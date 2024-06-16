@@ -4,13 +4,15 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from service.logging_config import logger 
 import dotenv
 
+dotenv.load_dotenv()
+
 engine = sa.create_engine(
      os.environ.get("DATABASE_URL"), 
      pool_size=10,
      max_overflow=20,
      pool_timeout=30,
      pool_recycle=1800
-    )
+)
 
 Base = declarative_base()
 

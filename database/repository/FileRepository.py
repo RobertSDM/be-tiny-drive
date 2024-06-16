@@ -68,13 +68,8 @@ def files_with_no_parent(db: Session) -> list:
     .where(File.folder == None)
     .order_by(File.name))
 
-    start = time.time()
+    files = db.execute(file_join_fileData).mappings().all()
 
-    files = db.execute(file_join_fileData)
+    logger.info(files)
 
-    logger.info(f"Depois do Execute {time.time() - start}")
-
-    for i in files:
-        logger.info(i)
-
-    return {}
+    return files
