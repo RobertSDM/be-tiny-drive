@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Response, Depends
 from service.FileService import save_file, download_service
 from service.logging_config import logger
-from database.repository.FileRepository import files_with_no_parent, find_all_files
+from database.repository.FileRepository import files_with_no_parent, find_all_files, files_by_folder
 from database.schemas.schemas import FileBody
 from fastapi.responses import StreamingResponse
 from database.init_database import get_session
@@ -20,7 +20,7 @@ def get_root_files(db = Depends(get_session)):
 
 @route.post('/save/file', status_code=200)
 def save_file_route(file: FileBody, db = Depends(get_session)):
-    new_file = save_file(db, file.name, file.extension, file.byteData, file.byteSize)
+    new_file = save_file(db, file.name,file.folderId, file.extension, file.byteData, file.byteSize)
 
     if(new_file):
         return new_file
@@ -42,3 +42,12 @@ def download(id: str, db = Depends(get_session)):
             "Content-Disposition": f"attachment; filename={data['fullname']}"
         }
     )
+
+@route.get("/from/folder/{id}", status_code=200)
+def findByFolder(id: str, db = Depends(get_session)):
+    files = files_by_folder(db, id)
+
+    if(len(files) > 0):
+        return [files, []]
+    else:
+        return Response(status_code=204)

@@ -47,9 +47,12 @@ class FileSchema(FileBase):
     fileData: FileDataBase
     folder: FolderBase
 
+class FolderBody(BaseModel):
+    name: str
+
 class FileBody(BaseModel):
     name: str
-    type: str
+    folderId: str | None
     extension: str
     byteData: str
     byteSize: int

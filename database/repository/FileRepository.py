@@ -1,9 +1,9 @@
 from sqlalchemy.orm import joinedload, Session
-from sqlalchemy import select, and_
+from sqlalchemy import select
 from service.decorator.time_spend import time_spent
 from service.logging_config import logger
+from database.models.FolderModel import Folder
 from ..models.FileModel import File, FileData
-from ..models.FolderModel import Folder
 import time
 
 @time_spent
@@ -40,11 +40,10 @@ def save_file (
     extension,
     byteData,
     byteSize,
-    byteSize_formatted,
-    fileDataId: int = None,
-    parentId: str = None,
+    prefix,
+    folderId: str,
 ):
-    file = File(name, extension, byteSize, byteSize_formatted, byteData)
+    file = File(name, extension, byteSize, prefix, byteData, folderId)
     
     db.add(file)
     db.commit()
@@ -53,23 +52,13 @@ def save_file (
 
 def files_with_no_parent(db: Session) -> list:
 
-    fileData_subq = (select(
-        FileData.byteSize,
-        FileData.byteSize_formatted,
-        FileData.extension,
-        FileData.file_id
-    ).select_from(FileData)
-    .subquery())
+    files = db.query(File).where(File.folder == None).all()
 
-    file_join_fileData = (select(
-        File
-    )
-    .join(fileData_subq, File.id == fileData_subq.c.file_id)
-    .where(File.folder == None)
-    .order_by(File.name))
+    folders = db.query(Folder).all()
 
-    files = db.execute(file_join_fileData).mappings().all()
+    return [files, folders]
 
-    logger.info(files)
+def files_by_folder(db: Session, folderId: str) -> list:
+    files = db.query(File).where(File.folder_id == folderId).all()
 
     return files

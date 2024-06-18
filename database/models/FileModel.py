@@ -11,6 +11,10 @@ class File(Base):
     name = sa.Column(sa.String)
     _type = sa.Column(sa.String, default="FILE")
     fullname = sa.Column(sa.String)
+    extension = sa.Column(sa.String, nullable=False)
+    byteSize = sa.Column(sa.Integer, nullable=False)
+    # byteSize_formatted = sa.Column(sa.String, nullable=False)
+    prefix = sa.Column(sa.String, nullable=False)
 
     # folder parent
     folder_id: Mapped['sa.String'] = mapped_column(sa.ForeignKey("folder.folder_id"), nullable=True)
@@ -19,13 +23,16 @@ class File(Base):
     fileData: Mapped["FileData"] = relationship(back_populates="file",uselist=False, lazy="selectin")
 
 
-    def __init__(self, name, extension, byteSize, byteSize_formatted, byteData) :
+    def __init__(self, name, extension, byteSize, prefix, byteData, folderId) :
         self.name = name
         self.fullname = f"{name}.{extension}"
+        self.byteSize = byteSize
+        self.extension = extension
+        self.prefix = prefix
+        self.folder_id = folderId
         
-        fileData = FileData(byteData=byteData, extension=extension,byteSize=byteSize, byteSize_formatted=byteSize_formatted)
+        self.fileData = FileData(byteData=byteData)
 
-        self.fileData = fileData
     
 
 class FileData(Base):
@@ -33,9 +40,6 @@ class FileData(Base):
 
     id = sa.Column(sa.String, primary_key=True, name="fileData_id", default=uuid.uuid4, index=True)
     byteData: Mapped[sa.String] = mapped_column(sa.String, nullable=False, deferred=True)
-    extension = sa.Column(sa.String, nullable=False)
-    byteSize = sa.Column(sa.Integer, nullable=False)
-    byteSize_formatted = sa.Column(sa.String, nullable=False)
 
     file_id: Mapped["sa.String"] = mapped_column(sa.ForeignKey("file.file_id"), nullable=False)
     file: Mapped["File"] = relationship(back_populates="fileData", uselist=False)

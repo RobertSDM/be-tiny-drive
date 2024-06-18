@@ -1,7 +1,7 @@
 from service.logging_config import logger
 import base64, math
 
-def add_sufix_to_bytes(byte_size: int):
+def get_sufix_to_bytes(byte_size: int):
     prefix = ["b","Kb","Mb", "Gb"]
 
     pos_prefix = 0
@@ -16,7 +16,7 @@ def add_sufix_to_bytes(byte_size: int):
         logger.info(devided_byte)
     logger.info(prefix[pos_prefix])
 
-    return f"{math.ceil(devided_byte)}{prefix[pos_prefix]}"
+    return math.ceil(devided_byte), prefix[pos_prefix]
 
 def get_bytes_data(byte_data):
     base64_data =  base64.b64decode(byte_data)
