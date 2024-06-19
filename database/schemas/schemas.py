@@ -49,6 +49,7 @@ class FileSchema(FileBase):
 
 class FolderBody(BaseModel):
     name: str
+    parentId: str | None
 
 class FileBody(BaseModel):
     name: str

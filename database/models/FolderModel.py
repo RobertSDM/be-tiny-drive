@@ -10,7 +10,7 @@ class Folder(Base):
     id = sa.Column(sa.String, primary_key=True, name="folder_id", default=uuid.uuid4, index=True)
     name = sa.Column(sa.String, nullable=False)
     _type = sa.Column(sa.String, default="FOLDER")
-    # tray = sa.Column(sa.String, nullable=False)
+    tray = sa.Column(sa.String, nullable=False, default="")
 
     # Child folders
     folders: Mapped[list["Folder"]] = relationship(back_populates="folder")
@@ -22,6 +22,11 @@ class Folder(Base):
     # files relation
     files: Mapped[list["File"]] = relationship(back_populates="folder")
 
-    def __init__(self, name) :
+    def __init__(self, name, folder_id, parentTray):
         self.name = name
-    
+        self.folderC_id = folder_id
+
+        if(folder_id):
+            self.tray = f"{parentTray}/{name}-{id}"
+        else:
+            self.tray = f"{name}-{id}"

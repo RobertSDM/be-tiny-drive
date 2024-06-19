@@ -4,9 +4,15 @@ from ..models.FolderModel import Folder
 def find_all_folders (id: str | None = None):
     pass
 
-def save_folder (db, name):
+def save_folder (db, name, parentId):
     try:
-        folder = Folder(name)
+        
+        if(parentId):
+            parentTray = db.query(Folder.tray).where(Folder.id == parentId).one()
+        else:
+            parentTray = None
+        
+        folder = Folder(name, parentId, parentTray)
 
         db.add(folder)
         db.flush()

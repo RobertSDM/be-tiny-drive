@@ -8,7 +8,8 @@ folder_router = APIRouter()
 
 @folder_router.post("/save/folder", status_code=200)
 def save_folder_route(folder: FolderBody, db = Depends(get_session)):
-    new_folder = save_folder(db, folder.name)
+    print(folder.parentId)
+    new_folder = save_folder(db, folder.name, folder.parentId)
 
     if(new_folder):
         return new_folder
