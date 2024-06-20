@@ -2,7 +2,7 @@ from fastapi import APIRouter, Response, Depends
 from service.FileService import save_file, download_service
 from service.logging_config import logger
 from database.repository.FileRepository import files_with_no_parent, find_all_files, files_by_folder
-from database.schemas.schemas import FileBody
+from database.schemas.schemas import FileBody, FileSchema, FileDataSchema
 from fastapi.responses import StreamingResponse
 from database.init_database import get_session
  
@@ -23,7 +23,16 @@ def save_file_route(file: FileBody, db = Depends(get_session)):
     new_file = save_file(db, file.name,file.folderId, file.extension, file.byteData, file.byteSize)
 
     if(new_file):
-        return new_file
+        return FileSchema(
+            id=str(new_file.id),
+            name=new_file.name,
+            _type=new_file._type,
+            fullname=new_file.fullname,
+            folder_id=new_file.folder_id,
+            folder=new_file.folder,
+            byteSize=new_file.byteSize,
+            prefix=new_file.prefix
+        )
     else:
         return Response(status_code=500)
 

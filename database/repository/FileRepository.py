@@ -46,7 +46,7 @@ def save_file (
     file = File(name, extension, byteSize, prefix, byteData, folderId)
     
     db.add(file)
-    db.commit()
+    db.flush()
 
     return file
 

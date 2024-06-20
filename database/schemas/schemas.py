@@ -1,14 +1,10 @@
 from pydantic import BaseModel
-from sqlalchemy.dialects.postgresql import UUID
 from typing import Optional
 
 
 class FileDataBase(BaseModel):
     id: str
     byteData: str
-    extension: str
-    byteSize: int
-    byteSize_formatted: str
     file_id: str
 
     class Config:
@@ -28,7 +24,9 @@ class FileBase(BaseModel):
     name: str
     _type: str
     fullname: str
-    folder_id: str
+    folder_id: str | None
+    byteSize: int
+    prefix: str
 
     class Config:
         from_attributes = True
@@ -44,8 +42,7 @@ class FolderSchema(FolderBase):
     files: list[FileBase]
 
 class FileSchema(FileBase):
-    fileData: FileDataBase
-    folder: FolderBase
+    folder: FolderBase | None
 
 class FolderBody(BaseModel):
     name: str
