@@ -22,7 +22,7 @@ app.add_middleware(
 app.include_router(file_route)
 app.include_router(folder_router)
     
-port = os.environ.get("PORT") if os.environ.get("PORT") else 4500
+port = int(os.environ.get("PORT") if os.environ.get("PORT") else 4500)
 debug = "info" if os.environ.get("MODE") != "production" else "debug"
 host = os.environ.get("HOST") if os.environ.get("HOST") else "127.0.0.1"
 
