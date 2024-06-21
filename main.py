@@ -10,13 +10,13 @@ dotenv.load_dotenv()
 app = FastAPI(title="Tiny Drive", )
 
 # CORS config
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins="*",
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins="*",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(file_route)
 app.include_router(folder_router)
