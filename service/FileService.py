@@ -7,8 +7,6 @@ def save_file(db, name,  folderId, extension, byteData, byteSize):
     _bytes, prefix = get_sufix_to_bytes(byteSize)
     new_file = fs(db, name, extension, byteData, _bytes, prefix, folderId)
 
-    print(new_file.fullname)
-    
     return new_file
 
 def download_service(db, id):

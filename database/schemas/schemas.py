@@ -26,11 +26,31 @@ class FileBase(BaseModel):
     fullname: str
     folder_id: str | None
     byteSize: int
+    extension: str
     prefix: str
 
     class Config:
         from_attributes = True
 
+
+class ResponseFolderBase(BaseModel):
+    id: str
+    name: str
+    folderC_id: str | None
+
+class ResponseFolder(ResponseFolderBase):
+    folder: ResponseFolderBase | None
+
+class ResponseFile(BaseModel):
+    id: str
+    name: str
+    fullname: str
+    folder_id: str | None
+    folder: ResponseFolder | None
+    byteSize: int
+    extension: str
+    prefix: str
+    
 ## Schemas
 
 class FileDataSchema(FileDataBase):
@@ -40,6 +60,8 @@ class FolderSchema(FolderBase):
     folders: list[FolderBase]
     folder: FolderBase
     files: list[FileBase]
+
+
 
 class FileSchema(FileBase):
     folder: FolderBase | None
