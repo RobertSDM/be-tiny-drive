@@ -14,14 +14,14 @@ class Folder(Base):
     tray = sa.Column(sa.String, nullable=False, default="")
 
     # Child folders
-    folders: Mapped[list["Folder"]] = relationship(back_populates="folder")
+    folders: Mapped[list["Folder"]] = relationship(back_populates="folder", cascade="all")
 
     # Parent folders
     folderC_id: Mapped[UUID] = mapped_column(sa.ForeignKey("folder.folder_id"), nullable=True)
     folder: Mapped["Folder"] = relationship(back_populates="folders", foreign_keys=[folderC_id], remote_side=[id], lazy="selectin")
 
     # files relation
-    files: Mapped[list["File"]] = relationship(back_populates="folder")
+    files: Mapped[list["File"]] = relationship(back_populates="folder", cascade="all")
 
     def __init__(self, name, folder_id):
         self.name = name

@@ -74,9 +74,6 @@ def delete_file(db: Session, id):
             joinedload(File.folder)
         ).where(File.id == id).first()
 
-        file_data = db.query(FileData).where(FileData.file_id == id).first()
-
-        db.delete(file_data)
         db.delete(file)
         db.commit()
 

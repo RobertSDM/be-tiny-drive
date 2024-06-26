@@ -20,7 +20,7 @@ class File(Base):
     folder_id: Mapped['sa.String'] = mapped_column(sa.ForeignKey("folder.folder_id"), nullable=True)
     folder: Mapped['Folder'] = relationship(back_populates="files", foreign_keys=[folder_id], lazy="selectin")
     
-    fileData: Mapped["FileData"] = relationship(back_populates="file",uselist=False, lazy="selectin")
+    fileData: Mapped["FileData"] = relationship(back_populates="file",uselist=False, lazy="selectin", cascade="all")
 
 
     def __init__(self, name, extension, byteSize, prefix, byteData, folderId) :
