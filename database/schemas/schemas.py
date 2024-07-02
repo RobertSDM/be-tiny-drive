@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Any, Optional
 
 
 class FileDataBase(BaseModel):
@@ -10,14 +10,16 @@ class FileDataBase(BaseModel):
     class Config:
         from_attributes = True
 
+
 class FolderBase(BaseModel):
     id: str
     name: str
     _type: str
     folderC_id: str
-    
+
     class Config:
         from_attributes = True
+
 
 class FileBase(BaseModel):
     id: str
@@ -33,13 +35,23 @@ class FileBase(BaseModel):
         from_attributes = True
 
 
+class UserBase(BaseModel):
+    id: str
+    user_name: str
+    email: str
+    password: str
+    saved_content_size: int
+
+
 class ResponseFolderBase(BaseModel):
     id: str
     name: str
     folderC_id: str | None
 
+
 class ResponseFolder(ResponseFolderBase):
     folder: ResponseFolderBase | None
+
 
 class ResponseFile(BaseModel):
     id: str
@@ -50,25 +62,64 @@ class ResponseFile(BaseModel):
     byteSize: int
     extension: str
     prefix: str
-    
-## Schemas
+
+
+class ResponseUser(BaseModel):
+    id: str
+    user_name: str
+    email: str
+
+
+# Schemas
+
+
+class DefaultDefReponseContent(BaseModel):
+    msg: str
+    data: Optional[str]
+
+
+class DefaultDefReponse(BaseModel):
+    status: int
+    content: DefaultDefReponseContent
+
+
+class UserParamLoginSchema(BaseModel):
+    email: str
+    password: str
+
+
+class UserParamRegisterSchema(BaseModel):
+    email: str
+    user_name: str
+    password: str
+
 
 class FileDataSchema(FileDataBase):
     file: FileBase
+    owner: UserBase
+
 
 class FolderSchema(FolderBase):
     folders: list[FolderBase]
     folder: FolderBase
     files: list[FileBase]
+    owner: UserBase
 
+
+class UserSchema(UserBase):
+    files: list[FileBase]
+    folders: list[FolderBase]
 
 
 class FileSchema(FileBase):
     folder: FolderBase | None
 
+
 class FolderBody(BaseModel):
     name: str
     parentId: str | None
+    owner_id: str
+
 
 class FileBody(BaseModel):
     name: str
@@ -76,3 +127,4 @@ class FileBody(BaseModel):
     extension: str
     byteData: str
     byteSize: int
+    owner_id: str
