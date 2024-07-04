@@ -33,11 +33,13 @@ app.add_middleware(
 async def add_process_time_header(request: Request, call_next):
     all_access_routes = ["/auth/register", "/auth/login"]
     path = request.url.path
+    
 
     if path not in all_access_routes and request.method != "OPTIONS":
         token = request.cookies.get("c_token")
-        print(request.cookies)
 
+        logger.info(request.cookies)
+        
         if not token:
             return Response(
                 status_code=422,
@@ -63,10 +65,10 @@ app.include_router(file_route)
 app.include_router(folder_router)
 app.include_router(auth_router)
 
-port = int(os.environ.get("PORT") if os.environ.get("PORT") else 4500)
+port = os.environ.get("PORT") if os.environ.get("PORT") else "4500"
 debug = "info" if os.environ.get("MODE") != "production" else "debug"
 host = os.environ.get("HOST") if os.environ.get("HOST") else "0.0.0.0"
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host=host, port=port, reload=True, log_level=debug)
-    logger.info("Api started on: " + host + ":" + str(port))
+    uvicorn.run("main:app", host=host, port=int(port), reload=True, log_level=debug)
+    logger.info("Api started on: " + host + ":" + port)

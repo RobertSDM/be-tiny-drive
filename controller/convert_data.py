@@ -43,6 +43,9 @@ def convert_folder_to_response_folder(folder: Folder | None) -> ResponseFolder |
 
 
 def convert_file_to_response_file_json(file: File) -> ResponseFile:
+    if not file:
+        return None
+    
     return {
         "id": str(file.id),
         "name": file.name,
