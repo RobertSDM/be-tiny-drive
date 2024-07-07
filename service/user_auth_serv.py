@@ -1,14 +1,13 @@
 import bcrypt
 from sqlalchemy.orm import Session
-from controller.auth import authenticate_token, create_token
-from controller.convert_data import convert_user_to_response_user
-from database.repository.UserRepository import (
+from controller.jwt.auth import authenticate_token, create_token
+from database.repository.user_repository import (
     find_user_by_email,
     find_user_by_id,
     insert_user,
 )
-from database.schemas.schemas import DefaultDefReponse, UserParamRegisterSchema
-from controller.pass_hashing import encoder, validate_login
+from database.schemas import DefaultDefReponse, UserParamRegisterSchema
+from controller.password.pass_hashing import encoder, validate_login
 
 
 def log_user_serv(db: Session, email: str, _pass: str) -> DefaultDefReponse:
@@ -40,13 +39,13 @@ def log_user_serv(db: Session, email: str, _pass: str) -> DefaultDefReponse:
         "status": 200,
         "content": {
             "msg": "Success",
+            "token": token,
             "data": {
                 "user": {
                     "id": str(user.id),
                     "email": user.email,
                     "user_name": user.user_name,
-                },
-                "token": token,
+                }
             },
         },
     }
@@ -68,7 +67,13 @@ def pass_hashing_serv(db: Session, user: UserParamRegisterSchema):
     return {"status": 200, "content": {"msg": "Success", "data": None}}
 
 
-def validate_token_serv(db: Session, token: str):
+def __cut_header_token(header_token: str) -> str:
+    return header_token.replace("Bearer ", "")
+
+
+def validate_token_serv(db: Session, header_token: str):
+    token = __cut_header_token(header_token)
+
     userId = authenticate_token(token)
 
     if not isinstance(userId, str):

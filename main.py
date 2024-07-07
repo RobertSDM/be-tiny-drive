@@ -1,28 +1,24 @@
 import json
-from typing import final
-from fastapi import Depends, FastAPI, Request, Response
 from sqlalchemy.orm import Session
-from database.init_database import get_session
-from routes.FileRest import route as file_route
-from routes.FolderRest import folder_router
-from routes.AuthRest import auth_router
+from fastapi import FastAPI, Request, Response
+from api.routes.file_rest import file_router
+from api.routes.folder_rest import folder_router
+from api.routes.auth_rest import auth_router
+from api.routes.content_rest import content_router
 from fastapi.middleware.cors import CORSMiddleware
+from database.init_database import get_session
 from service.logging_config import logger
-import dotenv, os, uvicorn
-
 from service.user_auth_serv import validate_token_serv
+from utils.env_definitions import Debug, Host, Origins, Port
+import uvicorn
 
-dotenv.load_dotenv()
+app = FastAPI(title="Tiny Drive", description="Backend api for tiny-drive project")
 
-
-app = FastAPI(
-    title="Tiny Drive",
-)
-
+## Middlewares
 # CORS config
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.environ.get("ORIGINS").split(";"),
+    allow_origins=Origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,26 +26,27 @@ app.add_middleware(
 
 
 @app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
+async def verify_auth_header(request: Request, call_next):
     all_access_routes = ["/auth/register", "/auth/login"]
     path = request.url.path
-    
+
+    logger.info(request.headers.get("Authorization"))
 
     if path not in all_access_routes and request.method != "OPTIONS":
-        token = request.cookies.get("c_token")
+        jwt_token = request.headers.get("Authorization")
 
-        logger.info(request.cookies)
-        
-        if not token:
+        if not jwt_token:
             return Response(
                 status_code=422,
-                content=json.dumps({"msg": "token no exist", "data": None}),
+                content=json.dumps(
+                    {"msg": "Authorization header not informed", "data": None}
+                ),
             )
 
         db: Session = next(get_session())
 
         try:
-            res = validate_token_serv(db, token)
+            res = validate_token_serv(db, jwt_token)
         finally:
             db.close()
 
@@ -61,14 +58,17 @@ async def add_process_time_header(request: Request, call_next):
     return await call_next(request)
 
 
-app.include_router(file_route)
-app.include_router(folder_router)
-app.include_router(auth_router)
+## APIRoutes
+app.include_router(file_router, prefix="/file")
+app.include_router(folder_router, prefix="/folder")
+app.include_router(auth_router, prefix="/auth")
+app.include_router(content_router, prefix="/content")
 
-port = os.environ.get("PORT") if os.environ.get("PORT") else "4500"
-debug = "info" if os.environ.get("MODE") != "production" else "debug"
-host = os.environ.get("HOST") if os.environ.get("HOST") else "0.0.0.0"
+
+def get_app() -> FastAPI:
+    return app
+
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host=host, port=int(port), reload=True, log_level=debug)
-    logger.info("Api started on: " + host + ":" + port)
+    logger.info("App stated on -> : " + Host + ":" + Port)
+    uvicorn.run("main:app", host=Host, port=int(Port), reload=True, log_level=Debug)

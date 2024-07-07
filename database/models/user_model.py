@@ -1,4 +1,4 @@
-from .FileModel import Base
+from .file_model import Base
 import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.dialects.postgresql import UUID

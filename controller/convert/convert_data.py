@@ -1,4 +1,5 @@
-import base64, math
+import base64
+import math
 
 
 def get_sufix_to_bytes(byte_size: int):

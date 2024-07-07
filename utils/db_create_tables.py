@@ -1,6 +1,5 @@
 from database.init_database import engine
-from database.models.UserModel import Base
-from service.logging_config import logger
+from database.models.user_model import Base
 
 
 def db_push():

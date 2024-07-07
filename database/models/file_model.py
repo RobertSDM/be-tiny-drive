@@ -1,7 +1,6 @@
-from .FolderModel import Base
+from .folder_model import Base
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 import sqlalchemy as sa
-from sqlalchemy.sql.sqltypes import String
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
@@ -68,8 +67,7 @@ class FileData(Base):
     byteData: Mapped["sa.String"] = mapped_column(
         sa.String, nullable=False, deferred=True
     )
-
     file_id: Mapped["sa.UUID"] = mapped_column(
         sa.ForeignKey("file.file_id"), nullable=False
     )
-    file: Mapped["File"] = relationship(back_populates="fileData", uselist=False)
+    file: Mapped["File"] = relationship(back_populates="fileData", lazy="selectin")

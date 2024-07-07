@@ -1,10 +1,10 @@
 from sqlalchemy import and_
 from service.logging_config import logger
-from ..models.FolderModel import Folder
+from ..models.folder_model import Folder
 from sqlalchemy.orm import load_only, joinedload, Session
 
 
-def save_folder(db, name: str, parentId: str, owner_id: str):
+def insert_folder(db: Session, name: str, parentId: str, owner_id: str):
     try:
         if parentId:
             folder = (

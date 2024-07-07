@@ -1,39 +1,32 @@
 from sqlalchemy.orm import joinedload, Session, load_only, lazyload, joinedload
 from sqlalchemy import select, and_
 from service.logging_config import logger
-from database.models.FolderModel import Folder
-from ..models.FileModel import File, FileData
+from database.models.folder_model import Folder
+from ..models.file_model import File, FileData
 
 
-def find_all_files(db):
-    return db.query(File).options(joinedload(File.fileData)).all()
+## Not beeing used
+# def find_all_files(db):
+#     return db.query(File).options(joinedload(File.fileData)).all()
 
 
-def find_by_file_id_download(db, id):
+def download_file(db, id):
 
-    fileData_subq = (
-        select(FileData.byteData, FileData.file_id).select_from(FileData).subquery()
-    )
-
-    file_join_fileData = (
-        select(File.id, File.fullname, fileData_subq.c.byteData)
-        .join(fileData_subq, File.id == fileData_subq.c.file_id)
-        .where(File.id == id)
-    )
+    file_join_fileData = select(FileData.id, FileData.fullname).options(load_only(FileData.file, FileData.byteData), joinedload(FileData.file)).filter(FileData.id == id)
 
     file = db.execute(file_join_fileData).mappings().fetchone()
 
     return file
 
 
-def save_file(
-    db,
-    name,
-    extension,
-    byteData,
-    byteSize,
-    prefix,
-    owner_id,
+def insert_file(
+    db: Session,
+    name: str,
+    extension: str,
+    byteData: str,
+    byteSize: int,
+    prefix: str,
+    owner_id: str,
     folderId: str,
 ):
 
@@ -45,7 +38,7 @@ def save_file(
     return file
 
 
-def files_with_no_parent(db: Session, owner_id: str) -> list:
+def find_with_no_parent(db: Session, owner_id: str) -> list:
 
     files = (
         db.query(File)
@@ -73,8 +66,7 @@ def files_with_no_parent(db: Session, owner_id: str) -> list:
     return {"files": files, "folders": folders}
 
 
-def files_by_folder(db: Session, folderId: str, owner_id: str) -> list:
-
+def find_by_folder(db: Session, folderId: str, owner_id: str) -> list:
     requestedFolder = (
         db.query(Folder)
         .options(

@@ -11,5 +11,4 @@ def encoder(_pass: str, salt: str) -> str:
 
 
 def validate_login(db_pass: str, _pass: str) -> bool:
-    
     return bc.checkpw(_pass.encode(), db_pass.encode())
