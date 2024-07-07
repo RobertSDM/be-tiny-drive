@@ -36,6 +36,6 @@ def save_file_serv(
 
 def download_serv(db, id):
     data = download_file(db, id)
-    byte_data = get_bytes_data(data["byteData"])
+    byte_data = get_bytes_data(data.byteData)
     formated_byte_data = io.BytesIO(byte_data)
     return [data, formated_byte_data]

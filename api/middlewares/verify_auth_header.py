@@ -10,7 +10,7 @@
 
 # @app.middleware("http")
 # async def verify_auth_header(request: Request, call_next):
-#     all_access_routes = ["/auth/register", "/auth/login"]
+#     all_access_routes = ["/auth/register", "/auth/login", "/file/download"]
 #     path = request.url.path
 
 #     logger.info(request.method)

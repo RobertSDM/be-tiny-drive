@@ -1,5 +1,5 @@
-from sqlalchemy.orm import joinedload, Session, load_only, lazyload, joinedload
-from sqlalchemy import select, and_
+from sqlalchemy.orm import joinedload, Session, load_only, lazyload, selectinload
+from sqlalchemy import and_
 from service.logging_config import logger
 from database.models.folder_model import Folder
 from ..models.file_model import File, FileData
@@ -12,11 +12,14 @@ from ..models.file_model import File, FileData
 
 def download_file(db, id):
 
-    file_join_fileData = select(FileData.id, FileData.fullname).options(load_only(FileData.file, FileData.byteData), joinedload(FileData.file)).filter(FileData.id == id)
+    file_data = (
+        db.query(FileData)
+        .options(load_only(FileData.id, FileData.byteData), selectinload(FileData.file))
+        .filter(FileData.file_id == id)
+        .first()
+    )
 
-    file = db.execute(file_join_fileData).mappings().fetchone()
-
-    return file
+    return file_data
 
 
 def insert_file(

@@ -27,12 +27,10 @@ app.add_middleware(
 
 @app.middleware("http")
 async def verify_auth_header(request: Request, call_next):
-    all_access_routes = ["/auth/register", "/auth/login"]
+    all_access_routes = ("/auth/register", "/auth/login", "/file/download")
     path = request.url.path
 
-    logger.info(request.headers.get("Authorization"))
-
-    if path not in all_access_routes and request.method != "OPTIONS":
+    if not path.startswith(all_access_routes) and request.method != "OPTIONS":
         jwt_token = request.headers.get("Authorization")
 
         if not jwt_token:

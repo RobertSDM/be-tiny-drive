@@ -39,7 +39,7 @@ class File(Base):
     )
 
     fileData: Mapped["FileData"] = relationship(
-        back_populates="file", uselist=False, lazy="selectin", cascade="all"
+        back_populates="file", lazy="selectin", cascade="all"
     )
 
     def __init__(self, name, extension, byteSize, prefix, byteData, folderId, ownerId):
@@ -67,6 +67,7 @@ class FileData(Base):
     byteData: Mapped["sa.String"] = mapped_column(
         sa.String, nullable=False, deferred=True
     )
+
     file_id: Mapped["sa.UUID"] = mapped_column(
         sa.ForeignKey("file.file_id"), nullable=False
     )

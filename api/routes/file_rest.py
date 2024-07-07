@@ -61,7 +61,7 @@ def __download_file(id: str, db=Depends(get_session)):
     return StreamingResponse(
         formated_byte_data,
         media_type="application/octet-stream",
-        headers={"Content-Disposition": f"attachment; filename={data['fullname']}"},
+        headers={"Content-Disposition": f"attachment; filename={data.file.fullname}"},
     )
 
 
