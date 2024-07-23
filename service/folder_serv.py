@@ -4,10 +4,18 @@ from database.models.folder_model import Folder
 from database.schemas import DefaultDefReponse, DefaultDefReponseContent
 from database.repository.folder_repository import insert_folder
 
-def save_folder_serv(db: Session, name, parent_id, owner_id) -> DefaultDefReponse | Folder:
+
+def save_folder_serv(
+    db: Session, name, parent_id, owner_id
+) -> DefaultDefReponse | Folder:
     folder = (
         db.query(Folder)
-        .filter(and_(Folder.folderC_id == parent_id, Folder.name == name))
+        .filter(
+            and_(
+                and_(Folder.folderC_id == parent_id, Folder.name == name),
+                Folder.owner_id == owner_id,
+            )
+        )
         .first()
     )
 

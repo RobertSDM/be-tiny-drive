@@ -14,7 +14,7 @@ def save_file_serv(
     file = (
         db.query(File)
         .filter(
-            and_(File.folder_id == folderId, File.fullname == name + "." + extension)
+            and_(and_(File.folder_id == folderId, File.fullname == name + "." + extension), File.owner_id == owner_id) 
         )
         .first()
     )
@@ -23,7 +23,9 @@ def save_file_serv(
         return DefaultDefReponse(
             status=422,
             content=DefaultDefReponseContent(
-                msg="The user name and extension 'name.extension' already exist in the folder",
+                msg="The user name and extension "
+                + file.fullname
+                + "already exist in the folder",
                 data=None,
             ),
         )
