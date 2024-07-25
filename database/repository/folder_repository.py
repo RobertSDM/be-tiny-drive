@@ -47,3 +47,16 @@ def delete_folder(db: Session, folderId: str, owner_id: str):
     except Exception as e:
         logger.error(e)
         return False
+
+
+def search_folder(db: Session, search: str, owner_id: str):
+    folders = (
+        db.query(Folder)
+        .options(load_only(Folder.id, Folder.name))
+        .filter(
+            and_(Folder.name.ilike("%" + search + "%"), Folder.owner_id == owner_id)
+        )
+        .all()
+    )
+
+    return folders

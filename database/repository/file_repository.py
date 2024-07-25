@@ -125,3 +125,22 @@ def delete_file(db: Session, id: str, owner_id: str):
     except Exception as e:
         logger.error(e)
         return False
+
+
+def search_file(db: Session, search: str, owner_id: str):
+    files = (
+        db.query(File)
+        .options(
+            load_only(
+                File.id,
+                File.extension,
+                File.name,
+                File.byteSize,
+                File.prefix,
+            )
+        )
+        .filter(and_(File.name.ilike("%" + search + "%"), File.owner_id == owner_id))
+        .all()
+    )
+
+    return files
