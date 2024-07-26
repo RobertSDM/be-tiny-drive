@@ -15,7 +15,6 @@ def __save_folder_route(folder: FolderBody, db=Depends(get_session)):
     res = insert_folder(db, folder.name, folder.parentId, folder.owner_id)
 
     if res:
-        print(res.name)
         return Response(
             json.dumps(
                 {"msg": None, "data": convert_folder_to_response_folder(res, True)},

@@ -12,8 +12,6 @@ auth_router = APIRouter()
 def __login(user: UserParamLoginSchema, db=Depends(get_session)):
     res = log_user_serv(db, user.email, user.password)
 
-    print(json.dumps(res, indent=4))
-
     response = Response(
         status_code=res["status"], content=json.dumps(res["content"])
     )

@@ -27,7 +27,7 @@ app.add_middleware(
 
 @app.middleware("http")
 async def verify_auth_header(request: Request, call_next):
-    all_access_routes = ("/auth/register", "/auth/login", "/file/download")
+    all_access_routes = ("/auth/register", "/auth/login")
     path = request.url.path
 
     if not path.startswith(all_access_routes) and request.method != "OPTIONS":

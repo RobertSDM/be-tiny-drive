@@ -10,16 +10,16 @@ from ..models.file_model import File, FileData
 #     return db.query(File).options(joinedload(File.fileData)).all()
 
 
-def download_file(db, id):
+def download_file(db: Session, id: str, owner_id: str):
 
-    file_data = (
-        db.query(FileData)
-        .options(load_only(FileData.id, FileData.byteData), selectinload(FileData.file))
-        .filter(FileData.file_id == id)
+    file = (
+        db.query(File)
+        .options(load_only(File.id), selectinload(File.fileData))
+        .filter(and_(File.id == id, File.owner_id == owner_id))
         .first()
     )
 
-    return file_data
+    return file
 
 
 def insert_file(
@@ -62,7 +62,7 @@ def find_with_no_parent(db: Session, owner_id: str) -> list:
 
     folders = (
         db.query(Folder)
-        .where(and_(Folder.folderC_id == None, Folder.owner_id == owner_id))
+        .filter(and_(Folder.folderC_id == None, Folder.owner_id == owner_id))
         .all()
     )
 
@@ -135,8 +135,6 @@ def search_file(db: Session, search: str, owner_id: str):
                 File.id,
                 File.extension,
                 File.name,
-                File.byteSize,
-                File.prefix,
             )
         )
         .filter(and_(File.name.ilike("%" + search + "%"), File.owner_id == owner_id))

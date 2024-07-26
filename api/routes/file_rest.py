@@ -1,4 +1,5 @@
 import json
+from os import name
 from fastapi import APIRouter, Response, Depends
 from service.file_serv import save_file_serv, download_serv
 from database.repository.file_repository import (
@@ -54,15 +55,17 @@ def __save_file_route(file: FileBody, db=Depends(get_session)):
 #     return find_all_files(db)
 
 
-@file_router.get("/download/{id}")
-def __download_file(id: str, db=Depends(get_session)):
-    data, formated_byte_data = download_serv(db, id)
+@file_router.get("/download/{id}/{owner_id}")
+def __download_file(id: str,owner_id: str, db=Depends(get_session)):
+    data, formated_byte_data = download_serv(db, id, owner_id)
 
-    return StreamingResponse(
-        formated_byte_data,
-        media_type="application/octet-stream",
-        headers={"Content-Disposition": f"attachment; filename={data.file.fullname}"},
-    )
+    return {"data": formated_byte_data, "name": data.fullname}
+
+    # return StreamingResponse(
+    #     formated_byte_data,
+    #     media_type="application/octet-stream",
+    #     headers={"Content-Disposition": f"attachment; filename={data.file.fullname}"},
+    # )
 
 
 @file_router.delete("/delete/{id}/{owner_id}", status_code=200)
