@@ -13,15 +13,9 @@ from controller.password.pass_hashing import encoder, validate_login
 def log_user_serv(db: Session, email: str, _pass: str) -> DefaultDefReponse:
     user = find_user_by_email(db, email)
 
-    if not user:
+    if not user or user.email != email:
         return {
-            "status": 404,
-            "content": {"msg": "The email or password is incorrect", "data": None},
-        }
-
-    if user.email != email:
-        return {
-            "status": 404,
+            "status": 400,
             "content": {"msg": "The email or password is incorrect", "data": None},
         }
 
@@ -29,7 +23,7 @@ def log_user_serv(db: Session, email: str, _pass: str) -> DefaultDefReponse:
 
     if not isValid:
         return {
-            "status": 422,
+            "status": 400,
             "content": {"msg": "The email or password is incorrect", "data": None},
         }
 
@@ -51,7 +45,15 @@ def log_user_serv(db: Session, email: str, _pass: str) -> DefaultDefReponse:
     }
 
 
-def pass_hashing_serv(db: Session, user: UserParamRegisterSchema):
+def register_serv(db: Session, user: UserParamRegisterSchema):
+    user = find_user_by_email(db, user.email)
+
+    if user:
+        return {
+            "status": 400,
+            "content": {"msg": "The user with the email already exist", "data": None},
+        }
+
     salt = bcrypt.gensalt().decode()
 
     user.password = encoder(user.password, salt)
@@ -60,7 +62,7 @@ def pass_hashing_serv(db: Session, user: UserParamRegisterSchema):
 
     if not res:
         return {
-            "status": 200,
+            "status": 400,
             "content": {"msg": "Error while creating the user", "data": None},
         }
 
