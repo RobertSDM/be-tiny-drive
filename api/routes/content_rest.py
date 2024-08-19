@@ -7,7 +7,8 @@ from controller.convert.convert_types import (
     convert_folder_to_response_folder,
 )
 from database.init_database import get_session
-from database.repository.file_repository import find_by_folder, find_with_no_parent
+from database.repository.file_repository import find_by_folder
+from database.repository.content_repository import find_with_no_parent
 from service.content_search_serv import content_search_serv
 
 content_router = APIRouter()

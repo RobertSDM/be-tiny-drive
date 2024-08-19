@@ -1,20 +1,32 @@
 import json
 from fastapi import APIRouter, Depends, Response
-from database.schemas import FolderBody
+from database.schemas import DefaultDefReponse, FolderBody
 from database.repository.folder_repository import insert_folder, delete_folder
 from database.init_database import get_session
 from controller.convert.convert_types import (
     convert_folder_to_response_folder,
 )
+from service.folder_serv import save_folder_serv
 
 folder_router = APIRouter()
 
 
 @folder_router.post("/save", status_code=200)
 def __save_folder_route(folder: FolderBody, db=Depends(get_session)):
-    res = insert_folder(db, folder.name, folder.parentId, folder.owner_id)
+    res = save_folder_serv(db, folder.name, folder.parentId, folder.owner_id)
 
-    if res:
+    
+    if isinstance(res, DefaultDefReponse):
+        return Response(
+            json.dumps(
+                {
+                    "msg": res.content.msg,
+                    "data": convert_folder_to_response_folder(res.content.data, True),
+                }
+            ),
+            status_code=res.status,
+        )
+    elif res:
         return Response(
             json.dumps(
                 {"msg": None, "data": convert_folder_to_response_folder(res, True)},

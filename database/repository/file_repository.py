@@ -2,7 +2,7 @@ from sqlalchemy.orm import joinedload, Session, load_only, lazyload, selectinloa
 from sqlalchemy import and_
 from service.logging_config import logger
 from database.models.folder_model import Folder
-from ..models.file_model import File, FileData
+from ..models.file_model import File
 
 
 ## Not beeing used

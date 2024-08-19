@@ -7,6 +7,8 @@ from database.repository.file_repository import insert_file as fs, download_file
 from controller.convert.convert_data import get_bytes_data
 import io
 
+from utils.addThreePeriods import addThreePeriods
+
 
 def save_file_serv(
     db: Session, name, folderId, extension, byteData, byteSize, owner_id
@@ -28,9 +30,9 @@ def save_file_serv(
         return DefaultDefReponse(
             status=422,
             content=DefaultDefReponseContent(
-                msg="The user name and extension "
-                + file.fullname
-                + "already exist in the folder",
+                msg="The file name and extension \""
+                + addThreePeriods(file.name, 30)
+                + "\" already exist in the folder",
                 data=None,
             ),
         )

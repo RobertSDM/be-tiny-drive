@@ -45,8 +45,8 @@ def log_user_serv(db: Session, email: str, _pass: str) -> DefaultDefReponse:
     }
 
 
-def register_serv(db: Session, user: UserParamRegisterSchema):
-    user = find_user_by_email(db, user.email)
+def register_serv(db: Session, p_user: UserParamRegisterSchema):
+    user = find_user_by_email(db, p_user.email)
 
     if user:
         return {
@@ -56,9 +56,9 @@ def register_serv(db: Session, user: UserParamRegisterSchema):
 
     salt = bcrypt.gensalt().decode()
 
-    user.password = encoder(user.password, salt)
+    p_user.password = encoder(p_user.password, salt)
 
-    res = insert_user(db, user, salt)
+    res = insert_user(db, p_user, salt)
 
     if not res:
         return {
