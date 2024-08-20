@@ -73,6 +73,13 @@ class ResponseUser(BaseModel):
 # Schemas
 
 
+class FileUpdate(BaseModel):
+    name: str
+    extension: str
+    folder_id: str | None
+    new_name: str
+
+
 class DefaultDefReponseContent(BaseModel):
     msg: str
     data: Optional[str]

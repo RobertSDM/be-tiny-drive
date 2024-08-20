@@ -1,3 +1,4 @@
+import json
 from sqlalchemy.orm import joinedload, Session, load_only, lazyload, selectinload
 from sqlalchemy import and_
 from service.logging_config import logger
@@ -142,3 +143,33 @@ def search_file(db: Session, search: str, owner_id: str):
     )
 
     return files
+
+
+def file_by_name_in_folder(
+    db: Session, fullname: str, folder_id: str, owner_id: str
+) -> File | None:
+    file = (
+        db.query(File)
+        .filter(
+            and_(
+                and_(File.fullname == fullname, File.folder_id != folder_id),
+                File.owner_id == owner_id,
+            )
+        )
+        .first()
+    )
+
+    return file
+
+
+def file_update_name(db: Session, name: str, id: str, owner_id: str) -> File:
+
+    updated_file = (
+        db.query(File)
+        .filter(and_(File.id == id, File.owner_id == owner_id))
+        .update({File.name: name})
+    )
+
+    db.flush()
+
+    return updated_file

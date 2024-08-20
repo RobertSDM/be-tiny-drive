@@ -1,12 +1,15 @@
+import json
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from database.models.file_model import File
-from database.schemas import DefaultDefReponse, DefaultDefReponseContent
+from database.schemas import DefaultDefReponse, DefaultDefReponseContent, FileUpdate
 from controller.convert.convert_data import get_sufix_to_bytes
-from database.repository.file_repository import insert_file as fs, download_file
-from controller.convert.convert_data import get_bytes_data
-import io
-
+from database.repository.file_repository import (
+    file_by_name_in_folder,
+    file_update_name,
+    insert_file as fs,
+    download_file,
+)
 from utils.addThreePeriods import addThreePeriods
 
 
@@ -30,9 +33,9 @@ def save_file_serv(
         return DefaultDefReponse(
             status=422,
             content=DefaultDefReponseContent(
-                msg="The file name and extension \""
+                msg='The file name and extension "'
                 + addThreePeriods(file.name, 30)
-                + "\" already exist in the folder",
+                + '" already exist in the folder',
                 data=None,
             ),
         )
@@ -47,3 +50,27 @@ def download_serv(db, id, owner_id):
     data = download_file(db, id, owner_id)
     # byte_data = get_bytes_data()
     return [data, data.fileData.byteData]
+
+
+def update_file_name_serv(
+    db: Session, file_id: str, body: FileUpdate, owner_id: str
+) -> DefaultDefReponse | File:
+
+    fullname = body.name + "." + body.extension
+
+    exist = file_by_name_in_folder(db, fullname, body.folder_id, owner_id)
+
+    if exist:
+        return DefaultDefReponse(
+            status=422,
+            content=DefaultDefReponseContent(
+                msg="Can't update the file \""
+                + addThreePeriods(body.name, 30)
+                + '" the name.extension already exist in the folder',
+                data=None,
+            ),
+        )
+
+    updated_file = file_update_name(db, body.new_name, file_id, owner_id)
+
+    return updated_file

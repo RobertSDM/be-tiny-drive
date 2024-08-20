@@ -1,11 +1,11 @@
 import json
 from os import name
 from fastapi import APIRouter, Response, Depends
-from service.file_serv import save_file_serv, download_serv
+from service.file_serv import save_file_serv, download_serv, update_file_name_serv
 from database.repository.file_repository import (
     delete_file,
 )
-from database.schemas import DefaultDefReponse, FileBody
+from database.schemas import DefaultDefReponse, FileBody, FileUpdate
 from fastapi.responses import StreamingResponse
 from database.init_database import get_session
 from controller.convert.convert_types import (
@@ -56,16 +56,37 @@ def __save_file_route(file: FileBody, db=Depends(get_session)):
 
 
 @file_router.get("/download/{id}/{owner_id}")
-def __download_file(id: str,owner_id: str, db=Depends(get_session)):
+def __download_file(id: str, owner_id: str, db=Depends(get_session)):
     data, formated_byte_data = download_serv(db, id, owner_id)
 
     return {"data": formated_byte_data, "name": data.fullname}
 
-    # return StreamingResponse(
-    #     formated_byte_data,
-    #     media_type="application/octet-stream",
-    #     headers={"Content-Disposition": f"attachment; filename={data.file.fullname}"},
-    # )
+
+@file_router.put("/update/name/{id}/{owner_id}", status_code=200)
+def __update_file_name(
+    id: str, body: FileUpdate, owner_id: str, db=Depends(get_session)
+):
+    res = update_file_name_serv(db, id, body, owner_id)
+
+    if isinstance(res, DefaultDefReponse):
+        return Response(
+            json.dumps(
+                {
+                    "msg": res.content.msg,
+                    "data": convert_file_to_response_file(res.content.data, True),
+                }
+            ),
+            status_code=res.status,
+        )
+    elif res:
+        return Response(
+            status_code=200,
+        )
+    else:
+        return Response(
+            status_code=500,
+            content=json.dumps({"msg": "Error to update the name"}),
+        )
 
 
 @file_router.delete("/delete/{id}/{owner_id}", status_code=200)
