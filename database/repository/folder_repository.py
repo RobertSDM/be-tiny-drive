@@ -60,3 +60,31 @@ def search_folder(db: Session, search: str, owner_id: str):
     )
 
     return folders
+
+
+def folder_by_name_in_folder(
+    db: Session, name: str, folder_id: str, owner_id: str
+) -> Folder | None:
+    file = (
+        db.query(Folder)
+        .filter(
+            and_(
+                and_(Folder.name == name, Folder.folderC_id != folder_id),
+                Folder.owner_id == owner_id,
+            )
+        )
+        .first()
+    )
+
+    return file
+
+
+def folder_update_name(db: Session, name: str, id: str, owner_id: str) -> None:
+
+    (
+        db.query(Folder)
+        .filter(and_(Folder.id == id, Folder.owner_id == owner_id))
+        .update({Folder.name: name})
+    )
+
+    db.commit()

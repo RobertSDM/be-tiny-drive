@@ -1,4 +1,5 @@
 import json
+from pickle import TRUE
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from database.models.file_model import File
@@ -54,7 +55,7 @@ def download_serv(db, id, owner_id):
 
 def update_file_name_serv(
     db: Session, file_id: str, body: FileUpdate, owner_id: str
-) -> DefaultDefReponse | File:
+) -> DefaultDefReponse | bool:
 
     fullname = body.name + "." + body.extension
 
@@ -71,6 +72,6 @@ def update_file_name_serv(
             ),
         )
 
-    updated_file = file_update_name(db, body.new_name, file_id, owner_id)
+    file_update_name(db, body.new_name, file_id, owner_id)
 
-    return updated_file
+    return True

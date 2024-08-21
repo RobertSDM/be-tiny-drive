@@ -73,6 +73,12 @@ class ResponseUser(BaseModel):
 # Schemas
 
 
+class FolderUpdate(BaseModel):
+    name: str
+    folder_id: str | None
+    new_name: str
+
+
 class FileUpdate(BaseModel):
     name: str
     extension: str
