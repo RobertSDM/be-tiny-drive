@@ -11,7 +11,7 @@ from database.repository.file_repository import (
     insert_file as fs,
     download_file,
 )
-from utils.addThreePeriods import addThreePeriods
+from utils.add_three_periods import addThreePeriods
 
 
 def save_file_serv(

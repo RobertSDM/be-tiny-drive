@@ -6,7 +6,9 @@ from utils.env_definitions import Database_url
 
 dotenv.load_dotenv()
 
-engine = sa.create_engine(Database_url)
+engine = sa.create_engine(
+    Database_url, pool_pre_ping=True, pool_size=5, pool_recycle=3600, pool_timeout=30
+)
 
 Base = declarative_base()
 __Session = sessionmaker(engine)

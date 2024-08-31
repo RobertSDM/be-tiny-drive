@@ -7,7 +7,7 @@ from database.repository.folder_repository import (
     folder_update_name,
     insert_folder,
 )
-from utils.addThreePeriods import addThreePeriods
+from utils.add_three_periods import addThreePeriods
 
 
 def save_folder_serv(
