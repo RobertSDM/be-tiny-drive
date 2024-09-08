@@ -79,12 +79,25 @@ def folder_by_name_in_folder(
     return file
 
 
-def folder_update_name(db: Session, name: str, id: str, owner_id: str) -> None:
+def folder_update_name(
+    db: Session, name: str, id: str, owner_id: str, parent_id: str
+) -> str:
+    if parent_id:
+        parentFolder = (
+            db.query(Folder)
+            .options(load_only(Folder.tray))
+            .filter(and_(Folder.id == parent_id, Folder.owner_id == owner_id))
+            .first()
+        )
+        parentTray = parentFolder.tray
+    else:
+        parentTray = None
 
-    (
-        db.query(Folder)
-        .filter(and_(Folder.id == id, Folder.owner_id == owner_id))
-        .update({Folder.name: name})
-    )
+    folder = db.query(Folder).filter(and_(Folder.id == id, Folder.owner_id == owner_id))
+    folder.update({Folder.name: name})
+    db.flush()
 
-    db.commit()
+    folder = folder.first()
+    updated_tray = folder.update_tray(parentTray, name)
+    db.flush()
+    return updated_tray

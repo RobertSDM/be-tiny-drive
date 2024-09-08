@@ -57,6 +57,12 @@ def __update_folder_name(
         )
     elif res:
         return Response(
+            json.dumps(
+                {
+                    "msg": None,
+                    "data": {"tray": res},
+                }
+            ),
             status_code=200,
         )
     else:

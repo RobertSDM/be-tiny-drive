@@ -72,11 +72,18 @@ class ResponseUser(BaseModel):
 
 # Schemas
 
+class Tray(BaseModel):
+    tray: str
+
+class UpdatedTray(BaseModel):
+    id: str
+    updatedTray: Tray
 
 class FolderUpdate(BaseModel):
     name: str
     folder_id: str | None
     new_name: str
+    parent_id: str | None
 
 
 class FileUpdate(BaseModel):

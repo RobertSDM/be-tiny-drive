@@ -56,3 +56,16 @@ class Folder(Base):
             self.tray = f"{parentTray}/{self.name};{str(self.id)}"
         else:
             self.tray = f"{self.name};{str(self.id)}"
+
+    def update_tray(self, parentTray, newName, updatedTray={}):
+        if self.folderC_id:
+            self.tray = f"{parentTray}/{newName};{str(self.id)}"
+        else:
+            self.tray = f"{newName};{str(self.id)}"
+
+        updatedTray[str(self.id)] = self.tray
+
+        for i in self.folders:
+            i.update_tray(self.tray, i.name, updatedTray)
+            
+        return updatedTray

@@ -1,7 +1,7 @@
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from database.models.folder_model import Folder
-from database.schemas import DefaultDefReponse, DefaultDefReponseContent, FolderUpdate
+from database.schemas import DefaultDefReponse, DefaultDefReponseContent, FolderUpdate, UpdatedTray
 from database.repository.folder_repository import (
     folder_by_name_in_folder,
     folder_update_name,
@@ -42,7 +42,7 @@ def save_folder_serv(
 
 def update_folder_name_serv(
     db: Session, file_id: str, body: FolderUpdate, owner_id: str
-) -> DefaultDefReponse | bool:
+) -> DefaultDefReponse | UpdatedTray:
 
     exist = folder_by_name_in_folder(db, body.name, body.folder_id, owner_id)
 
@@ -57,6 +57,6 @@ def update_folder_name_serv(
             ),
         )
 
-    folder_update_name(db, body.new_name, file_id, owner_id)
+    updatedTray = folder_update_name(db, body.new_name, file_id, owner_id, body.parent_id)
 
-    return True
+    return updatedTray
