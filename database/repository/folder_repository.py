@@ -1,8 +1,18 @@
 from sqlalchemy import and_
 from service.logging_config import logger
 from ..models.folder_model import Folder
-from sqlalchemy.orm import load_only, joinedload, Session
+from ..models.file_model import File
+from sqlalchemy.orm import load_only, joinedload, Session, selectinload
 
+
+def folder_by_id_load_children(db: Session, id: str, owner_id: str) -> list[Folder]:
+        return (db.query(Folder)
+                    .options(load_only(File.fileData), selectinload(Folder.files), selectinload(Folder.folders))
+                    .filter(and_(Folder.id == id, Folder.owner_id == owner_id))
+                    .all()
+                )
+
+    
 
 def insert_folder(db: Session, name: str, parentId: str, owner_id: str):
     try:
