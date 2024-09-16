@@ -57,7 +57,7 @@ def update_file_name_serv(
     db: Session, file_id: str, body: FileUpdate, owner_id: str
 ) -> DefaultDefReponse | bool:
 
-    fullname = body.name + "." + body.extension
+    fullname = body.new_name + "." + body.extension
 
     exist = file_by_name_in_folder(db, fullname, body.folder_id, owner_id)
 
@@ -72,6 +72,6 @@ def update_file_name_serv(
             ),
         )
 
-    file_update_name(db, body.new_name, file_id, owner_id)
+    file_update_name(db, fullname, body.new_name, file_id, owner_id)
 
     return True

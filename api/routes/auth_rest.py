@@ -1,5 +1,4 @@
 import json
-from service.logging_config import logger
 from fastapi import APIRouter, Depends, Response
 from database.schemas import UserParamLoginSchema, UserParamRegisterSchema
 from database.init_database import get_session

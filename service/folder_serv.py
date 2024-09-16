@@ -1,13 +1,27 @@
+import io
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from database.models.folder_model import Folder
-from database.schemas import DefaultDefReponse, DefaultDefReponseContent, FolderUpdate, UpdatedTray
+from database.schemas import (
+    DefaultDefReponse,
+    DefaultDefReponseContent,
+    FolderUpdate,
+    UpdatedTray,
+)
 from database.repository.folder_repository import (
     folder_by_name_in_folder,
+    folder_selectinload_children,
     folder_update_name,
     insert_folder,
 )
 from utils.add_three_periods import addThreePeriods
+from utils.folder_to_zip import get_folder_zip
+
+
+def download_zip_serv(db: Session, folder_id: str, owner_id: str) -> io.BytesIO:
+    folder = folder_selectinload_children(db, folder_id, owner_id)
+
+    return get_folder_zip(folder)
 
 
 def save_folder_serv(
@@ -57,6 +71,8 @@ def update_folder_name_serv(
             ),
         )
 
-    updatedTray = folder_update_name(db, body.new_name, file_id, owner_id, body.parent_id)
+    updatedTray = folder_update_name(
+        db, body.new_name, file_id, owner_id, body.parent_id
+    )
 
     return updatedTray

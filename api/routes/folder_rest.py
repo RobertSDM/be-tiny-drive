@@ -1,14 +1,33 @@
 import json
+from fastapi.responses import StreamingResponse
 from fastapi import APIRouter, Depends, Response
 from database.schemas import DefaultDefReponse, FolderBody, FolderUpdate
-from database.repository.folder_repository import insert_folder, delete_folder
+from database.repository.folder_repository import (
+    delete_folder,
+)
 from database.init_database import get_session
 from controller.convert.convert_types import (
     convert_folder_to_response_folder,
 )
-from service.folder_serv import save_folder_serv, update_folder_name_serv
+from service.folder_serv import download_zip_serv, save_folder_serv, update_folder_name_serv
 
 folder_router = APIRouter()
+
+
+@folder_router.get("/download/zip/{id}/{owner_id}", status_code=200)
+def __download_folder_zip(id: str, owner_id: str, db=Depends(get_session)):
+
+    data = download_zip_serv(db, id, owner_id)
+
+    return StreamingResponse(
+        data,
+        media_type="application/zip",
+        status_code=200,
+        headers={
+            "Content-Disposition": f"inline;",
+            "Content-Length": str(data.getbuffer().nbytes),
+        },
+    )
 
 
 @folder_router.post("/save", status_code=200)

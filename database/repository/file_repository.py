@@ -162,12 +162,12 @@ def file_by_name_in_folder(
     return file
 
 
-def file_update_name(db: Session, name: str, id: str, owner_id: str) -> None:
+def file_update_name(db: Session, fullname: str, name: str, id: str, owner_id: str) -> None:
 
     (
         db.query(File)
         .filter(and_(File.id == id, File.owner_id == owner_id))
-        .update({File.name: name})
+        .update({File.name: name, File.fullname: fullname})
     )
 
     db.commit()

@@ -67,5 +67,5 @@ class Folder(Base):
 
         for i in self.folders:
             i.update_tray(self.tray, i.name, updatedTray)
-            
+
         return updatedTray

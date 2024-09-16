@@ -1,4 +1,5 @@
 import base64
+import io
 import math
 
 
@@ -15,6 +16,6 @@ def get_sufix_to_bytes(byte_size: int):
     return math.ceil(devided_byte), prefix[pos_prefix]
 
 
-def get_bytes_data(byte_data):
+def get_base64_to_bytes_data(byte_data: base64) -> io.BytesIO:
     base64_data = base64.b64decode(byte_data)
-    return base64_data
+    return io.BytesIO(base64_data)
