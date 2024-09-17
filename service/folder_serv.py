@@ -42,9 +42,9 @@ def save_folder_serv(
         return DefaultDefReponse(
             status=422,
             content=DefaultDefReponseContent(
-                msg="The folder"
+                msg="The folder \""
                 + addThreePeriods(folder.name, 30)
-                + "already exist in the folder",
+                + "\" already exist in the folder",
                 data=None,
             ),
         )

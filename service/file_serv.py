@@ -67,7 +67,9 @@ def update_file_name_serv(
             content=DefaultDefReponseContent(
                 msg="Can't update the file \""
                 + addThreePeriods(body.name, 30)
-                + '" the name.extension already exist in the folder',
+                + "\" to \""
+                + addThreePeriods(body.new_name, 30)
+                + "\" the name already exist in the folder",
                 data=None,
             ),
         )

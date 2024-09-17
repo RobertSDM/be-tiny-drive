@@ -1,6 +1,6 @@
 import json
 from sqlalchemy.orm import joinedload, Session, load_only, lazyload, selectinload
-from sqlalchemy import and_
+from sqlalchemy import and_, update
 from service.logging_config import logger
 from database.models.folder_model import Folder
 from ..models.file_model import File
@@ -152,7 +152,7 @@ def file_by_name_in_folder(
         db.query(File)
         .filter(
             and_(
-                and_(File.fullname == fullname, File.folder_id != folder_id),
+                and_(File.fullname == fullname, File.folder_id == folder_id),
                 File.owner_id == owner_id,
             )
         )
@@ -162,12 +162,15 @@ def file_by_name_in_folder(
     return file
 
 
-def file_update_name(db: Session, fullname: str, name: str, id: str, owner_id: str) -> None:
+def file_update_name(
+    db: Session, fullname: str, name: str, id: str, owner_id: str
+) -> None:
+
 
     (
-        db.query(File)
-        .filter(and_(File.id == id, File.owner_id == owner_id))
-        .update({File.name: name, File.fullname: fullname})
+        update(File)
+        .where(and_(File.id == id, File.owner_id == owner_id))
+        .values({File.name: name, File.fullname: fullname})
     )
 
     db.commit()
