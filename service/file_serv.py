@@ -61,19 +61,20 @@ def update_file_name_serv(
 
     exist = file_by_name_in_folder(db, fullname, body.folder_id, owner_id)
 
+
     if exist:
         return DefaultDefReponse(
             status=422,
             content=DefaultDefReponseContent(
                 msg="Can't update the file \""
                 + addThreePeriods(body.name, 30)
-                + "\" to \""
+                + '" to "'
                 + addThreePeriods(body.new_name, 30)
-                + "\" the name already exist in the folder",
+                + '" the name already exist in the folder',
                 data=None,
             ),
         )
 
-    file_update_name(db, fullname, body.new_name, file_id, owner_id)
+    file_update_name(db, fullname, body.new_name, file_id, owner_id, body.folder_id)
 
     return True

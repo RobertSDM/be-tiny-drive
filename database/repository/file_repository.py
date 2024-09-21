@@ -163,14 +163,17 @@ def file_by_name_in_folder(
 
 
 def file_update_name(
-    db: Session, fullname: str, name: str, id: str, owner_id: str
+    db: Session, fullname: str, name: str, id: str, owner_id: str, folder_id: str
 ) -> None:
-
-
     (
-        update(File)
-        .where(and_(File.id == id, File.owner_id == owner_id))
-        .values({File.name: name, File.fullname: fullname})
+        db.execute(
+            update(File)
+            .where(
+                and_(and_(File.id == id, File.owner_id == owner_id)),
+                File.folder_id == folder_id,
+            )
+            .values({File.name: name, File.fullname: fullname})
+        )
     )
 
     db.commit()
