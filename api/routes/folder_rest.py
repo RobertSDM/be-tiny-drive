@@ -6,7 +6,7 @@ from database.repository.folder_repository import (
     delete_folder,
 )
 from database.init_database import get_session
-from controller.convert.convert_types import (
+from utils.convert_types import (
     convert_folder_to_response_folder,
 )
 from service.folder_serv import download_zip_serv, save_folder_serv, update_folder_name_serv

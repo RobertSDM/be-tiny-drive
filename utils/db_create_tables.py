@@ -1,5 +1,8 @@
+# from database.init_database import engine
+# from database.model.user_model import Base
+
 from database.init_database import engine
-from database.models.user_model import Base
+from database.model.user_model import Base
 
 
 def db_push():

@@ -1,7 +1,7 @@
 import io
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
-from database.models.folder_model import Folder
+from database.model.folder_model import Folder
 from database.schemas import (
     DefaultDefReponse,
     DefaultDefReponseContent,
@@ -42,9 +42,9 @@ def save_folder_serv(
         return DefaultDefReponse(
             status=422,
             content=DefaultDefReponseContent(
-                msg="The folder \""
+                msg='The folder "'
                 + addThreePeriods(folder.name, 30)
-                + "\" already exist in the folder",
+                + '" already exist in the folder',
                 data=None,
             ),
         )

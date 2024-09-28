@@ -49,16 +49,12 @@ class ResponseFolderBase(BaseModel):
     folderC_id: str | None
 
 
-class ResponseFolder(ResponseFolderBase):
-    folder: ResponseFolderBase | None
-
 
 class ResponseFile(BaseModel):
     id: str
     name: str
     fullname: str
     folder_id: str | None
-    folder: ResponseFolder | None
     byteSize: int
     extension: str
     prefix: str

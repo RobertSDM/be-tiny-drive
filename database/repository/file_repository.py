@@ -2,8 +2,8 @@ import json
 from sqlalchemy.orm import joinedload, Session, load_only, lazyload, selectinload
 from sqlalchemy import and_, update
 from service.logging_config import logger
-from database.models.folder_model import Folder
-from ..models.file_model import File
+from database.model.folder_model import Folder
+from ..model.file_model import File
 
 
 ## Not beeing used
@@ -14,7 +14,7 @@ from ..models.file_model import File
 def download_file(db: Session, id: str, owner_id: str):
 
     file = (
-        db.query(File)
+        db.query(File   )
         .options(load_only(File.id), selectinload(File.fileData))
         .filter(and_(File.id == id, File.owner_id == owner_id))
         .first()
@@ -40,74 +40,6 @@ def insert_file(
     db.flush()
 
     return file
-
-
-def find_with_no_parent(db: Session, owner_id: str) -> list:
-
-    files = (
-        db.query(File)
-        .options(
-            load_only(
-                File.id,
-                File.extension,
-                File.name,
-                File.byteSize,
-                File.fullname,
-                File.prefix,
-            ),
-            lazyload(File.fileData),
-        )
-        .filter(and_(File.folder_id == None, File.owner_id == owner_id))
-        .all()
-    )
-
-    folders = (
-        db.query(Folder)
-        .filter(and_(Folder.folderC_id == None, Folder.owner_id == owner_id))
-        .all()
-    )
-
-    return {"files": files, "folders": folders}
-
-
-def find_by_folder(db: Session, folderId: str, owner_id: str) -> list:
-    requestedFolder = (
-        db.query(Folder)
-        .options(
-            load_only(Folder.id, Folder.name, Folder.tray, Folder.folderC_id),
-            joinedload(Folder.folder),
-        )
-        .filter(and_(Folder.id == folderId, Folder.owner_id == owner_id))
-        .first()
-    )
-
-    files = (
-        db.query(File)
-        .options(
-            load_only(
-                File.id,
-                File.extension,
-                File.name,
-                File.byteSize,
-                File.fullname,
-                File.prefix,
-            )
-        )
-        .filter(and_(File.folder_id == folderId, File.owner_id == owner_id))
-        .all()
-    )
-
-    folders = (
-        db.query(Folder)
-        .options(
-            load_only(Folder.id, Folder.name, Folder.tray, Folder.folderC_id),
-            joinedload(Folder.folder),
-        )
-        .filter(and_(Folder.folderC_id == folderId, Folder.owner_id == owner_id))
-        .all()
-    )
-
-    return {"files": files, "folders": folders, "requestedFolder": requestedFolder}
 
 
 def delete_file(db: Session, id: str, owner_id: str):

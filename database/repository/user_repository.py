@@ -1,4 +1,4 @@
-from ..models.user_model import User
+from ..model.user_model import User
 from sqlalchemy.orm import Session
 from service.logging_config import logger
 

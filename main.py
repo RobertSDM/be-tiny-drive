@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database.init_database import get_session
 from service.logging_config import logger
 from service.user_auth_serv import validate_token_serv
-from utils.env_definitions import Debug, Host, Origins, Port
+from project.variables.env_definitions import Debug, Host, Origins, Port
 import uvicorn
 
 app = FastAPI(title="Tiny Drive", description="Backend api for tiny-drive project")

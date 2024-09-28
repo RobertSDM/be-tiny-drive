@@ -1,7 +1,7 @@
 import io
 import zipfile
 
-from controller.convert.convert_data import get_base64_to_bytes_data
+from utils.convert_data import get_base64_to_bytes_data
 from database.schemas import FolderSchema
 
 

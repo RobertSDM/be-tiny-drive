@@ -2,7 +2,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import declarative_base, sessionmaker
 import dotenv
 
-from utils.env_definitions import Database_url
+from project.variables.env_definitions import Database_url
 
 dotenv.load_dotenv()
 

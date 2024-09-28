@@ -1,7 +1,7 @@
 import jwt, dotenv
 import jwt.algorithms
 from service.logging_config import logger
-from utils.env_definitions import Secret_key
+from project.variables.env_definitions import Secret_key
 
 dotenv.load_dotenv()
 

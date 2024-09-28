@@ -6,9 +6,8 @@ from database.repository.file_repository import (
     delete_file,
 )
 from database.schemas import DefaultDefReponse, FileBody, FileUpdate
-from fastapi.responses import StreamingResponse
 from database.init_database import get_session
-from controller.convert.convert_types import (
+from utils.convert_types import (
     convert_file_to_response_file,
 )
 

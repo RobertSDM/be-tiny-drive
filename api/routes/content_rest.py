@@ -1,47 +1,49 @@
 import json
-from re import search
 from fastapi import APIRouter, Depends, Response
-from controller.convert.convert_types import (
+from utils.convert_types import (
     convert_content_to_json,
     convert_file_to_response_file,
     convert_folder_to_response_folder,
 )
 from database.init_database import get_session
-from database.repository.file_repository import find_by_folder
-from database.repository.content_repository import find_with_no_parent
+from database.repository.content_repository import find_all_content
 from service.content_search_serv import content_search_serv
 
 content_router = APIRouter()
 
 
 @content_router.get("/by/folder/{id}/{owner_id}", status_code=200)
-def __find_content_by_folder(id: str, owner_id: str, db=Depends(get_session)):
-    content = find_by_folder(db, id, owner_id)
+def __find_all_content_by_folder(
+    id: str, owner_id: str, p: int = 1, db=Depends(get_session)
+):
+    result = find_all_content(db, owner_id, id, p)
 
-    conv_content = convert_content_to_json(content)
+    conv_content = convert_content_to_json(
+        result["content"], result["requested_folder"]
+    )
 
-    if len(content) > 0:
-        return Response(
-            status_code=200, content=json.dumps({"msg": None, "data": conv_content})
-        )
+    conv_content.update({"totalCount": result["total_count"]})
+
+    if len(result) > 0:
+        return Response(status_code=200, content=json.dumps(conv_content))
     else:
         return Response(status_code=204)
 
 
 @content_router.get("/all/{owner_id}")
-def __find_file_with_no_parent(owner_id: str, db=Depends(get_session)):
-    content = find_with_no_parent(db, owner_id)
+def __find_all_content(owner_id: str, p: int = 1, db=Depends(get_session)):
+    result = find_all_content(db, owner_id, page=p)
 
-    conv_content = convert_content_to_json(content)
+    conv_content = convert_content_to_json(
+        result["content"], result["requested_folder"]
+    )
 
-    if len(content) > 0:
-        return Response(
-            status_code=200, content=json.dumps({"msg": None, "data": conv_content})
-        )
+    conv_content.update({"totalCount": result["total_count"]})
+
+    if len(result) > 0:
+        return Response(status_code=200, content=json.dumps(conv_content))
     else:
-        return Response(
-            status_code=204, content=json.dumps({"msg": None, "data": None})
-        )
+        return Response(status_code=204)
 
 
 @content_router.get("/search/{owner_id}", status_code=200)

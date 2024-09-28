@@ -1,10 +1,9 @@
 import json
-from pickle import TRUE
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
-from database.models.file_model import File
+from database.model.file_model import File
 from database.schemas import DefaultDefReponse, DefaultDefReponseContent, FileUpdate
-from controller.convert.convert_data import get_sufix_to_bytes
+from utils.convert_data import get_sufix_to_bytes
 from database.repository.file_repository import (
     file_by_name_in_folder,
     file_update_name,

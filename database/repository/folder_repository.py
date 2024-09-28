@@ -1,7 +1,6 @@
-import io
 from sqlalchemy import and_
 from service.logging_config import logger
-from ..models.folder_model import Folder
+from ..model.folder_model import Folder
 from sqlalchemy.orm import load_only, joinedload, Session, selectinload
 
 
@@ -84,7 +83,7 @@ def folder_by_name_in_folder(
         db.query(Folder)
         .filter(
             and_(
-                and_(Folder.name == name, Folder.folderC_id != folder_id),
+                and_(Folder.name == name, Folder.folder_id != folder_id),
                 Folder.owner_id == owner_id,
             )
         )
