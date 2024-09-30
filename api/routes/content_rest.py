@@ -22,7 +22,7 @@ def __find_all_content_by_folder(
         result["content"], result["requested_folder"]
     )
 
-    conv_content.update({"totalCount": result["total_count"]})
+    conv_content.update({"totalCount": result["total_count"], "page": p})
 
     if len(result) > 0:
         return Response(status_code=200, content=json.dumps(conv_content))
@@ -40,7 +40,7 @@ def __find_all_content(owner_id: str, p: int = 1, db=Depends(get_session)):
 
     conv_content.update({"totalCount": result["total_count"]})
 
-    if len(result) > 0:
+    if len(result["content"]) > 0:
         return Response(status_code=200, content=json.dumps(conv_content))
     else:
         return Response(status_code=204)

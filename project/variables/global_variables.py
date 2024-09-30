@@ -8,4 +8,4 @@ POOL_RECYCLE = os.environ.get("POOL_RECYCLE")
 POOL_TIMEOUT = os.environ.get("POOL_TIMEOUT")
 
 # pagination
-TAKE_PER_PAGE = 8
+TAKE_CONTENT_PER_PAGE = 8

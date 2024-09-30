@@ -1,14 +1,10 @@
-import json
-from sqlalchemy.orm import Session
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI
 from api.routes.file_rest import file_router
 from api.routes.folder_rest import folder_router
 from api.routes.auth_rest import auth_router
 from api.routes.content_rest import content_router
 from fastapi.middleware.cors import CORSMiddleware
-from database.init_database import get_session
 from service.logging_config import logger
-from service.user_auth_serv import validate_token_serv
 from project.variables.env_definitions import Debug, Host, Origins, Port
 import uvicorn
 

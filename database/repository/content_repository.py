@@ -5,7 +5,7 @@ from sqlalchemy import and_, literal, func, select
 
 from database.model.file_model import File
 from database.model.folder_model import Folder
-from project.variables.global_variables import TAKE_PER_PAGE
+from project.variables.global_variables import TAKE_CONTENT_PER_PAGE
 
 
 def find_all_content(
@@ -50,18 +50,17 @@ def find_all_content(
         literal(None).label("prefix"),
     ).filter(and_(Folder.folderC_id == folder_id, Folder.owner_id == owner_id))
 
-    total_count = math.ceil((files.count() + folders.count()) / TAKE_PER_PAGE)
+    total_count = math.ceil((files.count() + folders.count()) / TAKE_CONTENT_PER_PAGE)
 
     # Realiza a união das queries
     main_query = (
         select(files.union_all(folders).subquery())
-        .limit(TAKE_PER_PAGE)
-        .offset((page - 1) * TAKE_PER_PAGE)
+        .limit(TAKE_CONTENT_PER_PAGE)
+        .offset((page - 1) * TAKE_CONTENT_PER_PAGE)
         .order_by("name")
     )
 
     content = db.execute(main_query).all()
-
 
     return {
         "content": content,
