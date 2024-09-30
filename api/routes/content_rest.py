@@ -16,6 +16,10 @@ content_router = APIRouter()
 def __find_all_content_by_folder(
     id: str, owner_id: str, p: int = 1, db=Depends(get_session)
 ):
+
+    if p < 1:
+        p = 1
+
     result = find_all_content(db, owner_id, id, p)
 
     conv_content = convert_content_to_json(
@@ -32,6 +36,9 @@ def __find_all_content_by_folder(
 
 @content_router.get("/all/{owner_id}")
 def __find_all_content(owner_id: str, p: int = 1, db=Depends(get_session)):
+    if p < 1:
+        p = 1
+
     result = find_all_content(db, owner_id, page=p)
 
     conv_content = convert_content_to_json(
