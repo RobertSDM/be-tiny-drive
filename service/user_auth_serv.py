@@ -62,7 +62,7 @@ def register_serv(db: Session, p_user: UserParamRegisterSchema):
 
     if not res:
         return {
-            "status": 400,
+            "status": 500,
             "content": {"msg": "Error while creating the user", "data": None},
         }
 
