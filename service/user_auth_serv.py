@@ -7,7 +7,7 @@ from database.repository.user_repository import (
     insert_user,
 )
 from database.schemas import DefaultDefReponse, UserParamRegisterSchema
-from security.utils.pass_hashing import encoder, validate_login
+from utils.pass_hashing import encoder, validate_login
 
 
 def log_user_serv(db: Session, email: str, _pass: str) -> DefaultDefReponse:

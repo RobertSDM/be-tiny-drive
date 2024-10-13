@@ -1,18 +1,26 @@
 import jwt, dotenv
+from datetime import datetime, timedelta
 import jwt.algorithms
 from service.logging_config import logger
-from project.variables.env_definitions import Secret_key
+from project.variables.env_definitions import Secret_key, Clients_URL
 
 dotenv.load_dotenv()
 
-key = Secret_key
+access_token = Secret_key
 
 
 def create_token(userId: str):
 
     return jwt.encode(
-        {"userId": str(userId)},
-        key=key,
+        {
+            "userId": str(userId),
+            "exp": datetime.now() + timedelta(weeks=2),
+            "nbf": datetime.now(),
+            "iss": "bk-tiny-drive.azurewebsites.net",
+            "aud": [i for i in Clients_URL.split(";")],
+            "iat": datetime.now(),
+        },
+        key=access_token,
         algorithm="HS256",
     )
 
@@ -21,7 +29,13 @@ def authenticate_token(raw_token: str):
     token = __separate_token(raw_token)
 
     try:
-        decoded = jwt.decode(token, key=key, algorithms="HS256")
+        decoded = jwt.decode(
+            token,
+            key=access_token,
+            algorithms="HS256",
+            issuer="bk-tiny-drive.azurewebsites.net",
+            audience=[i for i in Clients_URL.split(";")],
+        )
 
         return decoded["userId"]
     except jwt.InvalidTokenError as e:

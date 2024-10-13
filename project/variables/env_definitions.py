@@ -8,5 +8,4 @@ Origins = os.environ.get("ORIGINS").split(";")
 Port = os.environ.get("PORT") if os.environ.get("PORT") else "4500"
 Debug = "info" if os.environ.get("MODE") != "production" else "debug"
 Host = os.environ.get("HOST") if os.environ.get("HOST") else "0.0.0.0"
-
-
+Clients_URL = os.environ.get("CLIENTS__URL")
