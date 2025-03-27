@@ -5,7 +5,7 @@ from api.routes.auth_rest import auth_router
 from api.routes.content_rest import content_router
 from fastapi.middleware.cors import CORSMiddleware
 from service.logging_config import logger
-from project.variables.env_definitions import Debug, Host, Origins, Port
+from project.variables.env_definitions import debug, host, origins, port
 import uvicorn
 
 app = FastAPI(title="Tiny Drive", description="Backend api for tiny-drive project")
@@ -14,7 +14,7 @@ app = FastAPI(title="Tiny Drive", description="Backend api for tiny-drive projec
 # CORS config
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=Origins,
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -33,5 +33,5 @@ def get_app() -> FastAPI:
 
 
 if __name__ == "__main__":
-    logger.info("App stated on -> : " + Host + ":" + Port)
-    uvicorn.run("main:app", host=Host, port=int(Port), reload=True, log_level=Debug)
+    logger.info("App stated on -> : " + host + ":" + port)
+    uvicorn.run("main:app", host=host, port=int(port), reload=True, log_level=debug)

@@ -2,11 +2,11 @@ import jwt, dotenv
 from datetime import datetime, timedelta
 import jwt.algorithms
 from service.logging_config import logger
-from project.variables.env_definitions import Secret_key, Clients_URL
+from project.variables.env_definitions import secret_key, clients_URL
 
 dotenv.load_dotenv()
 
-access_token = Secret_key
+access_token = secret_key
 
 
 def create_token(userId: str):
@@ -17,7 +17,7 @@ def create_token(userId: str):
             "exp": datetime.now() + timedelta(weeks=2),
             "nbf": datetime.now(),
             "iss": "bk-tiny-drive.azurewebsites.net",
-            "aud": [i for i in Clients_URL.split(";")],
+            "aud": [i for i in clients_URL.split(";")],
             "iat": datetime.now(),
         },
         key=access_token,
@@ -34,7 +34,7 @@ def authenticate_token(raw_token: str):
             key=access_token,
             algorithms="HS256",
             issuer="bk-tiny-drive.azurewebsites.net",
-            audience=[i for i in Clients_URL.split(";")],
+            audience=[i for i in clients_URL.split(";")],
         )
 
         return decoded["userId"]
