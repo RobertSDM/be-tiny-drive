@@ -1,8 +1,8 @@
 import json
-from database.model.folder_model import Folder
-from database.model.file_model import File
-from database.model.user_model import User
-from database.schemas import ResponseFile, ResponseFolderBase, ResponseUser
+from database.models.folder_model import Folder
+from database.models.file_model import File
+from database.models.user_model import User
+from schemas.schemas import ResponseFile, ResponseFolderBase, ResponseUser
 
 
 def convert_user_to_response_user(
@@ -51,7 +51,7 @@ def convert_file_to_response_file(file: File, to_json: bool = False) -> Response
                 "name": file.name,
                 "byteSize": file.byteSize,
                 "folder_id": str(file.folder_id),
-                "fullname": file.fullname,
+                "fullname": file.filename,
                 "prefix": file.prefix,
                 "extension": file.extension,
             }
@@ -61,7 +61,7 @@ def convert_file_to_response_file(file: File, to_json: bool = False) -> Response
                 "name": file.name,
                 "byteSize": file.byteSize,
                 "folder_id": (str(file.folderC_id)),
-                "fullname": file.fullname,
+                "fullname": file.filename,
                 "prefix": file.prefix,
                 "extension": file.extension,
             }
@@ -73,7 +73,7 @@ def convert_file_to_response_file(file: File, to_json: bool = False) -> Response
                 name=file.name,
                 byteSize=file.byteSize,
                 folder_id=str(file.folderC_id),
-                fullname=file.fullname,
+                fullname=file.filename,
                 prefix=file.prefix,
                 extension=file.extension,
             )
@@ -83,7 +83,7 @@ def convert_file_to_response_file(file: File, to_json: bool = False) -> Response
                 name=file.name,
                 byteSize=file.byteSize,
                 folder_id=(str(file.folder_id)),
-                fullname=file.fullname,
+                fullname=file.filename,
                 prefix=file.prefix,
                 extension=file.extension,
             )

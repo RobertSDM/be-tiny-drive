@@ -1,6 +1,6 @@
 from sqlalchemy import and_
 from service.logging_config import logger
-from ..model.folder_model import Folder
+from ..models.folder_model import Folder
 from sqlalchemy.orm import load_only, joinedload, Session, selectinload
 
 

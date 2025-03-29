@@ -1,7 +1,7 @@
 import json
 from service.logging_config import logger
 from fastapi import Request, Response
-from database.init_database import get_session
+from database.db_engine import get_session
 from main import get_app
 from service.user_auth_serv import validate_token_serv
 from sqlalchemy.orm import Session

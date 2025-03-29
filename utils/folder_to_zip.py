@@ -2,7 +2,7 @@ import io
 import zipfile
 
 from utils.convert_data import get_base64_to_bytes_data
-from database.schemas import FolderSchema
+from schemas.schemas import FolderSchema
 
 
 def get_folder_zip(folder: FolderSchema, path: str = "") -> io.BytesIO:
