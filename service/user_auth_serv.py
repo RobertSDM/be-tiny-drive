@@ -1,12 +1,12 @@
 import bcrypt
 from sqlalchemy.orm import Session
 from security.jwt.auth import authenticate_token, create_token
-from database.repository.user_repository import (
+from database.repositories.user_repository import (
     find_user_by_email,
     find_user_by_id,
     insert_user,
 )
-from database.schemas import DefaultDefReponse, UserParamRegisterSchema
+from schemas.schemas import DefaultDefReponse, UserParamRegisterSchema
 from utils.pass_hashing import encoder, validate_login
 
 

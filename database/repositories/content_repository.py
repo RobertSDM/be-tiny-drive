@@ -3,8 +3,8 @@ import math
 from sqlalchemy.orm import Session, load_only, joinedload, lazyload
 from sqlalchemy import and_, literal, func, select
 
-from database.model.file_model import File
-from database.model.folder_model import Folder
+from database.models.file_model import File
+from database.models.folder_model import Folder
 from project.variables.global_variables import TAKE_CONTENT_PER_PAGE
 
 
@@ -29,11 +29,11 @@ def find_all_content(
         File.id.label("id"),
         File.name.label("name"),
         File.byteSize.label("byteSize"),
-        File._type.label("type"),
+        File.type.label("type"),
         File.extension.label("extension"),
         literal(None).label("tray"),
         File.folder_id.label("folderC_id"),
-        File.fullname.label("fullname"),
+        File.filename.label("fullname"),
         File.prefix.label("prefix"),
     ).filter(and_(File.folder_id == folder_id, File.owner_id == owner_id))
 

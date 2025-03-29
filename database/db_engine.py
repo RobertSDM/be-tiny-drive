@@ -1,21 +1,26 @@
+from contextlib import contextmanager
 import sqlalchemy as sa
-from sqlalchemy.orm import declarative_base, sessionmaker
-import dotenv
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 from project.variables.env_definitions import database_url
-
-dotenv.load_dotenv()
 
 engine = sa.create_engine(
     database_url, pool_pre_ping=True, pool_size=5, pool_recycle=3600, pool_timeout=30
 )
-
-Base = declarative_base()
-__Session = sessionmaker(engine)
+session_maker = sessionmaker(engine)
 
 
+class Base(DeclarativeBase):
+    pass
+
+
+def create_db():
+    Base.metadata.create_all(engine)
+
+
+@contextmanager
 def get_session():
-    session = __Session()
+    session = session_maker()
     try:
         yield session
         session.commit()

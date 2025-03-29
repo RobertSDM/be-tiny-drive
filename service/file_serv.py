@@ -1,10 +1,10 @@
 import json
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
-from database.model.file_model import File
-from database.schemas import DefaultDefReponse, DefaultDefReponseContent, FileUpdate
+from database.models.file_model import File
+from schemas.schemas import DefaultDefReponse, DefaultDefReponseContent, FileUpdate
 from utils.convert_data import get_sufix_to_bytes
-from database.repository.file_repository import (
+from database.repositories.file_repository import (
     file_by_name_in_folder,
     file_update_name,
     insert_file as fs,
@@ -21,7 +21,7 @@ def save_file_serv(
         .filter(
             and_(
                 and_(
-                    File.folder_id == folderId, File.fullname == name + "." + extension
+                    File.folder_id == folderId, File.filename == name + "." + extension
                 ),
                 File.owner_id == owner_id,
             )
@@ -59,7 +59,6 @@ def update_file_name_serv(
     fullname = body.new_name + "." + body.extension
 
     exist = file_by_name_in_folder(db, fullname, body.folder_id, owner_id)
-
 
     if exist:
         return DefaultDefReponse(

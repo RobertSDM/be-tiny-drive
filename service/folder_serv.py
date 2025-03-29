@@ -1,14 +1,14 @@
 import io
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
-from database.model.folder_model import Folder
-from database.schemas import (
+from database.models.folder_model import Folder
+from schemas.schemas import (
     DefaultDefReponse,
     DefaultDefReponseContent,
     FolderUpdate,
     UpdatedTray,
 )
-from database.repository.folder_repository import (
+from database.repositories.folder_repository import (
     folder_by_name_in_folder,
     folder_selectinload_children,
     folder_update_name,

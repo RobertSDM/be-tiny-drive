@@ -2,8 +2,8 @@ import json
 from sqlalchemy.orm import joinedload, Session, load_only, lazyload, selectinload
 from sqlalchemy import and_, update
 from service.logging_config import logger
-from database.model.folder_model import Folder
-from ..model.file_model import File
+from database.models.folder_model import Folder
+from ..models.file_model import File
 
 
 ## Not beeing used
@@ -14,7 +14,7 @@ from ..model.file_model import File
 def download_file(db: Session, id: str, owner_id: str):
 
     file = (
-        db.query(File   )
+        db.query(File)
         .options(load_only(File.id), selectinload(File.fileData))
         .filter(and_(File.id == id, File.owner_id == owner_id))
         .first()
@@ -84,7 +84,7 @@ def file_by_name_in_folder(
         db.query(File)
         .filter(
             and_(
-                and_(File.fullname == fullname, File.folder_id == folder_id),
+                and_(File.filename == fullname, File.folder_id == folder_id),
                 File.owner_id == owner_id,
             )
         )
@@ -104,7 +104,7 @@ def file_update_name(
                 and_(and_(File.id == id, File.owner_id == owner_id)),
                 File.folder_id == folder_id,
             )
-            .values({File.name: name, File.fullname: fullname})
+            .values({File.name: name, File.filename: fullname})
         )
     )
 

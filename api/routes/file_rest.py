@@ -2,11 +2,11 @@ import json
 from os import name
 from fastapi import APIRouter, Response, Depends
 from service.file_serv import save_file_serv, download_serv, update_file_name_serv
-from database.repository.file_repository import (
+from database.repositories.file_repository import (
     delete_file,
 )
-from database.schemas import DefaultDefReponse, FileBody, FileUpdate
-from database.init_database import get_session
+from schemas.schemas import DefaultDefReponse, FileBody, FileUpdate
+from database.db_engine import get_session
 from utils.convert_types import (
     convert_file_to_response_file,
 )

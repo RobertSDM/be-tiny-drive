@@ -1,11 +1,11 @@
 import json
 from fastapi.responses import StreamingResponse
 from fastapi import APIRouter, Depends, Response
-from database.schemas import DefaultDefReponse, FolderBody, FolderUpdate
-from database.repository.folder_repository import (
+from schemas.schemas import DefaultDefReponse, FolderBody, FolderUpdate
+from database.repositories.folder_repository import (
     delete_folder,
 )
-from database.init_database import get_session
+from database.db_engine import get_session
 from utils.convert_types import (
     convert_folder_to_response_folder,
 )

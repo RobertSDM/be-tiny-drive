@@ -1,4 +1,4 @@
-from ..init_database import Base
+from ..db_engine import Base
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID

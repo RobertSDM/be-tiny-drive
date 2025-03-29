@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
-from database.repository.file_repository import search_file
-from database.repository.folder_repository import search_folder
+from database.repositories.file_repository import search_file
+from database.repositories.folder_repository import search_folder
 from model.enums.content_type import Content_type
 
 

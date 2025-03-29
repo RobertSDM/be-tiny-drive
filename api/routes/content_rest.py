@@ -5,8 +5,8 @@ from utils.convert_types import (
     convert_file_to_response_file,
     convert_folder_to_response_folder,
 )
-from database.init_database import get_session
-from database.repository.content_repository import find_all_content
+from database.db_engine import get_session
+from database.repositories.content_repository import find_all_content
 from service.content_search_serv import content_search_serv
 
 content_router = APIRouter()

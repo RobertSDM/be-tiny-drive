@@ -1,7 +1,7 @@
 import json
 from fastapi import APIRouter, Depends, Response
-from database.schemas import UserParamLoginSchema, UserParamRegisterSchema
-from database.init_database import get_session
+from schemas.schemas import UserParamLoginSchema, UserParamRegisterSchema
+from database.db_engine import get_session
 from service.user_auth_serv import log_user_serv, register_serv
 
 auth_router = APIRouter()
