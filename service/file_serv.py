@@ -1,32 +1,26 @@
 import json
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
-from database.models.file_model import File
+from database.models.file_model import File, FileData
+from database.repositories.folder_repository import folder_by_id
+from database.repositories.user_repository import user_by_id
 from schemas.schemas import DefaultDefReponse, DefaultDefReponseContent, FileUpdate
-from utils.convert_data import get_sufix_to_bytes
+from utils import get_sufix_to_bytes
 from database.repositories.file_repository import (
     file_by_name_in_folder,
     file_update_name,
-    insert_file as fs,
+    file_by_folderid_and_fullname_and_ownerid,
+    insert_file,
     download_file,
 )
-from utils.add_three_periods import addThreePeriods
+from utils import addThreePeriods
 
 
 def save_file_serv(
     db: Session, name, folderId, extension, byteData, byteSize, owner_id
 ) -> DefaultDefReponse | File:
-    file = (
-        db.query(File)
-        .filter(
-            and_(
-                and_(
-                    File.folder_id == folderId, File.filename == name + "." + extension
-                ),
-                File.owner_id == owner_id,
-            )
-        )
-        .first()
+    file = file_by_folderid_and_fullname_and_ownerid(
+        db, f"{name}.{extension}", folderId, owner_id
     )
 
     if file:
@@ -41,7 +35,12 @@ def save_file_serv(
         )
 
     _bytes, prefix = get_sufix_to_bytes(byteSize)
-    new_file = fs(db, name, extension, byteData, _bytes, prefix, owner_id, folderId)
+
+    filedata = FileData(byteData=byteData)
+    folder = folder_by_id(db, folderId)
+    owner = user_by_id(db, owner_id)
+
+    new_file = insert_file(db, name, extension, _bytes, prefix, folder, filedata, owner)
 
     return new_file
 

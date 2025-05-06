@@ -2,7 +2,7 @@ import jwt, dotenv
 from datetime import datetime, timedelta
 import jwt.algorithms
 from service.logging_config import logger
-from project.variables.env_definitions import secret_key, clients_URL
+from constants.env_definitions import secret_key, clients_URL
 
 dotenv.load_dotenv()
 
@@ -10,7 +10,6 @@ access_token = secret_key
 
 
 def create_token(userId: str):
-
     return jwt.encode(
         {
             "userId": str(userId),

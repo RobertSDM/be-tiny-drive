@@ -1,14 +1,24 @@
-import json
 from sqlalchemy.orm import joinedload, Session, load_only, lazyload, selectinload
 from sqlalchemy import and_, update
+from database.models.user_model import User
 from service.logging_config import logger
 from database.models.folder_model import Folder
-from ..models.file_model import File
+from ..models.file_model import File, FileData
 
 
-## Not beeing used
-# def find_all_files(db):
-#     return db.query(File).options(joinedload(File.fileData)).all()
+def file_by_folderid_and_fullname_and_ownerid(
+    db: Session, fullname: str, folderid: str, ownerid: str
+):
+    return (
+        db.query(File)
+        .filter(
+            and_(
+                and_(File.folder_id == folderid, File.filename == fullname),
+                File.owner_id == ownerid,
+            )
+        )
+        .first()
+    )
 
 
 def download_file(db: Session, id: str, owner_id: str):
@@ -27,14 +37,23 @@ def insert_file(
     db: Session,
     name: str,
     extension: str,
-    byteData: str,
     byteSize: int,
     prefix: str,
-    owner_id: str,
-    folderId: str,
+    folder: Folder,
+    filedata: FileData,
+    owner: User,
 ):
 
-    file = File(name, extension, byteSize, prefix, byteData, folderId, owner_id)
+    file = File(
+        name=name,
+        filename=f"{name}.{extension}",
+        extension=extension,
+        byteSize=byteSize,
+        prefix=prefix,
+        owner=owner,
+        folder=folder,
+        fileData=filedata,
+    )
 
     db.add(file)
     db.flush()

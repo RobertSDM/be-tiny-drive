@@ -9,7 +9,7 @@ click==8.1.7
 colorama==0.4.6
 dnspython==2.6.1
 email_validator==2.1.1
-fastapi==0.111.0
+fastapi==0.113.0
 fastapi-cli==0.0.4
 greenlet==3.0.3
 h11==0.14.0
@@ -32,7 +32,7 @@ Pygments==2.18.0
 PyJWT==2.8.0
 pypika-tortoise==0.1.6
 python-dotenv==1.0.1
-python-multipart==0.0.9
+python-multipart==0.0.20
 pytz==2024.1
 PyYAML==6.0.1
 rich==13.7.1

@@ -1,34 +1,22 @@
-from ..models.user_model import User
+from sqlalchemy import exists
+from ..models import User
 from sqlalchemy.orm import Session
 from service.logging_config import logger
 
 
-def find_user_by_email(db: Session, email: str) -> User:
-    try:
-
-        user = db.query(User).filter(User.email == email).first()
-        return user
-
-    except Exception as e:
-        logger.error(e)
-        return False
+def user_exists_by_email(db: Session, email: str) -> bool:
+    return db.query(exists().where(User.email == email)).scalar()
 
 
-def insert_user(db: Session, user: User, salt: str):
-    try:
-        user = User(user.user_name, user.email, user.password, salt)
-        db.add(user)
-        db.commit()
+def user_by_email(db: Session, email: str) -> User:
+    return db.query(User).filter(User.email == email).first()
 
-        return True
-    except Exception as e:
-        logger.error(e)
-        return False
 
-def find_user_by_id(db: Session, id: str) -> User:
-    try:
-        user = db.query(User).filter(User.id == id).first()
-        return user
-    except Exception as e:
-        logger.error(e)
-        return False
+def user_create(db: Session, user: User):
+    db.add(user)
+    db.commit()
+    return user
+
+
+def user_by_id(db: Session, id: int) -> User:
+    return db.query(User).filter(User.id == id).first()

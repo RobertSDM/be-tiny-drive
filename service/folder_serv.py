@@ -14,8 +14,8 @@ from database.repositories.folder_repository import (
     folder_update_name,
     insert_folder,
 )
-from utils.add_three_periods import addThreePeriods
-from utils.folder_to_zip import get_folder_zip
+from utils import addThreePeriods
+from utils import get_folder_zip
 
 
 def download_zip_serv(db: Session, folder_id: str, owner_id: str) -> io.BytesIO:

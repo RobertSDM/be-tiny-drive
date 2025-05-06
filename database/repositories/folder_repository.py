@@ -1,7 +1,12 @@
+from typing import Optional
 from sqlalchemy import and_
 from service.logging_config import logger
 from ..models.folder_model import Folder
 from sqlalchemy.orm import load_only, joinedload, Session, selectinload
+
+
+def folder_by_id(db: Session, id: str) -> Optional[Folder]:
+    return db.query(Folder).filter(Folder.id == id).first()
 
 
 def folder_selectinload_children(db: Session, id: str, owner_id: str) -> Folder:

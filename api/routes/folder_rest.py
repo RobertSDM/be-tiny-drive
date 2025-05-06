@@ -6,7 +6,7 @@ from database.repositories.folder_repository import (
     delete_folder,
 )
 from database.db_engine import get_session
-from utils.convert_types import (
+from utils import (
     convert_folder_to_response_folder,
 )
 from service.folder_serv import (

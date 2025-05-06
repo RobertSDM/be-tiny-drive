@@ -1,23 +1,18 @@
 from ..db_engine import Base
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID
-import uuid
 
 
 class Folder(Base):
     __tablename__ = "folder"
 
-    id = sa.Column(
-        UUID(as_uuid=True),
+    id: Mapped[int] = mapped_column(
         primary_key=True,
-        name="folder_id",
-        default=uuid.uuid4,
         index=True,
     )
-    name = sa.Column(sa.String, nullable=False)
-    _type = sa.Column(sa.String, default="FOLDER")
-    tray = sa.Column(sa.String, nullable=False, default="")
+    name: Mapped[str]
+    _type: Mapped[str] = mapped_column(default="FOLDER")
+    tray: Mapped[str] = mapped_column(default="")
 
     # Child folders
     folders: Mapped[list["Folder"]] = relationship(
@@ -25,16 +20,14 @@ class Folder(Base):
     )
 
     # User
-    owner_id: Mapped["sa.UUID"] = mapped_column(
-        sa.ForeignKey("user.user_id"), nullable=False
-    )
+    owner_id: Mapped[int] = mapped_column(sa.ForeignKey("user.id"), nullable=False)
     owner: Mapped["User"] = relationship(
         foreign_keys=[owner_id], back_populates="folders", lazy="selectin"
     )
 
     # Parent folders
-    folderC_id: Mapped["sa.UUID"] = mapped_column(
-        sa.ForeignKey("folder.folder_id"), nullable=True
+    folderC_id: Mapped[int] = mapped_column(
+        sa.ForeignKey("folder.id"), nullable=True
     )
     folder: Mapped["Folder"] = relationship(
         back_populates="folders",

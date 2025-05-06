@@ -1,13 +1,15 @@
 import json
 from os import name
-from fastapi import APIRouter, Response, Depends
+from typing import Annotated
+from fastapi import APIRouter, File, Form, Request, Response, Depends, UploadFile
+from pydantic import BaseModel
 from service.file_serv import save_file_serv, download_serv, update_file_name_serv
 from database.repositories.file_repository import (
     delete_file,
 )
 from schemas.schemas import DefaultDefReponse, FileBody, FileUpdate
 from database.db_engine import get_session
-from utils.convert_types import (
+from utils import (
     convert_file_to_response_file,
 )
 
@@ -15,15 +17,23 @@ file_router = APIRouter()
 
 
 @file_router.post("/save", status_code=200)
-def __save_file_route(file: FileBody, db=Depends(get_session)):
+def __save_file_route(
+    file: Annotated[bytes, File()],
+    name: Annotated[str, Form()],
+    extension: Annotated[str, Form()],
+    size: Annotated[int, Form()],
+    ownerid: Annotated[str, Form()],
+    folderid: Annotated[str, Form()],
+    db=Depends(get_session),
+):
     res = save_file_serv(
         db,
-        file.name,
-        file.folderId,
-        file.extension,
-        file.byteData,
-        file.byteSize,
-        file.owner_id,
+        name,
+        folderid,
+        extension,
+        file,
+        size,
+        ownerid,
     )
 
     if isinstance(res, DefaultDefReponse):
@@ -46,12 +56,6 @@ def __save_file_route(file: FileBody, db=Depends(get_session)):
             status_code=500,
             content=json.dumps({"msg": "Error to save the " + file.name}),
         )
-
-
-## Not beeing used
-# @file_router.get("/find/all")
-# def __find_all(db=Depends(get_session)):
-#     return find_all_files(db)
 
 
 @file_router.get("/download/{id}/{owner_id}")

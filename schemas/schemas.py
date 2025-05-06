@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import  Optional
+from typing import Optional
 
 
 class FileDataBase(BaseModel):
@@ -49,7 +49,6 @@ class ResponseFolderBase(BaseModel):
     folderC_id: str | None
 
 
-
 class ResponseFile(BaseModel):
     id: str
     name: str
@@ -68,12 +67,15 @@ class ResponseUser(BaseModel):
 
 # Schemas
 
+
 class Tray(BaseModel):
     tray: str
+
 
 class UpdatedTray(BaseModel):
     id: str
     updatedTray: Tray
+
 
 class FolderUpdate(BaseModel):
     name: str
@@ -106,7 +108,7 @@ class UserParamLoginSchema(BaseModel):
 
 class UserParamRegisterSchema(BaseModel):
     email: str
-    user_name: str
+    username: str
     password: str
 
 

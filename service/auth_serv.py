@@ -1,17 +1,20 @@
 import bcrypt
 from sqlalchemy.orm import Session
-from security.jwt.auth import authenticate_token, create_token
+from database.models import User
+from auth.jwt import authenticate_token, create_token
 from database.repositories.user_repository import (
-    find_user_by_email,
-    find_user_by_id,
-    insert_user,
+    user_by_email,
+    user_by_id,
+    user_create,
+    user_exists_by_email,
 )
 from schemas.schemas import DefaultDefReponse, UserParamRegisterSchema
-from utils.pass_hashing import encoder, validate_login
+from service.item_serv import create_root_item
+from auth.password_hashing import hash_password, check_password_hash
 
 
-def log_user_serv(db: Session, email: str, _pass: str) -> DefaultDefReponse:
-    user = find_user_by_email(db, email)
+def login_serv(db: Session, email: str, _pass: str) -> DefaultDefReponse:
+    user = user_by_email(db, email)
 
     if not user or user.email != email:
         return {
@@ -19,7 +22,7 @@ def log_user_serv(db: Session, email: str, _pass: str) -> DefaultDefReponse:
             "content": {"msg": "The email or password is incorrect", "data": None},
         }
 
-    isValid = validate_login(user.password, _pass)
+    isValid = check_password_hash(user.password, _pass)
 
     if not isValid:
         return {
@@ -38,35 +41,32 @@ def log_user_serv(db: Session, email: str, _pass: str) -> DefaultDefReponse:
                 "user": {
                     "id": str(user.id),
                     "email": user.email,
-                    "user_name": user.user_name,
+                    "user_name": user.username,
                 }
             },
         },
     }
 
 
-def register_serv(db: Session, p_user: UserParamRegisterSchema):
-    user = find_user_by_email(db, p_user.email)
+def register_serv(db: Session, username: str, email: str, password: str) -> User | None:
+    userexists = user_exists_by_email(db, email)
 
-    if user:
-        return {
-            "status": 400,
-            "content": {"msg": "The user with the email already exist", "data": None},
-        }
+    if userexists:
+        return None
 
     salt = bcrypt.gensalt().decode()
 
-    p_user.password = encoder(p_user.password, salt)
+    user = User(
+        username=username,
+        email=email,
+        password=hash_password(password, salt),
+        salt=salt,
+    )
 
-    res = insert_user(db, p_user, salt)
+    user = user_create(db, user)
+    create_root_item(db, user.id)
 
-    if not res:
-        return {
-            "status": 500,
-            "content": {"msg": "Error while creating the user", "data": None},
-        }
-
-    return {"status": 200, "content": {"msg": "Success", "data": None}}
+    return user
 
 
 def __cut_header_token(header_token: str) -> str:
@@ -81,7 +81,7 @@ def validate_token_serv(db: Session, header_token: str):
     if not isinstance(userId, str):
         return userId
 
-    userExist = find_user_by_id(db, userId)
+    userExist = user_by_id(db, userId)
 
     if not userExist:
         return {"status": 200, "content": {"msg": "The token is invalid", "data": None}}

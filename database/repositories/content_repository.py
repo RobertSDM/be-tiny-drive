@@ -5,7 +5,7 @@ from sqlalchemy import and_, literal, func, select
 
 from database.models.file_model import File
 from database.models.folder_model import Folder
-from project.variables.global_variables import TAKE_CONTENT_PER_PAGE
+from constants.global_variables import TAKE_CONTENT_PER_PAGE
 
 
 def find_all_content(

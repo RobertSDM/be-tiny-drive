@@ -1,7 +1,7 @@
 import io
 import zipfile
 
-from utils.convert_data import get_base64_to_bytes_data
+from utils import get_base64_to_bytes_data
 from schemas.schemas import FolderSchema
 
 

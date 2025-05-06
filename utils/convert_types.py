@@ -12,9 +12,9 @@ def convert_user_to_response_user(
         return None
 
     if json:
-        return {"id": str(user.id), "user_name": user.user_name, "email": user.email}
+        return {"id": str(user.id), "user_name": user.username, "email": user.email}
     else:
-        return ResponseUser(id=str(user.id), user_name=user.user_name, email=user.email)
+        return ResponseUser(id=str(user.id), user_name=user.username, email=user.email)
 
 
 def convert_folder_to_response_folder(
