@@ -1,36 +1,30 @@
-import io
-import zipfile
 
-from utils import get_base64_to_bytes_data
-from schemas.schemas import FolderSchema
+# def get_folder_zip(folder: FolderSchema, path: str = "") -> io.BytesIO:
 
+#     buffer = io.BytesIO()
 
-def get_folder_zip(folder: FolderSchema, path: str = "") -> io.BytesIO:
+#     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zip:
+#         for file in folder.files:
+#             base64Data = file.fileData.byteData
+#             byteData = get_base64_to_bytes_data(base64Data)  # return io.BytesIO
+#             full_path = (
+#                 path + file.name + (f".{file.extension}" if file.extension else "")
+#             )
+#             zip.writestr(full_path, byteData.getbuffer())
 
-    buffer = io.BytesIO()
+#         for subfolder in folder.folders:
+#             subfolder_path = path + subfolder.name + "/"
 
-    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zip:
-        for file in folder.files:
-            base64Data = file.fileData.byteData
-            byteData = get_base64_to_bytes_data(base64Data)  # return io.BytesIO
-            full_path = (
-                path + file.name + (f".{file.extension}" if file.extension else "")
-            )
-            zip.writestr(full_path, byteData.getbuffer())
+#             # Cria uma entrada para o diretório vazio
+#             zip.writestr(subfolder_path, "")
 
-        for subfolder in folder.folders:
-            subfolder_path = path + subfolder.name + "/"
+#             subfolder_buffer = get_folder_zip(subfolder, subfolder_path)
+#             subfolder_zip = zipfile.ZipFile(subfolder_buffer)
 
-            # Cria uma entrada para o diretório vazio
-            zip.writestr(subfolder_path, "")
+#             for name in subfolder_zip.namelist():
+#                 zip.writestr(name, subfolder_zip.read(name))
 
-            subfolder_buffer = get_folder_zip(subfolder, subfolder_path)
-            subfolder_zip = zipfile.ZipFile(subfolder_buffer)
+#             subfolder_zip.close()
 
-            for name in subfolder_zip.namelist():
-                zip.writestr(name, subfolder_zip.read(name))
-
-            subfolder_zip.close()
-
-    buffer.seek(0)
-    return buffer
+#     buffer.seek(0)
+#     return buffer

@@ -1,7 +1,9 @@
+from typing import Optional
 from sqlalchemy import ForeignKey
 from .enums.content_type import ItemType
 from ..db_engine import Base
 from sqlalchemy.orm import relationship, Mapped, mapped_column
+from datetime import datetime
 
 
 class Item(Base):
@@ -15,14 +17,16 @@ class Item(Base):
     size_prefix: Mapped[str]
     type: Mapped[ItemType]
     data: Mapped[bytes]
+    updateDate: Mapped[int] = mapped_column(default=lambda: datetime.now())
+    creationDate: Mapped[int] = mapped_column(default=lambda: datetime.now())
 
     # parent item
-    parentid: Mapped[int] = mapped_column(ForeignKey("tb_item.id"))
+    parentid: Mapped[Optional[int]] = mapped_column(ForeignKey("tb_item.id"))
     parent: Mapped["Item"] = relationship(back_populates="items", remote_side=[id])
 
     # children of this item
     items: Mapped[list["Item"]] = relationship(back_populates="parent")
 
     # owner
-    ownerid: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    ownerid: Mapped[Optional[int]] = mapped_column(ForeignKey("user.id"))
     owner: Mapped["User"] = relationship(back_populates="items")

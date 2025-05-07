@@ -1,7 +1,7 @@
 import jwt, dotenv
 from datetime import datetime, timedelta
 import jwt.algorithms
-from service.logging_config import logger
+from utils.logging_config import logger
 from constants.env_definitions import secret_key, clients_URL
 
 dotenv.load_dotenv()

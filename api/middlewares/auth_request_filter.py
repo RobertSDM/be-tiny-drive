@@ -1,5 +1,5 @@
 import json
-from service.logging_config import logger
+from utils.logging_config import logger
 from fastapi import Request, Response
 from database.db_engine import get_session
 from main import get_app

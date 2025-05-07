@@ -1,58 +1,43 @@
 import bcrypt
 from sqlalchemy.orm import Session
+from core.exeptions import InvalidPassword, UserAlreadyExists, UserDoesNotExists
 from database.models import User
 from auth.jwt import authenticate_token, create_token
-from database.repositories.user_repository import (
+from database.repositories.user_repo import (
     user_by_email,
     user_by_id,
     user_create,
-    user_exists_by_email,
 )
-from schemas.schemas import DefaultDefReponse, UserParamRegisterSchema
+from database.repositories.utils import execute_exists, execute_first
+from core.schemas import LoginReturn, UserModel
 from service.item_serv import create_root_item
 from auth.password_hashing import hash_password, check_password_hash
 
 
-def login_serv(db: Session, email: str, _pass: str) -> DefaultDefReponse:
-    user = user_by_email(db, email)
+def login_serv(db: Session, email: str, password: str) -> LoginReturn:
+    user = execute_first(db, user_by_email(db, email))
 
-    if not user or user.email != email:
-        return {
-            "status": 400,
-            "content": {"msg": "The email or password is incorrect", "data": None},
-        }
+    if not user:
+        raise UserDoesNotExists()
 
-    isValid = check_password_hash(user.password, _pass)
+    is_password_valid = check_password_hash(user.password, password)
 
-    if not isValid:
-        return {
-            "status": 400,
-            "content": {"msg": "The email or password is incorrect", "data": None},
-        }
+    if not is_password_valid:
+        raise InvalidPassword()
 
     token = create_token(user.id)
 
-    return {
-        "status": 200,
-        "content": {
-            "msg": "Success",
-            "token": token,
-            "data": {
-                "user": {
-                    "id": str(user.id),
-                    "email": user.email,
-                    "user_name": user.username,
-                }
-            },
-        },
-    }
+    return LoginReturn(
+        token=token,
+        user=UserModel.model_validate(user),
+    )
 
 
-def register_serv(db: Session, username: str, email: str, password: str) -> User | None:
-    userexists = user_exists_by_email(db, email)
+def register_serv(db: Session, username: str, email: str, password: str) -> User:
+    user_exists = execute_exists(db, user_by_email(db, email))
 
-    if userexists:
-        return None
+    if user_exists:
+        raise UserAlreadyExists()
 
     salt = bcrypt.gensalt().decode()
 

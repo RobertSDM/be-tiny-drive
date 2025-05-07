@@ -1,33 +1,54 @@
-from fastapi import Response
 from sqlalchemy.orm import Session
 
+from core.exeptions import ItemExistsInFolder, ParentFolderNotFound
 from database.models import Item
-from database.repositories.item_repo import (
+from database.repositories import (
     create_item,
-    item_by_ownerid_root,
     items_by_ownerid_parentid,
-    items_exists_by_ownerid_parentid_path,
 )
 from database.models.enums.content_type import ItemType
+from database.repositories import (
+    execute_exists,
+    execute_first,
+)
+from database.repositories.item_repo import (
+    item_by_id_type,
+    item_by_ownerid_parentid_path,
+)
+from database.repositories.utils import execute_all
 from utils import get_sufix_to_bytes
 
 
 def item_create_serv(
-    db: Session, name, parentid, extension, size, data, ownerid, path
-) -> Item | None:
+    db: Session,
+    name: str,
+    parentid: int,
+    extension: str,
+    size: int,
+    data: bytes,
+    ownerid: int,
+    path: str,
+    type: ItemType,
+) -> Item:
     fmtsize, prefix = get_sufix_to_bytes(size)
 
     if parentid == None:
-        print("here")
-        root = item_by_ownerid_root(db, ownerid)
+        root = execute_first(db, items_by_ownerid_parentid(db, ownerid, ""))
         parentid = root.id
 
-    itemexists = items_exists_by_ownerid_parentid_path(db, ownerid, parentid, path)
+    item_exists = execute_exists(
+        db, item_by_ownerid_parentid_path(db, ownerid, parentid, path)
+    )
 
-    print(itemexists)
+    if item_exists:
+        raise ItemExistsInFolder(name, type.value)
 
-    if itemexists:
-        return None
+    parent_exists = execute_exists(
+        db, item_by_id_type(db, parentid, ItemType.FOLDER.value)
+    )
+
+    if not parent_exists:
+        raise ParentFolderNotFound()
 
     item = Item(
         name=name,
@@ -38,13 +59,13 @@ def item_create_serv(
         ownerid=ownerid,
         path=path,
         parentid=parentid,
-        type=ItemType.FILE.value,
+        type=type,
     )
 
     return create_item(db, item)
 
 
-def create_root_item(db: Session, ownerid: int):
+def create_root_item(db: Session, ownerid: int) -> Item:
     item = Item(
         name="root",
         data=bytes(),
@@ -53,16 +74,16 @@ def create_root_item(db: Session, ownerid: int):
         size_prefix="",
         ownerid=ownerid,
         path="/",
-        parentid="",
-        type=ItemType.FILE.value,
+        parentid=None,
+        type=ItemType.FOLDER.value,
     )
 
     return create_item(db, item)
 
 
 def get_all_root_items(db: Session, ownerid: int) -> list[Item]:
-    root = item_by_ownerid_root(db, ownerid)
-    return items_by_ownerid_parentid(db, ownerid, root.id)
+    root = execute_first(db, items_by_ownerid_parentid(db, ownerid, ""))
+    return execute_all(db, items_by_ownerid_parentid(db, ownerid, root.id))
 
 
 # def download_serv(db, id, owner_id):

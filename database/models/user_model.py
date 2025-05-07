@@ -12,10 +12,4 @@ class User(Base):
     password: Mapped[str]
     salt: Mapped[str]
 
-    folders: Mapped[list["Folder"]] = relationship(
-        cascade="all", back_populates="owner"
-    )
-
-    files: Mapped[list["File"]] = relationship(cascade="all", back_populates="owner")
-
     items: Mapped[list["Item"]] = relationship(cascade="all", back_populates="owner")

@@ -1,8 +1,11 @@
 from typing import Annotated, Optional
-from fastapi import APIRouter, Depends, File, Form, Response
+from fastapi import APIRouter, Depends, Form, Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from core.schemas import ItemModel, ItemResponse
 from database.db_engine import get_session
+from database.models.enums.content_type import ItemType
 from service.item_serv import get_all_root_items, item_create_serv
 
 
@@ -16,7 +19,8 @@ class SaveRequest(BaseModel):
     path: Annotated[str, Form()]
     size: Annotated[int, Form()]
     ownerid: Annotated[int, Form()]
-    folderid: Optional[Annotated[int, Form()]]
+    type: Annotated[ItemType, Form()]
+    folderid: Annotated[Optional[int], Form()]
 
 
 @item_router.post("/save", status_code=200)
@@ -33,19 +37,17 @@ def save_file_route(
         bytes(),
         request.ownerid,
         request.path,
+        request.type,
     )
 
-    if not item:
-        return Response(status_code=409)
-
-    return item
+    return JSONResponse(ItemResponse(data=item).model_dump())
 
 
 @item_router.get("/root/all/{ownerid}")
 def all_items(ownerid: int, db=Depends(get_session)):
     items = get_all_root_items(db, ownerid)
 
-    return items
+    return JSONResponse(ItemResponse(data=items, count=len(items)).model_dump())
 
 
 # @item_router.get("/download/{id}/{owner_id}")
