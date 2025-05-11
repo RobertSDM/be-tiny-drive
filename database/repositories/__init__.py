@@ -8,7 +8,7 @@ from .item_repo import (
     item_search,
     item_update_name,
     items_by_ownerid,
-    items_by_ownerid_parentid,
+    item_by_ownerid_parentid,
     item_by_ownerid_parentid_type,
 )
 from .utils import execute_all, execute_exists, execute_first

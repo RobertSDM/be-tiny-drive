@@ -10,7 +10,7 @@ from database.repositories.user_repo import (
 )
 from database.repositories.utils import execute_exists, execute_first
 from core.schemas import LoginReturn, UserModel
-from service.item_serv import create_root_item
+from service.item_serv import create_root_item_serv
 from auth.password_hashing import hash_password, check_password_hash
 
 
@@ -49,7 +49,7 @@ def register_serv(db: Session, username: str, email: str, password: str) -> User
     )
 
     user = user_create(db, user)
-    create_root_item(db, user.id)
+    create_root_item_serv(db, user.id)
 
     return user
 

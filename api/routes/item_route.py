@@ -6,7 +6,11 @@ from pydantic import BaseModel
 from core.schemas import ListItemResponse, SingleItemResponse
 from database.db_engine import get_session
 from database.models.enums.content_type import ItemType
-from service.item_serv import get_all_root_items, item_create_serv
+from service.item_serv import (
+    delete_item_serv,
+    get_all_root_items_serv,
+    item_create_serv,
+)
 
 
 item_router = APIRouter()
@@ -45,7 +49,7 @@ def save_file_route(
 
 @item_router.get("/root/all/{ownerid}")
 def all_items(ownerid: int, db=Depends(get_session)):
-    items = get_all_root_items(db, ownerid)
+    items = get_all_root_items_serv(db, ownerid)
 
     return JSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
 
@@ -84,11 +88,8 @@ def all_items(ownerid: int, db=Depends(get_session)):
 #         )
 
 
-# @item_router.delete("/delete/{id}/{owner_id}", status_code=200)
-# def __delete_file_by_id(id: str, owner_id: str, db=Depends(get_session)):
-#     deleted_file = delete_file(db, id, owner_id)
+@item_router.delete("/delete/{ownerid}/{id}")
+def delete_file_by_id(ownerid: str, id: str, db=Depends(get_session)):
+    item = delete_item_serv(db, ownerid, id)
 
-#     if deleted_file:
-#         return convert_file_to_response_file(deleted_file)
-#     else:
-#         Response(status_code=500)
+    return JSONResponse(SingleItemResponse(data=item).model_dump())

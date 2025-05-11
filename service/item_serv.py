@@ -1,10 +1,15 @@
 from sqlalchemy.orm import Session
 
-from core.exeptions import ItemExistsInFolder, ParentFolderNotFound
+from core.exeptions import (
+    ItemDeleteError,
+    ItemExistsInFolder,
+    ItemNotFound,
+    ParentFolderNotFound,
+)
 from database.models import Item
 from database.repositories import (
     create_item,
-    items_by_ownerid_parentid,
+    item_by_ownerid_parentid,
 )
 from database.models.enums.content_type import ItemType
 from database.repositories import (
@@ -12,8 +17,12 @@ from database.repositories import (
     execute_first,
 )
 from database.repositories.item_repo import (
+    item_by_id,
+    item_by_id_ownerid,
     item_by_id_type,
     item_by_ownerid_parentid_path,
+    item_by_ownerid_parentid_type,
+    item_delete,
 )
 from database.repositories.utils import execute_all
 from utils import get_sufix_to_bytes
@@ -33,7 +42,7 @@ def item_create_serv(
     fmtsize, prefix = get_sufix_to_bytes(size)
 
     if parentid == None or parentid == "":
-        root = execute_first(db, items_by_ownerid_parentid(db, ownerid, None))
+        root = execute_first(db, item_by_ownerid_parentid(db, ownerid, None))
         parentid = root.id
 
     item_exists = execute_exists(
@@ -65,7 +74,7 @@ def item_create_serv(
     return create_item(db, item)
 
 
-def create_root_item(db: Session, ownerid: int) -> Item:
+def create_root_item_serv(db: Session, ownerid: int) -> Item:
     item = Item(
         name="root",
         data=bytes(),
@@ -81,9 +90,23 @@ def create_root_item(db: Session, ownerid: int) -> Item:
     return create_item(db, item)
 
 
-def get_all_root_items(db: Session, ownerid: int) -> list[Item]:
-    root = execute_first(db, items_by_ownerid_parentid(db, ownerid, None))
-    return execute_all(db, items_by_ownerid_parentid(db, ownerid, root.id))
+def get_all_root_items_serv(db: Session, ownerid: int) -> list[Item]:
+    root = execute_first(db, item_by_ownerid_parentid(db, ownerid, None))
+    return execute_all(db, item_by_ownerid_parentid(db, ownerid, root.id))
+
+
+def delete_item_serv(db: Session, ownerid: int, id: int) -> Item:
+    item = execute_first(db, item_by_id_ownerid(db, id, ownerid))
+
+    if not item:
+        raise ItemNotFound()
+
+    if not item.parentid:
+        raise ItemDeleteError()
+
+    item_delete(db, item)
+
+    return item
 
 
 # def download_serv(db, id, owner_id):

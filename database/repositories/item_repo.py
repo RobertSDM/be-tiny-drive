@@ -1,17 +1,13 @@
 from typing import Optional, TypeVar
 from sqlalchemy import and_, update
-from sqlalchemy.orm import Session, load_only, Query
+from sqlalchemy.orm import Session, Query
 
 from database.models import Item
 from database.models.enums.content_type import ItemType
 
 
-def item_by_id_ownerid(db: Session, id: str, ownerid: str) -> Query[Item] | None:
-    return (
-        db.query(Item)
-        .options(load_only(Item.data))
-        .filter(and_(Item.id == id, Item.ownerid == ownerid))
-    )
+def item_by_id_ownerid(db: Session, id: str, ownerid: str) -> Query[Item]:
+    return db.query(Item).where(and_(Item.id == id, Item.ownerid == ownerid))
 
 
 def item_by_id(db: Session, id: int) -> Query[Item]:
@@ -94,7 +90,7 @@ def items_by_ownerid(db: Session, ownerid: int) -> Query[Item]:
     return db.query(Item).where(Item.ownerid == ownerid)
 
 
-def items_by_ownerid_parentid(
+def item_by_ownerid_parentid(
     db: Session, ownerid: int, parentid: Optional[int]
 ) -> Query[Item]:
     return db.query(Item).where(

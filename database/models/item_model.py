@@ -29,7 +29,7 @@ class Item(Base):
     parent: Mapped["Item"] = relationship(back_populates="items", remote_side=[id])
 
     # children of this item
-    items: Mapped[list["Item"]] = relationship(back_populates="parent")
+    items: Mapped[list["Item"]] = relationship(back_populates="parent", cascade="all")
 
     # owner
     ownerid: Mapped[Optional[int]] = mapped_column(ForeignKey("user.id"))
