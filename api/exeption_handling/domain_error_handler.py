@@ -1,7 +1,7 @@
-from fastapi import Request, Response
+from fastapi import Request
 from fastapi.responses import JSONResponse
-from core.exeptions import DomainError, ItemExistsInFolder
-from core.schemas import DefaultResponse, Error, ItemResponse
+from core.exeptions import DomainError
+from core.schemas import DefaultResponse, Error
 
 
 def domain_error_handler(request: Request, exc: DomainError):

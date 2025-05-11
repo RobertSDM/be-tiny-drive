@@ -17,8 +17,12 @@ class Item(Base):
     size_prefix: Mapped[str]
     type: Mapped[ItemType]
     data: Mapped[bytes]
-    updateDate: Mapped[int] = mapped_column(default=lambda: datetime.now())
-    creationDate: Mapped[int] = mapped_column(default=lambda: datetime.now())
+    update_date: Mapped[float] = mapped_column(
+        default=lambda: datetime.now().timestamp()
+    )
+    creation_date: Mapped[float] = mapped_column(
+        default=lambda: datetime.now().timestamp()
+    )
 
     # parent item
     parentid: Mapped[Optional[int]] = mapped_column(ForeignKey("tb_item.id"))

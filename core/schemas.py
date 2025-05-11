@@ -1,10 +1,5 @@
-from ast import TypeVar
-from email import message
+from typing import TypeVar
 from pydantic import BaseModel, ConfigDict
-from typing import Generic, Optional
-
-from database.models.enums.content_type import ItemType
-from database.models.item_model import Item
 
 # ORM Models
 
@@ -19,6 +14,8 @@ class ItemModel(BaseModel):
     size: int
     size_prefix: str
     type: str
+    update_date: float
+    creation_date: float
 
 
 class UserModel(BaseModel):
@@ -47,21 +44,33 @@ class Error(BaseModel):
 T = TypeVar("T")
 
 
-class DefaultResponse[T](BaseModel):
-    data: list[T] | T | None = None
+class DefaultResponse(BaseModel):
     error: Error | None = None
     success: bool = True
 
 
-class AuthResponse(DefaultResponse[UserModel]):
+class ListResponse[T](DefaultResponse):
+    data: list[T]
+    count: int
+
+
+class SingleResponse[T](DefaultResponse):
+    data: T
+
+
+class AuthResponse(SingleResponse[UserModel]):
     token: str | None = None
 
 
-class ItemResponse(DefaultResponse[ItemModel]):
-    count: int = 0
+class ListItemResponse(ListResponse[ItemModel]):
+    pass
 
 
-class UserResponse(DefaultResponse[UserModel]):
+class SingleItemResponse(SingleResponse[ItemModel]):
+    pass
+
+
+class UserResponse(SingleResponse[UserModel]):
     pass
 
 

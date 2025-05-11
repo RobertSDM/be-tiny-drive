@@ -32,8 +32,8 @@ def item_create_serv(
 ) -> Item:
     fmtsize, prefix = get_sufix_to_bytes(size)
 
-    if parentid == None:
-        root = execute_first(db, items_by_ownerid_parentid(db, ownerid, ""))
+    if parentid == None or parentid == "":
+        root = execute_first(db, items_by_ownerid_parentid(db, ownerid, None))
         parentid = root.id
 
     item_exists = execute_exists(
@@ -82,7 +82,7 @@ def create_root_item(db: Session, ownerid: int) -> Item:
 
 
 def get_all_root_items(db: Session, ownerid: int) -> list[Item]:
-    root = execute_first(db, items_by_ownerid_parentid(db, ownerid, ""))
+    root = execute_first(db, items_by_ownerid_parentid(db, ownerid, None))
     return execute_all(db, items_by_ownerid_parentid(db, ownerid, root.id))
 
 

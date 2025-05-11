@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Form, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from core.schemas import ItemModel, ItemResponse
+from core.schemas import ListItemResponse, SingleItemResponse
 from database.db_engine import get_session
 from database.models.enums.content_type import ItemType
 from service.item_serv import get_all_root_items, item_create_serv
@@ -20,7 +20,7 @@ class SaveRequest(BaseModel):
     size: Annotated[int, Form()]
     ownerid: Annotated[int, Form()]
     type: Annotated[ItemType, Form()]
-    folderid: Annotated[Optional[int], Form()]
+    parentid: Annotated[Optional[int], Form()]
 
 
 @item_router.post("/save", status_code=200)
@@ -31,7 +31,7 @@ def save_file_route(
     item = item_create_serv(
         db,
         request.name,
-        request.folderid,
+        request.parentid,
         request.extension,
         request.size,
         bytes(),
@@ -40,14 +40,14 @@ def save_file_route(
         request.type,
     )
 
-    return JSONResponse(ItemResponse(data=item).model_dump())
+    return JSONResponse(SingleItemResponse(data=item).model_dump())
 
 
 @item_router.get("/root/all/{ownerid}")
 def all_items(ownerid: int, db=Depends(get_session)):
     items = get_all_root_items(db, ownerid)
 
-    return JSONResponse(ItemResponse(data=items, count=len(items)).model_dump())
+    return JSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
 
 
 # @item_router.get("/download/{id}/{owner_id}")
