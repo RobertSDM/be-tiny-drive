@@ -1,11 +1,11 @@
 from fastapi import FastAPI
-from api.exeption_handling import domain_error_handler
-from api.routes.item_route import item_router
-from api.routes.auth_route import auth_router
+from app.api.exeption_handling import domain_error_handler
+from app.api.routes.item_route import item_router
+from app.api.routes.auth_route import auth_router
 from fastapi.middleware.cors import CORSMiddleware
-from core.exeptions import DomainError, ItemExistsInFolder
-from utils.logging_config import logger
-from constants.env_definitions import debug, host, origins, port
+from app.core.exeptions import DomainError
+from app.utils.logging_config import logger
+from app.constants.env_definitions import debug, host, origins, port
 import uvicorn
 
 app = FastAPI(title="Tiny Drive", description="Backend API for tiny-drive project")
