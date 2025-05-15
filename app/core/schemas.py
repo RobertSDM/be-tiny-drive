@@ -7,13 +7,14 @@ from pydantic import BaseModel, ConfigDict
 class ItemModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: str
     name: str
     extension: str
     path: str
     size: int
     size_prefix: str
     type: str
+    parentid: str | None
     update_date: float
     creation_date: float
 
@@ -21,7 +22,7 @@ class ItemModel(BaseModel):
 class UserModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: str
     username: str
     email: str
 

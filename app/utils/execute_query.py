@@ -7,7 +7,7 @@ T = TypeVar("T")
 
 def update_entity(query: Query[T], data: dict[any, any]) -> None:
     query.update(data)
-
+    
 
 def execute_all(query: Query[T]) -> list[T]:
     return query.all()

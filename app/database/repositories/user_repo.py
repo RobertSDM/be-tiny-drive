@@ -12,5 +12,5 @@ def user_save(db: Session, user: User):
     return user
 
 
-def user_by_id(db: Session, id: int) -> Query[User]:
+def user_by_id(db: Session, id: str) -> Query[User]:
     return db.query(User).filter(User.id == id)

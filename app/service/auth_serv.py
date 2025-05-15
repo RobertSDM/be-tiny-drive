@@ -10,12 +10,11 @@ from app.database.repositories.user_repo import (
 )
 from app.utils.execute_query import execute_exists, execute_first
 from app.core.schemas import LoginReturn, UserModel
-from app.service.item_serv import create_root_item_serv
 from app.auth.password_hashing import hash_password, check_password_hash
 
 
 def login_serv(db: Session, email: str, password: str) -> LoginReturn:
-    user = execute_first(db, user_by_email(db, email))
+    user = execute_first(user_by_email(db, email))
 
     if not user:
         raise UserDoesNotExists()
@@ -34,9 +33,9 @@ def login_serv(db: Session, email: str, password: str) -> LoginReturn:
 
 
 def register_serv(db: Session, username: str, email: str, password: str) -> User:
-    user_exists = execute_exists(db, user_by_email(db, email))
+    exists = execute_exists(db, user_by_email(db, email))
 
-    if user_exists:
+    if exists:
         raise UserAlreadyExists()
 
     salt = bcrypt.gensalt().decode()
@@ -49,7 +48,6 @@ def register_serv(db: Session, username: str, email: str, password: str) -> User
     )
 
     user = user_save(db, user)
-    create_root_item_serv(db, user.id)
 
     return user
 

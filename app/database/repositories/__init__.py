@@ -9,5 +9,5 @@ from .item_repo import (
     items_by_ownerid,
     item_by_ownerid_parentid,
     item_by_ownerid_parentid_type,
-    item_by_id_type
+    item_by_id_type,
 )

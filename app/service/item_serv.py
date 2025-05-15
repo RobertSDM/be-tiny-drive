@@ -1,3 +1,4 @@
+from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.core.exeptions import (
@@ -29,19 +30,18 @@ from app.utils import get_sufix_to_bytes
 def item_create_serv(
     db: Session,
     name: str,
-    parentid: int,
+    parentid: str | None,
     extension: str,
     size: int,
     data: bytes,
-    ownerid: int,
+    ownerid: str,
     path: str,
     type: ItemType,
 ) -> Item:
     fmtsize, prefix = get_sufix_to_bytes(size)
 
-    if parentid == None or parentid == "":
-        root = execute_first(item_by_ownerid_parentid(db, ownerid, None))
-        parentid = root.id
+    if parentid == "":
+        parentid = None
 
     item_exists = execute_exists(
         db, item_by_ownerid_parentid_path(db, ownerid, parentid, path)
@@ -50,12 +50,13 @@ def item_create_serv(
     if item_exists:
         raise ItemExistsInFolder(name, type.value)
 
-    parent_exists = execute_exists(
-        db, item_by_id_type(db, parentid, ItemType.FOLDER.value)
-    )
+    if parentid:
+        parent_exists = execute_exists(
+            db, item_by_id_type(db, parentid, ItemType.FOLDER.value)
+        )
 
-    if not parent_exists:
-        raise ParentFolderNotFound()
+        if not parent_exists:
+            raise ParentFolderNotFound()
 
     item = Item(
         name=name,
@@ -72,37 +73,22 @@ def item_create_serv(
     return item_save(db, item)
 
 
-def create_root_item_serv(db: Session, ownerid: int) -> Item:
-    item = Item(
-        name="root",
-        data=bytes(),
-        extension="",
-        size=0,
-        size_prefix="",
-        ownerid=ownerid,
-        path="/",
-        parentid=None,
-        type=ItemType.FOLDER.value,
-    )
-
-    return item_save(db, item)
-
-
-def item_update_name(db: Session, id: int, name: str) -> None:
+def item_update_name(db: Session, id: str, name: str) -> Item:
     query = item_by_id(db, id)
-    exists = execute_exists(db, query)
-    if not exists:
+    item = execute_first(query)
+    if not item:
         raise ItemNotFound
 
     update_entity(query, {Item.name: name})
+    db.commit()
+    return item
 
 
-def get_all_root_items_serv(db: Session, ownerid: int) -> list[Item]:
-    root = execute_first(item_by_ownerid_parentid(db, ownerid, None))
-    return execute_all(item_by_ownerid_parentid(db, ownerid, root.id))
+def all_root_items_serv(db: Session, ownerid: str) -> list[Item]:
+    return execute_all(item_by_ownerid_parentid(db, ownerid, None))
 
 
-def get_by_id(db: Session, ownerid: int, id: int):
+def item_by_id_serv(db: Session, ownerid: str, id: str):
     item = execute_first(item_by_id_ownerid(db, id, ownerid))
 
     if not item:
@@ -111,19 +97,16 @@ def get_by_id(db: Session, ownerid: int, id: int):
     return item
 
 
-def get_all_items_in_folder(db: Session, ownerid: int, parentid: int):
+def all_items_in_folder_serv(db: Session, ownerid: str, parentid: Optional[str]):
     items = execute_all(item_by_ownerid_parentid(db, ownerid, parentid))
     return items
 
 
-def delete_item_serv(db: Session, ownerid: int, id: int) -> Item:
+def delete_item_serv(db: Session, ownerid: str, id: str) -> Item:
     item = execute_first(item_by_id_ownerid(db, id, ownerid))
 
     if not item:
         raise ItemNotFound()
-
-    if not item.parentid:
-        raise ItemDeleteError()
 
     item_delete(db, item)
 

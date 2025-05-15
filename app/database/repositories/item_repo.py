@@ -10,16 +10,16 @@ def item_by_id_ownerid(db: Session, id: str, ownerid: str) -> Query[Item]:
     return db.query(Item).where(and_(Item.id == id, Item.ownerid == ownerid))
 
 
-def item_by_id(db: Session, id: int) -> Query[Item]:
+def item_by_id(db: Session, id: str) -> Query[Item]:
     return db.query(Item).where(Item.id == id)
 
 
-def item_by_id_type(db: Session, id: int, type: ItemType) -> Query[Item]:
+def item_by_id_type(db: Session, id: str, type: ItemType) -> Query[Item]:
     return db.query(Item).where(and_(Item.id == id, Item.type == type))
 
 
 def item_by_ownerid_parentid_path(
-    db: Session, parentid: int, ownerid: int, path: str
+    db: Session, parentid: str, ownerid: str, path: str
 ) -> Query[Item]:
     return db.query(Item).where(
         and_(
@@ -63,7 +63,7 @@ def items_by_ownerid(db: Session, ownerid: int) -> Query[Item]:
 
 
 def item_by_ownerid_parentid(
-    db: Session, ownerid: int, parentid: Optional[int]
+    db: Session, ownerid: str, parentid: Optional[str]
 ) -> Query[Item]:
     return db.query(Item).where(
         and_(Item.ownerid == ownerid, Item.parentid == parentid)
