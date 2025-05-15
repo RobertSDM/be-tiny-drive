@@ -95,9 +95,19 @@ def get_all_root_items_serv(db: Session, ownerid: int) -> list[Item]:
     return execute_all(db, item_by_ownerid_parentid(db, ownerid, root.id))
 
 
+def get_by_id(db: Session, ownerid: int, id: int):
+    item = execute_first(db, item_by_id_ownerid(db, id, ownerid))
+
+    if not item:
+        raise ItemNotFound
+    
+    return item
+
+
 def get_all_items_in_folder(db: Session, ownerid: int, parentid: int):
     items = execute_all(db, item_by_ownerid_parentid(db, ownerid, parentid))
     return items
+
 
 def delete_item_serv(db: Session, ownerid: int, id: int) -> Item:
     item = execute_first(db, item_by_id_ownerid(db, id, ownerid))

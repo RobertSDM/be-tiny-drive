@@ -28,4 +28,4 @@ app.add_exception_handler(DomainError, domain_error_handler)
 
 if __name__ == "__main__":
     logger.info("App stated on -> " + ":" + port)
-    uvicorn.run("main:app", host=host, port=int(port), reload=True, log_level=debug)
+    uvicorn.run("main:app", host=host, port=int(port), reload=True, log_level=debug, use_colors=True)

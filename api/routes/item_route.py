@@ -10,6 +10,7 @@ from service.item_serv import (
     delete_item_serv,
     get_all_items_in_folder,
     get_all_root_items_serv,
+    get_by_id,
     item_create_serv,
 )
 
@@ -60,6 +61,13 @@ def all_item_in_folder(ownerid: int, parentid: int, db=Depends(get_session)):
     items = get_all_items_in_folder(db, ownerid, parentid)
 
     return JSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
+
+
+@item_router.get("/{ownerid}/{id}")
+def item_by_id(ownerid: int, id: int, db=Depends(get_session)):
+    item = get_by_id(db, ownerid, id)
+
+    return JSONResponse(SingleItemResponse(data=item).model_dump())
 
 
 # @item_router.get("/download/{id}/{owner_id}")
