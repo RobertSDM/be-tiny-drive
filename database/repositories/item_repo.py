@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session, Query
 
 from database.models import Item
 from database.models.enums.content_type import ItemType
+from database.repositories.utils import update_entity
 
 
 def item_by_id_ownerid(db: Session, id: str, ownerid: str) -> Query[Item]:
@@ -38,10 +39,9 @@ def item_by_ownerid_parentid_type(
     )
 
 
-def create_item(db: Session, item: Item) -> Item:
+def item_create(db: Session, item: Item) -> Item:
     db.add(item)
     db.commit()
-
     return item
 
 
@@ -112,20 +112,3 @@ def item_by_ownerid_parentid(
 #             )
 #         )
 #     ).scalar()
-
-
-def item_update_name(
-    db: Session, name: str, id: str, ownerid: str, parentid: str
-) -> None:
-
-    (
-        db.execute(
-            update(Item)
-            .where(
-                and_(and_(Item.id == id, Item.ownerid == ownerid)),
-                Item.parentid == parentid,
-            )
-            .values({Item.name: name})
-        )
-    )
-    db.commit()

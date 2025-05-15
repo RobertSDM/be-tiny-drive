@@ -18,10 +18,10 @@ class Item(Base):
     type: Mapped[ItemType]
     data: Mapped[bytes]
     update_date: Mapped[float] = mapped_column(
-        default=lambda: datetime.now().timestamp()
+        default=datetime.now().timestamp, onupdate=datetime.now().timestamp
     )
     creation_date: Mapped[float] = mapped_column(
-        default=lambda: datetime.now().timestamp()
+        default=datetime.now().timestamp
     )
 
     # parent item

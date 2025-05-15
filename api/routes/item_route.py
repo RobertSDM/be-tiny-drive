@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Form, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from core.schemas import ListItemResponse, SingleItemResponse
+from core.schemas import DefaultResponse, ListItemResponse, SingleItemResponse
 from database.db_engine import get_session
 from database.models.enums.content_type import ItemType
 from service.item_serv import (
@@ -12,6 +12,7 @@ from service.item_serv import (
     get_all_root_items_serv,
     get_by_id,
     item_create_serv,
+    item_update_name,
 )
 
 
@@ -77,31 +78,15 @@ def item_by_id(ownerid: int, id: int, db=Depends(get_session)):
 #     return {"data": formated_byte_data, "name": data.fullname}
 
 
-# @item_router.put("/update/name/{id}/{owner_id}", status_code=200)
-# def __update_file_name(
-#     id: str, body: FileUpdate, owner_id: str, db=Depends(get_session)
-# ):
-#     res = update_file_name_serv(db, id, body, owner_id)
+class UpdateNameBody(BaseModel):
+    name: str
 
-#     if isinstance(res, DefaultDefReponse):
-#         return Response(
-#             json.dumps(
-#                 {
-#                     "msg": res.content.msg,
-#                     "data": convert_file_to_response_file(res.content.data, True),
-#                 }
-#             ),
-#             status_code=res.status,
-#         )
-#     elif res:
-#         return Response(
-#             status_code=200,
-#         )
-#     else:
-#         return Response(
-#             status_code=500,
-#             content=json.dumps({"msg": "Error to update the name"}),
-#         )
+
+@item_router.put("/update/{id}/name")
+def update_name(id: int, body: UpdateNameBody, db=Depends(get_session)):
+    item_update_name(db, id, body.name)
+
+    return JSONResponse(DefaultResponse().model_dump())
 
 
 @item_router.delete("/delete/{ownerid}/{id}")

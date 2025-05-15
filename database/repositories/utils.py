@@ -1,9 +1,12 @@
 from typing import TypeVar
 from sqlalchemy.orm import Session, Query
 
-from database.models import Item
 
 T = TypeVar("T")
+
+
+def update_entity(query: Query[T], data: dict[any, any]) -> None:
+    query.update(data)
 
 
 def execute_all(db: Session, query: Query[T]) -> list[T]:
