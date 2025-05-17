@@ -51,3 +51,21 @@ class InvalidPassword(DomainError):
     def __init__(self):
         self.message = f"the password is invalid"
         super().__init__(self.message, 422)
+
+
+class NoAuthenticationHeader(DomainError):
+    def __init__(self):
+        self.message = "the authentication header was not present in the request"
+        super().__init__(self.message, 422)
+
+
+class InvalidJWTToken(DomainError):
+    def __init__(self):
+        self.message = "the token is invalid"
+        super().__init__(self.message, 422)
+
+
+class JWTTokenExpired(DomainError):
+    def __init__(self):
+        self.message = "the token has expired"
+        super().__init__(self.message, 401)

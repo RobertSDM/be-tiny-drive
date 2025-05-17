@@ -13,6 +13,7 @@ host = os.getenv("HOST")
 clients_URL = os.getenv("CLIENTS_URL")
 supabase_url = os.getenv("SUPABASE_URL")
 supabase_key = os.getenv("SUPABASE_KEY")
+jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
 
 database_url = database_url if mode == Mode.PROD else "sqlite:///database.db"
 origins = origins.split(";")
