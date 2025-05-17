@@ -1,76 +1,50 @@
 from typing import Optional
+from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
+from app.clients.supabase_storage_client import storage
 from app.core.exeptions import (
-    ItemDeleteError,
-    ItemExistsInFolder,
     ItemNotFound,
-    ParentFolderNotFound,
 )
+from app.core.extract_metadata_file import create_file_structure
 from app.database.models import Item
 from app.database.repositories import (
     item_save,
     item_by_ownerid_parentid,
     item_by_id,
     item_by_id_ownerid,
-    item_by_id_type,
-    item_by_ownerid_parentid_path,
     item_delete,
 )
-from app.enums.enums import ItemType
 from app.utils.execute_query import (
     execute_all,
-    execute_exists,
     execute_first,
     update_entity,
 )
-from app.utils import get_sufix_to_bytes
 
 
-def item_create_serv(
-    db: Session,
-    name: str,
-    parentid: str | None,
-    extension: str,
-    size: int,
-    data: bytes,
-    ownerid: str,
-    path: str,
-    type: ItemType,
+def item_save_serv(
+    db: Session, file: UploadFile, path: str, ownerid: str, parentid: str | None
 ) -> Item:
-    fmtsize, prefix = get_sufix_to_bytes(size)
-
-    if parentid == "":
-        parentid = None
-
-    item_exists = execute_exists(
-        db, item_by_ownerid_parentid_path(db, ownerid, parentid, path)
+    folders_save, file_save = create_file_structure(
+        file, path, ownerid, bucketid="files"
     )
 
-    if item_exists:
-        raise ItemExistsInFolder(name, type.value)
+    crr_parentid = parentid
 
-    if parentid:
-        parent_exists = execute_exists(
-            db, item_by_id_type(db, parentid, ItemType.FOLDER.value)
+    for f in folders_save:
+        folder = execute_first(
+            item_by_ownerid_parentid(db, ownerid, crr_parentid, f.path)
         )
+        if folder:
+            continue
+        item = item_save(db, f)
+        crr_parentid = item.id
 
-        if not parent_exists:
-            raise ParentFolderNotFound()
+    storage.save("files", file.content_type, file_save.path, file.file)
 
-    item = Item(
-        name=name,
-        data=data,
-        extension=extension,
-        size=fmtsize,
-        size_prefix=prefix,
-        ownerid=ownerid,
-        path=path,
-        parentid=parentid,
-        type=type,
-    )
+    item_save(db, file_save)
 
-    return item_save(db, item)
+    return None
 
 
 def item_update_name(db: Session, id: str, name: str) -> Item:

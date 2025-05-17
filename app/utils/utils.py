@@ -1,7 +1,7 @@
 import math
 
 
-def get_sufix_to_bytes(byte_size: int):
+def normalize_file_size(byte_size: int):
     prefix = ["b", "Kb", "Mb", "Gb"]
 
     pos_prefix = 0

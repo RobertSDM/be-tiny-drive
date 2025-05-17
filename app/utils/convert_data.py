@@ -2,11 +2,6 @@ import base64
 import io
 
 
-def get_base64_to_bytes_data(byte_data: base64) -> io.BytesIO:
-    base64_data = base64.b64decode(byte_data)
-    return io.BytesIO(base64_data)
-
-
 # def get_folder_zip(folder: FolderSchema, path: str = "") -> io.BytesIO:
 
 #     buffer = io.BytesIO()

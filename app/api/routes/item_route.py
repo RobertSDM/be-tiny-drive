@@ -1,17 +1,17 @@
-from typing import Annotated, Optional
-from fastapi import APIRouter, Depends, Form
+from typing import Annotated
+from fastapi import APIRouter, Depends, Form, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.clients.sqlalchemy_client import db_client
-from app.core.schemas import ListItemResponse, SingleItemResponse
-from app.enums.enums import ItemType
+from app.core.schemas import DefaultResponse, ListItemResponse, SingleItemResponse
+from app.database.repositories.item_repo import item_save
 from app.service.item_serv import (
     delete_item_serv,
     all_items_in_folder_serv,
     all_root_items_serv,
     item_by_id_serv,
-    item_create_serv,
+    item_save_serv,
     item_update_name,
 )
 
@@ -19,35 +19,27 @@ from app.service.item_serv import (
 item_router = APIRouter()
 
 
-class SaveRequest(BaseModel):
-    # file: Annotated[bytes, File()]
-    name: Annotated[str, Form()]
-    extension: Annotated[str, Form()]
-    path: Annotated[str, Form()]
-    size: Annotated[int, Form()]
-    ownerid: Annotated[str, Form()]
-    type: Annotated[ItemType, Form()]
-    parentid: Annotated[Optional[str], Form()]
-
-
 @item_router.post("/save", status_code=200)
 def save_file_route(
-    request: SaveRequest,
+    file: UploadFile,
+    path: Annotated[str, Form()],
+    parentid: Annotated[str | None, Form()] = None,
     db=Depends(db_client.get_session),
 ):
-    item = item_create_serv(
-        db,
-        request.name,
-        request.parentid,
-        request.extension,
-        request.size,
-        bytes(),
-        request.ownerid,
-        request.path,
-        request.type,
-    )
+    # item = item_create_serv(
+    #     db,
+    #     request.name,
+    #     request.parentid,
+    #     request.extension,
+    #     request.size,
+    #     bytes(),
+    #     request.ownerid,
+    #     request.path,
+    #     request.type,
+    # )
+    item_save_serv(db, file, path, "da", parentid)
 
-    return JSONResponse(SingleItemResponse(data=item).model_dump())
+    return JSONResponse(DefaultResponse().model_dump())
 
 
 @item_router.get("/all/{ownerid}")

@@ -1,5 +1,8 @@
-from typing import TypeVar
+from typing import BinaryIO, TypeVar
+from fastapi import UploadFile
 from pydantic import BaseModel, ConfigDict
+
+from app.enums.enums import ItemType
 
 # ORM Models
 
@@ -28,6 +31,18 @@ class UserModel(BaseModel):
 
 
 # Schemas
+
+
+class Metadata(BaseModel):
+    name: str
+    extension: str
+    size: int
+    size_prefix: str
+    type: ItemType
+    parentid: str | None
+    ownerid: str
+    bucketid: str
+    path: str
 
 
 class LoginReturn(BaseModel):
