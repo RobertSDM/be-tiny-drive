@@ -13,7 +13,7 @@ def execute_all(query: Query[T]) -> list[T]:
     return query.all()
 
 
-def execute_first(query: Query[T]) -> T:
+def execute_first(query: Query[T]) -> T | None:
     return query.first()
 
 

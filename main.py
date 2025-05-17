@@ -4,7 +4,7 @@ from app.api.exeption_handling import domain_error_handler
 from app.api.middlewares.auth_middleware import AuthMiddleware
 from app.api.routes.item_route import item_router
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.exeptions import DomainError
+from app.core.exceptions import DomainError
 from app.constants.env_ import debug, host, origins, port
 
 app = FastAPI(title="Tiny Drive", description="Backend API for tiny-drive project")

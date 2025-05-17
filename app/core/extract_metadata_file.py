@@ -36,7 +36,7 @@ def create_file_structure(
             parentid=None,
             size=0,
             size_prefix="",
-            bucketid="",
+            bucketid=None,
             name=f.split("/")[-1],
             ownerid=ownerid,
             path=f,

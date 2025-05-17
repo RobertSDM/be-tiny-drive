@@ -3,7 +3,7 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from jose import jwt
 from app.constants.env_ import jwt_secret
 
-from app.core.exeptions import InvalidJWTToken, JWTTokenExpired, NoAuthenticationHeader
+from app.core.exceptions import InvalidJWTToken, JWTTokenExpired, NoAuthenticationHeader
 
 
 class AuthMiddleware(BaseHTTPMiddleware):

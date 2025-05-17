@@ -12,11 +12,11 @@ class SupabaseStorageClient(StorageClientInterface):
     def update(self, bucketid, fileid):
         pass
 
-    def save(self, bucketid: str, content_type: str, path: str, file: BinaryIO) -> None:
-        self.storage.from_(bucketid).upload(path, file, {"content-type": content_type})
+    def save(self, bucketid: str, content_type: str, path: str, file: BinaryIO):
+        return self.storage.from_(bucketid).upload(path, file, {"content-type": content_type})
 
-    def remove(self, bucketid: str, fileid: str) -> None:
-        self.storage.from_(bucketid).remove(fileid)
+    def remove(self, bucketid: str, fileid: str):
+        return self.storage.from_(bucketid).remove(fileid)
 
     def get(self, bucketid: str, fileid: str) -> str:
         data = self.storage.from_(bucketid).create_signed_url(fileid, 60)

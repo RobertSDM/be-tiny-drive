@@ -41,7 +41,7 @@ class ItemExistsInFolder(DomainError):
         super().__init__(self.message, 409)
 
 
-class UserDoesNotExists(DomainError):
+class AccountDoesNotExists(DomainError):
     def __init__(self):
         self.message = f"the user don't exist"
         super().__init__(self.message, 404)
