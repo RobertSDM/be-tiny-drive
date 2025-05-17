@@ -1,8 +1,8 @@
 import bcrypt
 from sqlalchemy.orm import Session
-from app.core.exeptions import UserAlreadyExists
+from app.core.exceptions import UserAlreadyExists
 from app.database.models import User
-from app.database.repositories.user_repo import (
+from app.database.repositories.account_repo import (
     user_by_email,
     user_by_id,
 )

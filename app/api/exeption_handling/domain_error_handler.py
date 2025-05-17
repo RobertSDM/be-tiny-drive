@@ -1,6 +1,6 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from app.core.exeptions import DomainError
+from app.core.exceptions import DomainError
 from app.core.schemas import DefaultResponse, Error
 
 
