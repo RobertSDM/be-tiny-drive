@@ -3,7 +3,7 @@ from uuid import uuid4
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 from datetime import datetime
-from app.service.database_serv import Base
+from app.clients.sqlalchemy_client import Base
 
 
 class User(Base):

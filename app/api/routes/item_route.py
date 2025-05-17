@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends, Form
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from app.clients.sqlalchemy_client import db_client
 from app.core.schemas import ListItemResponse, SingleItemResponse
-from app.service.database_serv import get_session
-from app.utils.enums import ItemType
+from app.enums.enums import ItemType
 from app.service.item_serv import (
     delete_item_serv,
     all_items_in_folder_serv,
@@ -33,7 +33,7 @@ class SaveRequest(BaseModel):
 @item_router.post("/save", status_code=200)
 def save_file_route(
     request: SaveRequest,
-    db=Depends(get_session),
+    db=Depends(db_client.get_session),
 ):
     item = item_create_serv(
         db,
@@ -51,28 +51,28 @@ def save_file_route(
 
 
 @item_router.get("/all/{ownerid}")
-def all_items(ownerid: str, db=Depends(get_session)):
+def all_items(ownerid: str, db=Depends(db_client.get_session)):
     items = all_root_items_serv(db, ownerid)
 
     return JSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
 
 
 @item_router.get("/all/{ownerid}/{parentid}")
-def all_item_in_folder(ownerid: str, parentid: str, db=Depends(get_session)):
+def all_item_in_folder(ownerid: str, parentid: str, db=Depends(db_client.get_session)):
     items = all_items_in_folder_serv(db, ownerid, parentid)
 
     return JSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
 
 
 @item_router.get("/{ownerid}/{id}")
-def item_by_id(ownerid: str, id: str, db=Depends(get_session)):
+def item_by_id(ownerid: str, id: str, db=Depends(db_client.get_session)):
     item = item_by_id_serv(db, ownerid, id)
 
     return JSONResponse(SingleItemResponse(data=item).model_dump())
 
 
 # @item_router.get("/download/{id}/{owner_id}")
-# def __download_file(id: str, owner_id: str, db=Depends(get_session)):
+# def __download_file(id: str, owner_id: str, db=Depends(db_client.get_session)):
 #     data, formated_byte_data = download_serv(db, id, owner_id)
 
 #     return {"data": formated_byte_data, "name": data.fullname}
@@ -83,14 +83,14 @@ class UpdateNameBody(BaseModel):
 
 
 @item_router.put("/update/{id}/name")
-def update_name(id: str, body: UpdateNameBody, db=Depends(get_session)):
+def update_name(id: str, body: UpdateNameBody, db=Depends(db_client.get_session)):
     item = item_update_name(db, id, body.name)
 
     return JSONResponse(SingleItemResponse(data=item).model_dump())
 
 
 @item_router.delete("/delete/{ownerid}/{id}")
-def delete_file_by_id(ownerid: str, id: str, db=Depends(get_session)):
+def delete_file_by_id(ownerid: str, id: str, db=Depends(db_client.get_session)):
     item = delete_item_serv(db, ownerid, id)
 
     return JSONResponse(SingleItemResponse(data=item).model_dump())

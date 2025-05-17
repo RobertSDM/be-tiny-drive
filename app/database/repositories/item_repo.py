@@ -3,7 +3,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session, Query
 
 from ..models import Item
-from app.utils.enums import ItemType
+from app.enums.enums import ItemType
 
 
 def item_by_id_ownerid(db: Session, id: str, ownerid: str) -> Query[Item]:
