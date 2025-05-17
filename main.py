@@ -6,7 +6,7 @@ from app.api.routes.item_route import item_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.exeptions import DomainError
 from app.utils.logging_config import logger
-from app.constants.env_definitions import debug, host, origins, port
+from app.constants.env_ import debug, host, origins, port
 
 app = FastAPI(title="Tiny Drive", description="Backend API for tiny-drive project")
 
@@ -21,12 +21,11 @@ app.add_middleware(
 )
 
 
-app.include_router(item_router, "/item")
+app.include_router(item_router, prefix="/item")
 app.add_middleware(AuthMiddleware)
 app.add_exception_handler(DomainError, domain_error_handler)
 
 if __name__ == "__main__":
-    logger.info("App stated on -> " + ":" + port)
     uvicorn.run(
         "main:app",
         host=host,

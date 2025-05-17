@@ -1,16 +1,2 @@
-from ..models import User
+from ..models import Account
 from sqlalchemy.orm import Session, Query
-
-
-def user_by_email(db: Session, email: str) -> Query[User]:
-    return db.query(User).where(User.email == email)
-
-
-def user_save(db: Session, user: User):
-    db.add(user)
-    db.commit()
-    return user
-
-
-def user_by_id(db: Session, id: str) -> Query[User]:
-    return db.query(User).filter(User.id == id)
