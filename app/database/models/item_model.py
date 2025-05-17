@@ -1,8 +1,8 @@
 from typing import Optional
 from uuid import uuid4
 from sqlalchemy import ForeignKey, func
-from app.utils.enums import ItemType
-from app.service.database_serv import Base
+from app.enums.enums import ItemType
+from app.clients.sqlalchemy_client import Base
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
 

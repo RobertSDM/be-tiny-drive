@@ -17,7 +17,7 @@ from app.database.repositories import (
     item_by_ownerid_parentid_path,
     item_delete,
 )
-from app.utils.enums import ItemType
+from app.enums.enums import ItemType
 from app.utils.execute_query import (
     execute_all,
     execute_exists,
