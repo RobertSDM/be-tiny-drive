@@ -1,6 +1,5 @@
 from fastapi import UploadFile
 
-from app.core.schemas import Metadata
 from app.database.models.item_model import Item
 from app.enums.enums import ItemType
 from app.utils.utils import normalize_file_size

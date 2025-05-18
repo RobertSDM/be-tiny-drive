@@ -5,11 +5,12 @@ from sqlalchemy.orm import Session
 import storage3
 import storage3.exceptions
 
-from app.clients.supabase_storage_client import storage
+from app.clients.supabase.storage_client import storage
 from app.core.exceptions import (
     ItemExistsInFolder,
     ItemNotFound,
     AccountDoesNotExists,
+    ParentFolderNotFound,
 )
 from app.core.extract_metadata_file import create_file_structure
 from app.database.models import Item
@@ -42,6 +43,14 @@ def item_save_serv(
 
     folders_save, file_save = create_file_structure(file, path, ownerid, bucketid)
 
+    initial_path = ""
+    if parentid:
+        parent = execute_first(item_by_id(db, parentid))
+        if not parent:
+            raise ParentFolderNotFound()
+        initial_path = parent.path
+        file_save.path = f"{initial_path}/{file_save.path}"
+
     crr_parentid = parentid
 
     try:
@@ -53,6 +62,7 @@ def item_save_serv(
         raise e
 
     for f in folders_save:
+        f.path = f"{initial_path}/{file_save.path}" if initial_path != "" else f.path
         folder = execute_first(
             item_by_ownerid_parentid_path(db, crr_parentid, ownerid, f.path)
         )
@@ -62,9 +72,7 @@ def item_save_serv(
         item = item_save(db, f)
         crr_parentid = item.id
 
-    item_save(db, file_save)
-
-    return None
+    return item_save(db, file_save)
 
 
 def item_update_name(db: Session, id: str, name: str) -> Item:

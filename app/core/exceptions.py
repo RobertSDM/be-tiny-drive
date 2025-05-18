@@ -5,7 +5,7 @@ class DomainError(Exception):
         super().__init__(self.message)
 
 
-class UserAlreadyExists(DomainError):
+class AccountAlreadyExists(DomainError):
     def __init__(self):
         self.message = f"the user already exists"
         super().__init__(self.message, 409)
@@ -43,8 +43,14 @@ class ItemExistsInFolder(DomainError):
 
 class AccountDoesNotExists(DomainError):
     def __init__(self):
-        self.message = f"the user don't exist"
+        self.message = f"the account don't exist"
         super().__init__(self.message, 404)
+
+
+class AccountRegistrationError(DomainError):
+    def __init__(self):
+        self.message = "error registring the user"
+        super().__init__(self.message, 500)
 
 
 class InvalidPassword(DomainError):

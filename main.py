@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 import uvicorn
-from app.api.exeption_handling import domain_error_handler
+from app.api.exeption_handling.domain_error_handler import domain_error_handler
 from app.api.middlewares.auth_middleware import AuthMiddleware
+from app.api.routes import auth_router
 from app.api.routes.item_route import item_router
+from app.api.routes.account_route import account_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.exceptions import DomainError
 from app.constants.env_ import debug, host, origins, port
@@ -20,7 +22,9 @@ app.add_middleware(
 )
 
 
+app.include_router(auth_router, prefix="/auth")
 app.include_router(item_router, prefix="/item")
+app.include_router(account_router, prefix="/account")
 # app.add_middleware(AuthMiddleware)
 app.add_exception_handler(DomainError, domain_error_handler)
 
