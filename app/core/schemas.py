@@ -1,5 +1,10 @@
-from typing import TypeVar
+import datetime
+from typing import BinaryIO, TypeVar
+from fastapi import UploadFile
 from pydantic import BaseModel, ConfigDict
+
+from app.database.models.account_model import Account
+from app.enums.enums import ItemType
 
 # ORM Models
 
@@ -19,12 +24,13 @@ class ItemModel(BaseModel):
     creation_date: float
 
 
-class UserModel(BaseModel):
+class AccountModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
     username: str
     email: str
+    creation_date: datetime.datetime
 
 
 # Schemas
@@ -32,7 +38,7 @@ class UserModel(BaseModel):
 
 class LoginReturn(BaseModel):
     token: str
-    user: UserModel
+    user: AccountModel
 
 
 # API
@@ -59,8 +65,17 @@ class SingleResponse[T](DefaultResponse):
     data: T
 
 
-class AuthResponse(SingleResponse[UserModel]):
-    token: str | None = None
+class AccountResponse(SingleResponse[AccountModel]):
+    pass
+
+
+class AuthRegisterResponse(SingleResponse[AccountModel]):
+    pass
+
+
+class AuthLoginResponse(SingleResponse[AccountModel]):
+    access_token: str
+    refresh_token: str
 
 
 class ListItemResponse(ListResponse[ItemModel]):
@@ -68,10 +83,6 @@ class ListItemResponse(ListResponse[ItemModel]):
 
 
 class SingleItemResponse(SingleResponse[ItemModel]):
-    pass
-
-
-class UserResponse(SingleResponse[UserModel]):
     pass
 
 

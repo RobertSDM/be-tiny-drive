@@ -1,22 +1,30 @@
 from typing import Optional
+from uuid import uuid4
+from fastapi import UploadFile
 from sqlalchemy.orm import Session
+import storage3
+import storage3.exceptions
 
-from app.core.exeptions import (
-    ItemDeleteError,
+from app.clients.supabase.storage_client import storage
+from app.core.exceptions import (
     ItemExistsInFolder,
     ItemNotFound,
+    AccountDoesNotExists,
     ParentFolderNotFound,
 )
+from app.core.extract_file_metadata import create_items_from_path
 from app.database.models import Item
 from app.database.repositories import (
     item_save,
     item_by_ownerid_parentid,
-    item_by_id,
     item_by_id_ownerid,
-    item_by_id_type,
-    item_by_ownerid_parentid_path,
     item_delete,
 )
+from app.database.repositories.account_repo import account_by_id
+from app.database.repositories.item_repo import (
+    item_by_ownerid_path,
+)
+from app.constants.env_ import drive_bucketid
 from app.enums.enums import ItemType
 from app.utils.execute_query import (
     execute_all,
@@ -24,60 +32,97 @@ from app.utils.execute_query import (
     execute_first,
     update_entity,
 )
-from app.utils import get_sufix_to_bytes
+from app.utils.utils import make_bucket_path
 
 
-def item_create_serv(
-    db: Session,
-    name: str,
-    parentid: str | None,
-    extension: str,
-    size: int,
-    data: bytes,
-    ownerid: str,
-    path: str,
-    type: ItemType,
+def item_save_item_serv(
+    db: Session, file: UploadFile, ownerid: str, parentid: str | None
 ) -> Item:
-    fmtsize, prefix = get_sufix_to_bytes(size)
+    account_exists = execute_exists(db, account_by_id(db, ownerid))
 
-    if parentid == "":
-        parentid = None
+    if not account_exists:
+        raise AccountDoesNotExists()
 
-    item_exists = execute_exists(
-        db, item_by_ownerid_parentid_path(db, ownerid, parentid, path)
-    )
-
-    if item_exists:
-        raise ItemExistsInFolder(name, type.value)
-
+    parent_path = ""
     if parentid:
-        parent_exists = execute_exists(
-            db, item_by_id_type(db, parentid, ItemType.FOLDER.value)
-        )
-
-        if not parent_exists:
+        parent = execute_first(item_by_id_ownerid(db, parentid, ownerid))
+        if not parent:
             raise ParentFolderNotFound()
+        parent_path = parent.path
 
-    item = Item(
-        name=name,
-        data=data,
-        extension=extension,
-        size=fmtsize,
-        size_prefix=prefix,
-        ownerid=ownerid,
-        path=path,
-        parentid=parentid,
-        type=type,
+    bucket_file_hash = str(uuid4())
+    item_folders, item_file = create_items_from_path(
+        file, ownerid, bucket_file_hash, parent_path
     )
 
-    return item_save(db, item)
+    try:
+        storage.save(
+            drive_bucketid,
+            file.content_type,
+            make_bucket_path(
+                ownerid, item_file.path, f"{bucket_file_hash}.{item_file.extension}"
+            ),
+            file.file.read(),
+        )
+    except storage3.exceptions.StorageApiError as e:
+        if e.status == "409":
+            raise ItemExistsInFolder(item_file.name, item_file.type.value)
+
+        raise e
+
+    crr_parentid = parentid
+    if len(item_folders) > 0 and (
+        folder := execute_first(
+            item_by_ownerid_path(db, ownerid, item_folders[-1].path)
+        )
+    ):
+        crr_parentid = folder.id
+    else:
+        for f in item_folders:
+            if folder := execute_first(item_by_ownerid_path(db, ownerid, f.path)):
+                crr_parentid = folder.id
+                continue
+            f.parentid = crr_parentid
+            item = item_save(db, f)
+            crr_parentid = item.id
+
+    item_file.parentid = crr_parentid
+    return item_save(db, item_file)
 
 
-def item_update_name(db: Session, id: str, name: str) -> Item:
-    query = item_by_id(db, id)
+def item_save_folder_serv(db: Session, ownerid: str, name: str, parentid: str | None):
+    account_exists = execute_exists(db, account_by_id(db, ownerid))
+
+    if not account_exists:
+        raise AccountDoesNotExists()
+
+    parent_path = ""
+    if parentid:
+        parent = execute_first(item_by_id_ownerid(db, parentid, ownerid))
+        if not parent:
+            raise ParentFolderNotFound()
+        parent_path = parent.path
+
+    folder = Item(
+        name=name,
+        ownerid=ownerid,
+        parentid=parentid,
+        extension="",
+        size=0,
+        size_prefix="",
+        bucketid=None,
+        path=f"{parent_path}/{name}" if parent_path != "" else name,
+        type=ItemType.FOLDER,
+    )
+
+    return item_save(db, folder)
+
+
+def item_update_name(db: Session, id: str, ownerid: str, name: str) -> Item:
+    query = item_by_id_ownerid(db, id, ownerid)
     item = execute_first(query)
     if not item:
-        raise ItemNotFound
+        raise ItemNotFound()
 
     update_entity(query, {Item.name: name})
     db.commit()
@@ -108,12 +153,51 @@ def delete_item_serv(db: Session, ownerid: str, id: str) -> Item:
     if not item:
         raise ItemNotFound()
 
+    bucket_path = f"user-{ownerid}/drive"
+
+    if item.type == ItemType.FOLDER:
+        storage_list = storage.list(drive_bucketid, f"{bucket_path}/{item.path}")
+
+        def dfs(to_visit: list[str], path: str = ""):
+            for tv in to_visit:
+                bucket_item_path = make_bucket_path(ownerid, item.path, tv["name"])
+                if not tv["metadata"]:
+                    children = storage.list(drive_bucketid, bucket_item_path)
+                    dfs(children, f"{path}/{tv["name"]}")
+                else:
+                    storage.remove(drive_bucketid, bucket_item_path)
+
+        dfs(storage_list, item.path)
+    else:
+        bucket_fullname = f"{item.bucketid}.{item.extension}"
+        storage.remove(
+            drive_bucketid,
+            make_bucket_path(ownerid, item.path, bucket_fullname),
+        )
+
     item_delete(db, item)
 
     return item
 
 
-# def download_serv(db, id, owner_id):
-#     data = download_file(db, id, owner_id)
-#     # byte_data = get_bytes_data()
-#     return [data, data.fileData.byteData]
+def download_serv(db, id: str, ownerid: str) -> str:
+    account_exists = execute_exists(db, account_by_id(db, ownerid))
+
+    if not account_exists:
+        raise AccountDoesNotExists()
+
+    item = execute_first(item_by_id_ownerid(db, id, ownerid))
+
+    if not item:
+        raise ItemNotFound()
+
+    if item.type == ItemType.FILE:
+        bucket_fullname = f"{item.name}.{item.extension}"
+        bucket_item_path = make_bucket_path(ownerid, item.path, bucket_fullname)
+        url = storage.signedURL(
+            drive_bucketid, bucket_item_path, 5 * 60, bucket_fullname
+        )
+
+        return url
+
+    return ""

@@ -16,8 +16,8 @@ class Item(Base):
     path: Mapped[str]
     size: Mapped[int]
     size_prefix: Mapped[str]
+    bucketid: Mapped[Optional[str]]
     type: Mapped[ItemType]
-    data: Mapped[bytes]
     update_date: Mapped[float] = mapped_column(
         default=datetime.now().timestamp,
         onupdate=datetime.now().timestamp,
@@ -36,5 +36,5 @@ class Item(Base):
     items: Mapped[list["Item"]] = relationship(back_populates="parent", cascade="all")
 
     # owner
-    ownerid: Mapped[Optional[str]] = mapped_column(ForeignKey("user.id"))
-    owner: Mapped["User"] = relationship(back_populates="items")
+    ownerid: Mapped[Optional[str]] = mapped_column(ForeignKey("tb_account.id"))
+    owner: Mapped["Account"] = relationship(back_populates="items")

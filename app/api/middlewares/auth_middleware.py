@@ -1,24 +1,20 @@
 from fastapi import Request
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from jose import jwt
+from jwt import InvalidTokenError, ExpiredSignatureError
 from app.constants.env_ import jwt_secret
 
-from app.core.exeptions import InvalidJWTToken, JWTTokenExpired, NoAuthenticationHeader
+from app.core.exceptions import InvalidJWTToken, JWTTokenExpired, NoAuthorizationHeader
 
 
-class AuthMiddleware(BaseHTTPMiddleware):
+async def auth_middleware(req: Request):
+    authorization = req.headers.get("Authorization")
+    if not authorization:
+        raise NoAuthorizationHeader()
 
-    async def dispatch(self, req: Request, call_next: RequestResponseEndpoint):
-        authorization = req.headers.get("Authorization")
-        if not authorization:
-            raise NoAuthenticationHeader()
-
-        token = authorization.replace("Bearer ", "")
-        try:
-            jwt.decode(token, jwt_secret, "HS256", "authenticated")
-        except jwt.InvalidTokenError:
-            raise InvalidJWTToken()
-        except jwt.ExpiredSignatureError:
-            raise JWTTokenExpired()
-
-        return await call_next(req)
+    token = authorization.replace("Bearer ", "")
+    try:
+        jwt.decode(token, jwt_secret, algorithms="HS256", audience="authenticated")
+    except InvalidTokenError:
+        raise InvalidJWTToken()
+    except ExpiredSignatureError:
+        raise JWTTokenExpired()
