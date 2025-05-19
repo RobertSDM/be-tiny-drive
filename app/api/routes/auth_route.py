@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, ORJSONResponse
 from pydantic import BaseModel
 from app.clients.sqlalchemy_client import db_client
 from sqlalchemy.orm import Session
@@ -14,13 +14,10 @@ class RegisterBody(BaseModel):
     username: str
     email: str
     password: str
-    
 
 
 @auth_router.post("/register")
 def register(body: RegisterBody, db: Session = Depends(db_client.get_session)):
     account = register_serv(db, body.username, body.email, body.password)
 
-    print(account)
-
-    return JSONResponse(AuthRegisterResponse(data=account).model_dump())
+    return ORJSONResponse(AuthRegisterResponse(data=account).model_dump())

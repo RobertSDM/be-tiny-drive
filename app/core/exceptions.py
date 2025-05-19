@@ -59,9 +59,9 @@ class InvalidPassword(DomainError):
         super().__init__(self.message, 422)
 
 
-class NoAuthenticationHeader(DomainError):
+class NoAuthorizationHeader(DomainError):
     def __init__(self):
-        self.message = "the authentication header was not present in the request"
+        self.message = "the authorization header was not present in the request"
         super().__init__(self.message, 422)
 
 

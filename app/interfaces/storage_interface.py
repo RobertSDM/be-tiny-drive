@@ -22,3 +22,11 @@ class StorageClientInterface(ABC):
     @abstractmethod
     def download(self, bucketid: str, fileid: str) -> BinaryIO:
         pass
+
+    @abstractmethod
+    def list(self, buckedid: str, path: str) -> list[dict[str, any]]:
+        pass
+
+    @abstractmethod
+    def signedURL(self, buckedid: str, fileid: str, expire_in: int):
+        pass

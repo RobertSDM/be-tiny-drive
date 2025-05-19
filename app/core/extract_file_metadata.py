@@ -1,3 +1,4 @@
+from uuid import uuid4
 from fastapi import UploadFile
 
 from app.database.models.item_model import Item
@@ -17,40 +18,39 @@ def generate_folders_paths(folders: list[str]) -> list[str]:
     return list(paths)
 
 
-def create_file_structure(
-    file: UploadFile, path: str, ownerid: str, bucketid: str
+def create_items_from_path(
+    file: UploadFile, ownerid: str, bucketid: str, parent_path: str
 ) -> tuple[list[Item], Item]:
     struct = list()
 
-    wholepath: str = path
-    if len(wholepath) == 0:
-        wholepath = file.filename
+    fullpath: str = file.filename
 
-    dirs: list[str] = wholepath.split("/")
+    dirs: list[str] = fullpath.split("/")
     folders_paths: list[str] = generate_folders_paths(dirs[:-1])
 
-    for f in folders_paths:
+    for path in folders_paths:
         folder = Item(
             extension="",
             parentid=None,
             size=0,
             size_prefix="",
             bucketid=None,
-            name=f.split("/")[-1],
+            name=path.split("/")[-1],
             ownerid=ownerid,
-            path=f,
+            path=f"{parent_path}/{path}" if parent_path != "" else path,
             type=ItemType.FOLDER,
         )
         struct.append(folder)
 
+    name = ".".join(dirs[-1].split(".")[:-1])
     extension = file.content_type.split("/")[1]
     normalized_size, prefix = normalize_file_size(file.size)
 
     item = Item(
-        name=file.filename,
+        name=name,
         extension=extension,
         parentid=None,
-        path=wholepath,
+        path=f"{parent_path}/{fullpath}" if parent_path != "" else fullpath,
         size=normalized_size,
         size_prefix=prefix,
         bucketid=bucketid,

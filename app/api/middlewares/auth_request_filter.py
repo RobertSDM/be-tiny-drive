@@ -3,7 +3,7 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from jose import jwt
 from app.constants.env_ import jwt_secret
 
-from app.core.exceptions import InvalidJWTToken, JWTTokenExpired, NoAuthenticationHeader
+from app.core.exceptions import InvalidJWTToken, JWTTokenExpired, NoAuthorizationHeader
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
@@ -11,7 +11,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, req: Request, call_next: RequestResponseEndpoint):
         authorization = req.headers.get("Authorization")
         if not authorization:
-            raise NoAuthenticationHeader()
+            raise NoAuthorizationHeader()
 
         token = authorization.replace("Bearer ", "")
         try:

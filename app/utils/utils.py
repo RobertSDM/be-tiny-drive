@@ -12,3 +12,14 @@ def normalize_file_size(byte_size: int):
         pos_prefix += 1
 
     return math.ceil(devided_byte), prefix[pos_prefix]
+
+
+def make_bucket_path(ownerid: str, path: str, name: str):
+    """
+    Make the bucket path for a storage item file
+    """
+
+    folders = "/".join(path.split("/")[:-1])
+    item_path = f"{folders}" if len(folders) > 0 else ""
+
+    return f"user-{ownerid}/drive{"/" if len(folders) > 0 else ""}{item_path}/{name}"

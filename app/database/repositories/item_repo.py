@@ -10,12 +10,12 @@ def item_by_id_ownerid(db: Session, id: str, ownerid: str) -> Query[Item]:
     return db.query(Item).where(and_(Item.id == id, Item.ownerid == ownerid))
 
 
-def item_by_id(db: Session, id: str) -> Query[Item]:
-    return db.query(Item).where(Item.id == id)
-
-
 def item_by_id_type(db: Session, id: str, type: ItemType) -> Query[Item]:
     return db.query(Item).where(and_(Item.id == id, Item.type == type))
+
+
+def item_by_ownerid_path(db: Session, ownerid: str, path: str) -> Query[Item]:
+    return db.query(Item).where(and_(Item.path == path, Item.ownerid == ownerid))
 
 
 def item_by_ownerid_parentid_path(
