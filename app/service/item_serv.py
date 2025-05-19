@@ -160,7 +160,10 @@ def delete_item_serv(db: Session, ownerid: str, id: str) -> Item:
 
         def dfs(to_visit: list[str], path: str = ""):
             for tv in to_visit:
-                bucket_item_path = make_bucket_path(ownerid, item.path, tv["name"])
+                bucket_item_path = make_bucket_path(
+                    ownerid, path + f"/{tv['name']}", tv["name"]
+                )
+                print(bucket_item_path)
                 if not tv["metadata"]:
                     children = storage.list(drive_bucketid, bucket_item_path)
                     dfs(children, f"{path}/{tv["name"]}")
@@ -192,10 +195,11 @@ def download_serv(db, id: str, ownerid: str) -> str:
         raise ItemNotFound()
 
     if item.type == ItemType.FILE:
-        bucket_fullname = f"{item.name}.{item.extension}"
+        bucket_fullname = f"{item.bucketid}.{item.extension}"
         bucket_item_path = make_bucket_path(ownerid, item.path, bucket_fullname)
+        print(bucket_item_path)
         url = storage.signedURL(
-            drive_bucketid, bucket_item_path, 5 * 60, bucket_fullname
+            drive_bucketid, bucket_item_path, 5 * 60, f"{item.name}.{item.extension}"
         )
 
         return url
