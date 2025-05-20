@@ -12,7 +12,6 @@ from app.core.exceptions import (
     InvalidItemToPreview,
     ItemExistsInFolder,
     ItemNotFound,
-    AccountDoesNotExists,
     ParentFolderNotFound,
 )
 from app.core.extract_file_metadata import create_items_from_path
@@ -23,10 +22,8 @@ from app.database.repositories import (
     item_by_id_ownerid,
     item_delete,
 )
-from app.database.repositories.account_repo import account_by_id
 from app.database.repositories.item_repo import (
     item_by_ownerid_path,
-    items_by_ownerid,
     items_by_ownerid_name,
     items_by_ownerid_name_type,
 )
@@ -34,7 +31,6 @@ from app.constants.env_ import drive_bucketid
 from app.enums.enums import ItemType
 from app.utils.execute_query import (
     execute_all,
-    execute_exists,
     execute_first,
     update_entity,
 )

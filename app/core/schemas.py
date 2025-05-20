@@ -1,10 +1,7 @@
 import datetime
-from typing import BinaryIO, TypeVar
-from fastapi import UploadFile
+from typing import TypeVar
 from pydantic import BaseModel, ConfigDict
 
-from app.database.models.account_model import Account
-from app.enums.enums import ItemType
 
 # ORM Models
 

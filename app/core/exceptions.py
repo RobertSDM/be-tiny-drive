@@ -71,7 +71,7 @@ class InvalidItemToPreview(DomainError):
         super().__init__(self.message, 422)
 
 
-class WrongIdentityJWTToken(DomainError):
+class IndentityMismatch(DomainError):
 
     def __init__(self):
         self.message = "account mismatch"

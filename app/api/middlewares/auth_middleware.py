@@ -7,12 +7,11 @@ from app.core.exceptions import (
     InvalidJWTToken,
     JWTTokenExpired,
     NoAuthorizationHeader,
-    WrongIdentityJWTToken,
+    IndentityMismatch,
 )
 from app.constants.env_ import jwt_secret
 from app.clients.sqlalchemy_client import db_client
 from app.database.repositories.account_repo import account_by_id
-from app.database.repositories.item_repo import item_by_id_ownerid
 from app.utils.execute_query import execute_exists
 
 
@@ -35,7 +34,7 @@ async def auth_middleware(req: Request):
 
         ownerid = req.path_params.get("ownerid", None)
         if ownerid and ownerid != resp["sub"]:
-            raise WrongIdentityJWTToken()
+            raise IndentityMismatch()
 
     except InvalidTokenError:
         raise InvalidJWTToken()
