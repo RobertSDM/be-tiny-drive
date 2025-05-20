@@ -9,6 +9,7 @@ import storage3.exceptions
 
 from app.clients.supabase.storage_client import storage
 from app.core.exceptions import (
+    InvalidItemToPreview,
     ItemExistsInFolder,
     ItemNotFound,
     AccountDoesNotExists,
@@ -25,6 +26,9 @@ from app.database.repositories import (
 from app.database.repositories.account_repo import account_by_id
 from app.database.repositories.item_repo import (
     item_by_ownerid_path,
+    items_by_ownerid,
+    items_by_ownerid_name,
+    items_by_ownerid_name_type,
 )
 from app.constants.env_ import drive_bucketid
 from app.enums.enums import ItemType
@@ -40,11 +44,6 @@ from app.utils.utils import make_bucket_path
 def item_save_item_serv(
     db: Session, file: UploadFile, ownerid: str, parentid: str | None
 ) -> Item:
-    account_exists = execute_exists(db, account_by_id(db, ownerid))
-
-    if not account_exists:
-        raise AccountDoesNotExists()
-
     parent_path = ""
     if parentid:
         parent = execute_first(item_by_id_ownerid(db, parentid, ownerid))
@@ -93,11 +92,6 @@ def item_save_item_serv(
 
 
 def item_save_folder_serv(db: Session, ownerid: str, name: str, parentid: str | None):
-    account_exists = execute_exists(db, account_by_id(db, ownerid))
-
-    if not account_exists:
-        raise AccountDoesNotExists()
-
     parent_path = ""
     if parentid:
         parent = execute_first(item_by_id_ownerid(db, parentid, ownerid))
@@ -109,6 +103,7 @@ def item_save_folder_serv(db: Session, ownerid: str, name: str, parentid: str | 
         name=name,
         ownerid=ownerid,
         parentid=parentid,
+        content_type="",
         extension="",
         size=0,
         size_prefix="",
@@ -183,11 +178,6 @@ def delete_item_serv(db: Session, ownerid: str, id: str) -> Item:
 
 
 def download_serv(db, id: str, ownerid: str) -> str:
-    account_exists = execute_exists(db, account_by_id(db, ownerid))
-
-    if not account_exists:
-        raise AccountDoesNotExists()
-
     item = execute_first(item_by_id_ownerid(db, id, ownerid))
 
     if not item:
@@ -206,11 +196,6 @@ def download_serv(db, id: str, ownerid: str) -> str:
 
 
 def download_many_serv(db: Session, fileids: list[str], ownerid: str):
-    account_exists = execute_exists(db, account_by_id(db, ownerid))
-
-    if not account_exists:
-        raise AccountDoesNotExists()
-
     buffer = io.BytesIO()
 
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zip:
@@ -241,11 +226,6 @@ def download_many_serv(db: Session, fileids: list[str], ownerid: str):
 
 
 def download_folder_serv(db: Session, ownerid: str, parentid: str):
-    account_exists = execute_exists(db, account_by_id(db, ownerid))
-
-    if not account_exists:
-        raise AccountDoesNotExists()
-
     folder = execute_first(item_by_id_ownerid(db, parentid, ownerid))
 
     if not folder:
@@ -284,3 +264,32 @@ def download_folder_serv(db: Session, ownerid: str, parentid: str):
         if len(b) == 0:
             break
         yield b
+
+
+def image_preview_serv(db: Session, ownerid: str, id: str) -> str:
+    item = execute_first(item_by_id_ownerid(db, id, ownerid))
+
+    if not item:
+        raise ItemNotFound()
+
+    if not item.content_type.startswith("image"):
+        raise InvalidItemToPreview()
+
+    try:
+        bucket_item_path = make_bucket_path(
+            item.ownerid, item.path, f"{item.bucketid}.{item.extension}"
+        )
+        url = storage.signedURL(drive_bucketid, bucket_item_path, 5 * 60)
+    except Exception as e:
+        raise e
+    return url
+
+
+def search_serv(
+    db: Session, ownerid: str, query: str, type: ItemType | None
+) -> list[Item]:
+    if type:
+        items = execute_all(items_by_ownerid_name_type(db, ownerid, query, type))
+    else:
+        items = execute_all(items_by_ownerid_name(db, ownerid, query))
+    return items

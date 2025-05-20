@@ -62,6 +62,26 @@ def items_by_ownerid(db: Session, ownerid: int) -> Query[Item]:
     return db.query(Item).where(Item.ownerid == ownerid)
 
 
+def items_by_ownerid_name_type(
+    db: Session, ownerid: int, query: str, type: ItemType
+) -> Query[Item]:
+    return db.query(Item).where(
+        and_(
+            and_(Item.ownerid == ownerid, Item.type == type),
+            Item.name.ilike(f"%{query}%"),
+        )
+    )
+
+
+def items_by_ownerid_name(db: Session, ownerid: int, query: str) -> Query[Item]:
+    return db.query(Item).where(
+        and_(
+            Item.ownerid == ownerid,
+            Item.name.ilike(f"%{query}%"),
+        )
+    )
+
+
 def item_by_ownerid_parentid(
     db: Session, ownerid: str, parentid: Optional[str]
 ) -> Query[Item]:
