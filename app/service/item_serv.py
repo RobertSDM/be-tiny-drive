@@ -1,5 +1,7 @@
+import io
 from typing import Optional
 from uuid import uuid4
+import zipfile
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 import storage3
@@ -192,12 +194,93 @@ def download_serv(db, id: str, ownerid: str) -> str:
         raise ItemNotFound()
 
     if item.type == ItemType.FILE:
-        bucket_fullname = f"{item.name}.{item.extension}"
+        bucket_fullname = f"{item.bucketid}.{item.extension}"
         bucket_item_path = make_bucket_path(ownerid, item.path, bucket_fullname)
         url = storage.signedURL(
-            drive_bucketid, bucket_item_path, 5 * 60, bucket_fullname
+            drive_bucketid, bucket_item_path, 5 * 60, f"{item.name}.{item.extension}"
         )
 
         return url
 
     return ""
+
+
+def download_many_serv(db: Session, fileids: list[str], ownerid: str):
+    account_exists = execute_exists(db, account_by_id(db, ownerid))
+
+    if not account_exists:
+        raise AccountDoesNotExists()
+
+    buffer = io.BytesIO()
+
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zip:
+        for id in fileids:
+            item = execute_first(item_by_id_ownerid(db, id, ownerid))
+            if not item:
+                raise ItemNotFound()
+
+            try:
+                file = storage.download(
+                    drive_bucketid,
+                    make_bucket_path(
+                        ownerid, item.path, f"{item.bucketid}.{item.extension}"
+                    ),
+                )
+
+                zip.writestr(f"{item.name}.{item.extension}", file)
+
+            except Exception as e:
+                raise e
+
+    buffer.seek(0)
+    while 1:
+        b = buffer.read(5 * (1024 * 1024))
+        if len(b) == 0:
+            break
+        yield b
+
+
+def download_folder_serv(db: Session, ownerid: str, parentid: str):
+    account_exists = execute_exists(db, account_by_id(db, ownerid))
+
+    if not account_exists:
+        raise AccountDoesNotExists()
+
+    folder = execute_first(item_by_id_ownerid(db, parentid, ownerid))
+
+    if not folder:
+        raise ParentFolderNotFound()
+
+    buffer = io.BytesIO()
+
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zip:
+
+        def dfs(folder: Item):
+            items = execute_all(item_by_ownerid_parentid(db, ownerid, folder.id))
+
+            for item in items:
+                if item.type == ItemType.FILE:
+                    try:
+                        file = storage.download(
+                            drive_bucketid,
+                            make_bucket_path(
+                                ownerid, item.path, f"{item.bucketid}.{item.extension}"
+                            ),
+                        )
+
+                        path = f"{folder.path}/{item.name}.{item.extension}"
+                        zip.writestr(path, file)
+
+                    except Exception as e:
+                        raise e
+                else:
+                    dfs(item)
+
+        dfs(folder)
+
+    buffer.seek(0)
+    while 1:
+        b = buffer.read(5 * 1024 * 1024)
+        if len(b) == 0:
+            break
+        yield b

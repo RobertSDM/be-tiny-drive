@@ -18,4 +18,4 @@ database_url = database_url if mode == Mode.PROD else "sqlite:///database.db"
 origins = origins.split(";")
 port = int(port if port else 4500)
 debug = "info" if mode == Mode.PROD else "debug"
-host = "0.0.0.0" if mode == Mode.PROD else "127.0.0.1"
+host = "0.0.0.0"
