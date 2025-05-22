@@ -1,11 +1,13 @@
 import math
 
+from app.database.models.item_model import Item
+
 
 def normalize_file_size(byte_size: int):
     """
     Transform a size in bytes into a normalized size with its prefix
     """
-    
+
     prefix = ["b", "Kb", "Mb", "Gb"]
 
     pos_prefix = 0
@@ -18,12 +20,9 @@ def normalize_file_size(byte_size: int):
     return math.ceil(devided_byte), prefix[pos_prefix]
 
 
-def make_bucket_path(ownerid: str, path: str, name: str):
+def make_bucket_path(item: Item):
     """
     Make the bucket path for a storage item file
     """
 
-    folders = "/".join(path.split("/")[:-1])
-    item_path = f"{folders}" if len(folders) > 0 else ""
-
-    return f"user-{ownerid}/drive{"/" if len(folders) > 0 else ""}{item_path}/{name}"
+    return f"user-{item.ownerid}/drive/{item.id}{item.extension}"

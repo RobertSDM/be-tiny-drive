@@ -12,7 +12,6 @@ class ItemModel(BaseModel):
     id: str
     name: str
     extension: str
-    path: str
     size: int
     size_prefix: str
     content_type: str   
