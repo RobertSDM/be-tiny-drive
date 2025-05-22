@@ -65,6 +65,19 @@ class NoAuthorizationHeader(DomainError):
         super().__init__(self.message, 422)
 
 
+class InvalidItemToPreview(DomainError):
+    def __init__(self):
+        self.message = "the item is not elegible to preview"
+        super().__init__(self.message, 422)
+
+
+class IndentityMismatch(DomainError):
+
+    def __init__(self):
+        self.message = "account mismatch"
+        super().__init__(self.message, 401)
+
+
 class InvalidJWTToken(DomainError):
     def __init__(self):
         self.message = "the token is invalid"

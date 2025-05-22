@@ -1,3 +1,4 @@
+from sys import exc_info
 from uuid import uuid4
 from fastapi import UploadFile
 
@@ -34,6 +35,7 @@ def create_items_from_path(
             parentid=None,
             size=0,
             size_prefix="",
+            content_type="",
             bucketid=None,
             name=path.split("/")[-1],
             ownerid=ownerid,
@@ -42,8 +44,13 @@ def create_items_from_path(
         )
         struct.append(folder)
 
-    name = ".".join(dirs[-1].split(".")[:-1])
-    extension = file.content_type.split("/")[1]
+    name_splited = dirs[-1].split(".")
+    name = ".".join(name_splited[:-1]) if len(name_splited) > 1 else name_splited[0]
+    extension = (
+        f".{name_splited[-1]}"
+        if len(name_splited) > 1 and name_splited[-1] != ""
+        else ""
+    )
     normalized_size, prefix = normalize_file_size(file.size)
 
     item = Item(
@@ -51,6 +58,7 @@ def create_items_from_path(
         extension=extension,
         parentid=None,
         path=f"{parent_path}/{fullpath}" if parent_path != "" else fullpath,
+        content_type=file.content_type,
         size=normalized_size,
         size_prefix=prefix,
         bucketid=bucketid,

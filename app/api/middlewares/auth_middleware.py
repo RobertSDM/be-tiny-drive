@@ -1,9 +1,18 @@
 from fastapi import Request
 from jose import jwt
 from jwt import InvalidTokenError, ExpiredSignatureError
-from app.constants.env_ import jwt_secret
 
-from app.core.exceptions import InvalidJWTToken, JWTTokenExpired, NoAuthorizationHeader
+from app.core.exceptions import (
+    AccountDoesNotExists,
+    InvalidJWTToken,
+    JWTTokenExpired,
+    NoAuthorizationHeader,
+    IndentityMismatch,
+)
+from app.constants.env_ import jwt_secret
+from app.clients.sqlalchemy_client import db_client
+from app.database.repositories.account_repo import account_by_id
+from app.utils.execute_query import execute_exists
 
 
 async def auth_middleware(req: Request):
@@ -13,7 +22,20 @@ async def auth_middleware(req: Request):
 
     token = authorization.replace("Bearer ", "")
     try:
-        jwt.decode(token, jwt_secret, algorithms="HS256", audience="authenticated")
+        resp = jwt.decode(
+            token, jwt_secret, algorithms="HS256", audience="authenticated"
+        )
+
+        db = next(db_client.get_session())
+        exists = execute_exists(db, account_by_id(db, resp["sub"]))
+
+        if not exists:
+            raise AccountDoesNotExists()
+
+        ownerid = req.path_params.get("ownerid", None)
+        if ownerid and ownerid != resp["sub"]:
+            raise IndentityMismatch()
+
     except InvalidTokenError:
         raise InvalidJWTToken()
     except ExpiredSignatureError:

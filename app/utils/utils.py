@@ -2,12 +2,16 @@ import math
 
 
 def normalize_file_size(byte_size: int):
+    """
+    Transform a size in bytes into a normalized size with its prefix
+    """
+    
     prefix = ["b", "Kb", "Mb", "Gb"]
 
     pos_prefix = 0
     devided_byte = byte_size
 
-    while devided_byte >= 1024 and pos_prefix < len(prefix) - 1:
+    while devided_byte >= 1024 and pos_prefix < len(prefix):
         devided_byte /= 1024
         pos_prefix += 1
 

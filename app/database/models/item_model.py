@@ -18,6 +18,7 @@ class Item(Base):
     size_prefix: Mapped[str]
     bucketid: Mapped[Optional[str]]
     type: Mapped[ItemType]
+    content_type: Mapped[str]
     update_date: Mapped[float] = mapped_column(
         default=datetime.now().timestamp,
         onupdate=datetime.now().timestamp,
