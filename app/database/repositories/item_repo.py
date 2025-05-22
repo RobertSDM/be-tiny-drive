@@ -10,6 +10,14 @@ def item_by_id_ownerid(db: Session, id: str, ownerid: str) -> Query[Item]:
     return db.query(Item).where(and_(Item.id == id, Item.ownerid == ownerid))
 
 
+def item_by_id_ownerid_type(
+    db: Session, id: str, ownerid: str, type: ItemType
+) -> Query[Item]:
+    return db.query(Item).where(
+        and_(and_(Item.id == id, Item.ownerid == ownerid), Item.type == type)
+    )
+
+
 def item_by_ownerid_parentid_fullname(
     db: Session, ownerid: str, path: str
 ) -> Query[Item]:
