@@ -21,6 +21,7 @@ from app.core.schemas import (
 from app.database.models.item_model import Item
 from app.enums.enums import ItemType
 from app.service.item_serv import (
+    breadcrumb_serv,
     delete_items_serv,
     delete_items_serv,
     all_items_in_folder_serv,
@@ -172,3 +173,10 @@ def delete_item_route(
             data=FailureAndSuccess(successes=sucesses, failures=failures)
         ).model_dump()
     )
+
+
+@item_router.get("/breadcrumb/{ownerid}/{id}")
+def breadcrumb_route(id: str, ownerid: str, db=Depends(db_client.get_session)):
+    breadcrumb = breadcrumb_serv(db, ownerid, id)
+
+    return JSONResponse(ListItemResponse(data=breadcrumb, count=len(breadcrumb)).model_dump())

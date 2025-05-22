@@ -18,6 +18,7 @@ from app.core.extract_file_metadata import create_items_from_path
 from app.database.models import Item
 from app.database.repositories.item_repo import (
     item_by_id_ownerid,
+    item_by_id_ownerid_type,
     item_by_ownerid_parentid,
     item_by_ownerid_parentid_fullname,
     item_delete,
@@ -305,3 +306,27 @@ def search_serv(
     else:
         items = execute_all(items_by_ownerid_name(db, ownerid, query))
     return items
+
+
+def breadcrumb_serv(db: Session, ownerid: str, id: str) -> list[Item]:
+    breadcrumb = list()
+
+    def climb_tree(parentid: str):
+        item = execute_first(
+            item_by_id_ownerid_type(db, parentid, ownerid, ItemType.FOLDER)
+        )
+
+        if not item:
+            raise ItemNotFound()
+
+        breadcrumb.append(item)
+
+        if not item.parentid:
+            return
+
+        climb_tree(item.parentid)
+
+    climb_tree(id)
+
+    breadcrumb.reverse()
+    return breadcrumb
