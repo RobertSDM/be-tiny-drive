@@ -5,10 +5,24 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.clients.sqlalchemy_client import db_client
-from app.core.schemas import ListItemResponse, SingleItemResponse, SingleResponse
+from app.core.schemas import (
+    FailureAndSuccess,
+    ListItemResponse,
+    SingleItemResponse,
+    SingleResponse,
+)
+from app.database.models.item_model import Item
+from app.core.schemas import (
+    FailureAndSuccess,
+    ListItemResponse,
+    SingleItemResponse,
+    SingleResponse,
+)
+from app.database.models.item_model import Item
 from app.enums.enums import ItemType
 from app.service.item_serv import (
-    delete_item_serv,
+    delete_items_serv,
+    delete_items_serv,
     all_items_in_folder_serv,
     all_root_items_serv,
     download_folder_serv,
@@ -123,7 +137,7 @@ def download_file_route(id: str, ownerid: str, db=Depends(db_client.get_session)
     return JSONResponse(SingleResponse(data=url).model_dump())
 
 
-@item_router.get("/img/preview/{ownerid}/{id}")
+@item_router.get("/preview/img/{ownerid}/{id}")
 def image_preview(ownerid: str, id: str, db: Session = Depends(db_client.get_session)):
     url = image_preview_serv(db, ownerid, id)
 
@@ -143,8 +157,18 @@ def put_name_route(
     return JSONResponse(SingleItemResponse(data=item).model_dump())
 
 
-@item_router.delete("/delete/{ownerid}/{id}")
-def delete_item_by_id_route(ownerid: str, id: str, db=Depends(db_client.get_session)):
-    item = delete_item_serv(db, ownerid, id)
+class DeleteItemBody(BaseModel):
+    itemids: list[str]
 
-    return JSONResponse(SingleItemResponse(data=item).model_dump())
+
+@item_router.delete("/delete/{ownerid}")
+def delete_item_route(
+    ownerid: str, body: DeleteItemBody, db=Depends(db_client.get_session)
+):
+    sucesses, failures = delete_items_serv(db, ownerid, body.itemids)
+
+    return JSONResponse(
+        SingleResponse(
+            data=FailureAndSuccess(successes=sucesses, failures=failures)
+        ).model_dump()
+    )
