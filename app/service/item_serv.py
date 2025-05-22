@@ -40,6 +40,12 @@ from app.utils.utils import make_bucket_path
 def item_save_item_serv(
     db: Session, file: UploadFile, ownerid: str, parentid: str | None
 ) -> Item:
+
+    item = execute_first(item_by_ownerid_path(db, ownerid, file.filename))
+
+    if item:
+        raise ItemExistsInFolder(file.filename.split("/")[-1], ItemType.FILE.value)
+
     parent_path = ""
     if parentid:
         parent = execute_first(item_by_id_ownerid(db, parentid, ownerid))
@@ -57,7 +63,7 @@ def item_save_item_serv(
             drive_bucketid,
             file.content_type,
             make_bucket_path(
-                ownerid, item_file.path, f"{bucket_file_hash}.{item_file.extension}"
+                ownerid, item_file.path, f"{bucket_file_hash}{item_file.extension}"
             ),
             file.file.read(),
         )
@@ -88,12 +94,22 @@ def item_save_item_serv(
 
 
 def item_save_folder_serv(db: Session, ownerid: str, name: str, parentid: str | None):
+
     parent_path = ""
     if parentid:
         parent = execute_first(item_by_id_ownerid(db, parentid, ownerid))
         if not parent:
             raise ParentFolderNotFound()
         parent_path = parent.path
+
+    item = execute_first(
+        item_by_ownerid_path(
+            db, ownerid, f"{parent_path}/{name}" if parent_path != "" else name
+        )
+    )
+
+    if item:
+        raise ItemExistsInFolder(name, ItemType.FOLDER.value)
 
     folder = Item(
         name=name,
@@ -162,7 +178,7 @@ def delete_item_serv(db: Session, ownerid: str, id: str) -> Item:
 
         dfs(storage_list, item.path)
     else:
-        bucket_fullname = f"{item.bucketid}.{item.extension}"
+        bucket_fullname = f"{item.bucketid}{item.extension}"
         storage.remove(
             drive_bucketid,
             make_bucket_path(ownerid, item.path, bucket_fullname),
@@ -180,7 +196,7 @@ def download_serv(db, id: str, ownerid: str) -> str:
         raise ItemNotFound()
 
     if item.type == ItemType.FILE:
-        bucket_fullname = f"{item.bucketid}.{item.extension}"
+        bucket_fullname = f"{item.bucketid}{item.extension}"
         bucket_item_path = make_bucket_path(ownerid, item.path, bucket_fullname)
         url = storage.signedURL(
             drive_bucketid, bucket_item_path, 5 * 60, f"{item.name}.{item.extension}"
@@ -204,18 +220,18 @@ def download_many_serv(db: Session, fileids: list[str], ownerid: str):
                 file = storage.download(
                     drive_bucketid,
                     make_bucket_path(
-                        ownerid, item.path, f"{item.bucketid}.{item.extension}"
+                        ownerid, item.path, f"{item.bucketid}{item.extension}"
                     ),
                 )
 
-                zip.writestr(f"{item.name}.{item.extension}", file)
+                zip.writestr(f"{item.name}{item.extension}", file)
 
             except Exception as e:
                 raise e
 
     buffer.seek(0)
     while 1:
-        b = buffer.read(5 * (1024 * 1024))
+        b = buffer.read(5 * (1024 * 1024)) # 5mbs
         if len(b) == 0:
             break
         yield b
@@ -240,11 +256,11 @@ def download_folder_serv(db: Session, ownerid: str, parentid: str):
                         file = storage.download(
                             drive_bucketid,
                             make_bucket_path(
-                                ownerid, item.path, f"{item.bucketid}.{item.extension}"
+                                ownerid, item.path, f"{item.bucketid}{item.extension}"
                             ),
                         )
 
-                        path = f"{folder.path}/{item.name}.{item.extension}"
+                        path = f"{folder.path}/{item.name}{item.extension}"
                         zip.writestr(path, file)
 
                     except Exception as e:
@@ -273,9 +289,9 @@ def image_preview_serv(db: Session, ownerid: str, id: str) -> str:
 
     try:
         bucket_item_path = make_bucket_path(
-            item.ownerid, item.path, f"{item.bucketid}.{item.extension}"
+            item.ownerid, item.path, f"{item.bucketid}{item.extension}"
         )
-        url = storage.signedURL(drive_bucketid, bucket_item_path, 5 * 60)
+        url = storage.signedURL(drive_bucketid, bucket_item_path, 3600)
     except Exception as e:
         raise e
     return url

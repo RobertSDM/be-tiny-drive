@@ -15,6 +15,7 @@ class ItemModel(BaseModel):
     path: str
     size: int
     size_prefix: str
+    content_type: str   
     type: str
     parentid: str | None
     update_date: float
