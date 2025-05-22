@@ -58,6 +58,11 @@ class DefaultResponse(BaseModel):
     success: bool = True
 
 
+class FailureAndSuccess[T](BaseModel):
+    failures: list[T]
+    successes: list[T]
+
+
 class ListResponse[T](DefaultResponse):
     data: list[T]
     count: int
