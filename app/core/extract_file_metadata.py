@@ -1,4 +1,4 @@
-from sys import exc_info
+from functools import reduce
 from uuid import uuid4
 from fastapi import UploadFile
 
@@ -7,42 +7,27 @@ from app.enums.enums import ItemType
 from app.utils.utils import normalize_file_size
 
 
-def generate_folders_paths(folders: list[str]) -> list[str]:
-    paths = list()
-
-    for f in folders:
-        if len(paths) > 0:
-            paths.append(f"{paths[-1]}/{f}")
-        else:
-            paths.append(f)
-
-    return list(paths)
-
-
 def create_items_from_path(
-    file: UploadFile, ownerid: str, bucketid: str, parent_path: str
+    file_data: UploadFile, ownerid: str
 ) -> tuple[list[Item], Item]:
-    struct = list()
+    folders = list()
 
-    fullpath: str = file.filename
+    dirs: list[str] = file_data.filename.split("/")
+    folder_names: list[str] = dirs[:-1]
 
-    dirs: list[str] = fullpath.split("/")
-    folders_paths: list[str] = generate_folders_paths(dirs[:-1])
-
-    for path in folders_paths:
+    for name in folder_names:
         folder = Item(
+            id=str(uuid4()),
             extension="",
             parentid=None,
             size=0,
             size_prefix="",
             content_type="",
-            bucketid=None,
-            name=path.split("/")[-1],
+            name=name,
             ownerid=ownerid,
-            path=f"{parent_path}/{path}" if parent_path != "" else path,
             type=ItemType.FOLDER,
         )
-        struct.append(folder)
+        folders.append(folder)
 
     name_splited = dirs[-1].split(".")
     name = ".".join(name_splited[:-1]) if len(name_splited) > 1 else name_splited[0]
@@ -51,19 +36,18 @@ def create_items_from_path(
         if len(name_splited) > 1 and name_splited[-1] != ""
         else ""
     )
-    normalized_size, prefix = normalize_file_size(file.size)
+    normalized_size, prefix = normalize_file_size(file_data.size)
 
-    item = Item(
+    file = Item(
+        id=str(uuid4()),
         name=name,
         extension=extension,
         parentid=None,
-        path=f"{parent_path}/{fullpath}" if parent_path != "" else fullpath,
-        content_type=file.content_type,
+        content_type=file_data.content_type,
         size=normalized_size,
         size_prefix=prefix,
-        bucketid=bucketid,
         ownerid=ownerid,
         type=ItemType.FILE,
     )
 
-    return struct, item
+    return folders, file

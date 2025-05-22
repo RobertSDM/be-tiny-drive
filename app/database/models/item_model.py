@@ -13,10 +13,8 @@ class Item(Base):
     id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid4()))
     name: Mapped[str]
     extension: Mapped[str]
-    path: Mapped[str]
     size: Mapped[int]
     size_prefix: Mapped[str]
-    bucketid: Mapped[Optional[str]]
     type: Mapped[ItemType]
     content_type: Mapped[str]
     update_date: Mapped[float] = mapped_column(

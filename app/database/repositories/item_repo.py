@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session, Query
 
 from ..models import Item
@@ -10,7 +10,9 @@ def item_by_id_ownerid(db: Session, id: str, ownerid: str) -> Query[Item]:
     return db.query(Item).where(and_(Item.id == id, Item.ownerid == ownerid))
 
 
-def item_by_ownerid_path(db: Session, ownerid: str, path: str) -> Query[Item]:
+def item_by_ownerid_parentid_fullname(
+    db: Session, ownerid: str, path: str
+) -> Query[Item]:
     return db.query(Item).where(and_(Item.path == path, Item.ownerid == ownerid))
 
 
@@ -51,6 +53,20 @@ def items_by_ownerid_name(db: Session, ownerid: int, query: str) -> Query[Item]:
             Item.ownerid == ownerid,
             Item.name.ilike(f"%{query}%"),
         )
+    )
+
+
+def item_by_ownerid_parentid_fullname(
+    db: Session, ownerid: str, parentid: Optional[str], fullname: str
+) -> Query[Item]:
+    return db.query(Item).where(
+        and_(
+            and_(
+                Item.ownerid == ownerid,
+                Item.parentid == parentid,
+            ),
+            (Item.name + Item.extension) == fullname,
+        ),
     )
 
 

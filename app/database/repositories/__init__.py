@@ -3,5 +3,5 @@ from .item_repo import (
     item_by_id_ownerid,
     item_delete,
     item_search,
-    item_by_ownerid_parentid,
+    item_by_ownerid_parentid_fullname,
 )
