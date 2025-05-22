@@ -14,7 +14,7 @@ class ItemModel(BaseModel):
     extension: str
     size: int
     size_prefix: str
-    content_type: str   
+    content_type: str
     type: str
     parentid: str | None
     update_date: float
@@ -51,6 +51,11 @@ T = TypeVar("T")
 class DefaultResponse(BaseModel):
     error: Error | None = None
     success: bool = True
+
+
+class FailureAndSuccess[T](BaseModel):
+    failures: list[T]
+    successes: list[T]
 
 
 class ListResponse[T](DefaultResponse):

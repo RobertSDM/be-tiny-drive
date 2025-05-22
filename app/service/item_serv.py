@@ -142,34 +142,50 @@ def all_items_in_folder_serv(db: Session, ownerid: str, parentid: Optional[str])
     return execute_all(item_by_ownerid_parentid(db, ownerid, parentid))
 
 
-def delete_item_serv(db: Session, ownerid: str, id: str) -> Item:
-    item = execute_first(item_by_id_ownerid(db, id, ownerid))
+def delete_items_serv(
+    db: Session, ownerid: str, items: list[str]
+) -> tuple[list[str], list[str]]:
+    sucesses = list()
+    failures = list()
 
-    if not item:
-        raise ItemNotFound()
+    for id in items:
+        item = execute_first(item_by_id_ownerid(db, id, ownerid))
 
-    if item.type == ItemType.FOLDER:
-        items = execute_all(item_by_ownerid_parentid(db, ownerid, item.id))
+        if not item:
+            failures.append(id)
+            continue
 
-        def dfs(children: list[Item]):
-            for c in children:
-                bucket_item_path = make_bucket_path(c)
-                if c.type == ItemType.FOLDER:
-                    children = execute_all(item_by_ownerid_parentid(db, ownerid, c.id))
-                    dfs(children)
-                else:
-                    storage.remove(drive_bucketid, bucket_item_path)
+        if item.type == ItemType.FOLDER:
+            items = execute_all(item_by_ownerid_parentid(db, ownerid, item.id))
 
-        dfs(items)
-    else:
-        storage.remove(
-            drive_bucketid,
-            make_bucket_path(item),
-        )
+            def dfs(children: list[Item]):
+                for c in children:
+                    bucket_item_path = make_bucket_path(c)
+                    if c.type == ItemType.FOLDER:
+                        children = execute_all(
+                            item_by_ownerid_parentid(db, ownerid, c.id)
+                        )
+                        dfs(children)
+                    else:
+                        try:
+                            storage.remove(drive_bucketid, bucket_item_path)
+                        except:
+                            failures.append(id)
 
-    item_delete(db, item)
+            dfs(items)
+        else:
+            try:
+                storage.remove(
+                    drive_bucketid,
+                    make_bucket_path(item),
+                )
+                sucesses.append(id)
+            except:
+                failures.append(id)
 
-    return item
+        item_delete(db, item)
+
+    return sucesses, failures
 
 
 def download_serv(db, id: str, ownerid: str) -> str:
