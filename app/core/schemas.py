@@ -14,7 +14,7 @@ class ItemModel(BaseModel):
     extension: str
     size: int
     size_prefix: str
-    content_type: str   
+    content_type: str
     type: str
     parentid: str | None
     update_date: float
@@ -31,6 +31,11 @@ class AccountModel(BaseModel):
 
 
 # Schemas
+
+
+class FailureAndSuccess[T](BaseModel):
+    failures: list[T]
+    successes: list[T]
 
 
 class LoginReturn(BaseModel):
