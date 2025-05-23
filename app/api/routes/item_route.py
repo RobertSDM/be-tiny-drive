@@ -12,20 +12,12 @@ from app.core.schemas import (
 )
 from app.clients.sqlalchemy_client import db_client
 from app.enums.enums import ItemType
-from app.service.item_serv.item_create import item_save_folder_serv, item_save_item_serv
-from app.service.item_serv.item_delete import delete_items_serv
-from app.service.item_serv.item_read import (
-    all_items_in_folder_serv,
-    all_root_items_serv,
-    breadcrumb_serv,
-    download_folder_serv,
-    download_many_serv,
-    download_serv,
-    image_preview_serv,
-    item_by_id_serv,
-    search_serv,
+from app.services.item_serv import (
+    item_create_serv,
+    item_delete_serv,
+    item_read_serv,
+    item_update_serv,
 )
-from app.service.item_serv.item_update import item_update_name
 
 
 item_router = APIRouter()
@@ -38,7 +30,7 @@ def save_file_route(
     parentid: Annotated[str | None, Form()] = None,
     db=Depends(db_client.get_session),
 ):
-    item = item_save_item_serv(db, file, ownerid, parentid)
+    item = item_create_serv.item_save_item_serv(db, file, ownerid, parentid)
 
     return JSONResponse(SingleItemResponse(data=item).model_dump())
 
@@ -51,14 +43,16 @@ class SaveFolderBody(BaseModel):
 
 @item_router.post("/save/folder")
 def save_folder_route(body: SaveFolderBody, db=Depends(db_client.get_session)):
-    folder = item_save_folder_serv(db, body.ownerid, body.name, body.parentid)
+    folder = item_create_serv.item_save_folder_serv(
+        db, body.ownerid, body.name, body.parentid
+    )
 
     return JSONResponse(SingleItemResponse(data=folder).model_dump())
 
 
 @item_router.get("/all/{ownerid}")
 def get_all_items_route(ownerid: str, db=Depends(db_client.get_session)):
-    items = all_root_items_serv(db, ownerid)
+    items = item_read_serv.all_root_items_serv(db, ownerid)
 
     return JSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
 
@@ -67,7 +61,7 @@ def get_all_items_route(ownerid: str, db=Depends(db_client.get_session)):
 def get_all_item_in_folder_route(
     ownerid: str, parentid: str, db=Depends(db_client.get_session)
 ):
-    items = all_items_in_folder_serv(db, ownerid, parentid)
+    items = item_read_serv.all_items_in_folder_serv(db, ownerid, parentid)
 
     return JSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
 
@@ -79,14 +73,14 @@ def item_search_route(
     type: ItemType | None = None,
     db: Session = Depends(db_client.get_session),
 ):
-    items = search_serv(db, ownerid, q, type)
+    items = item_read_serv.search_serv(db, ownerid, q, type)
 
     return JSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
 
 
 @item_router.get("/{ownerid}/{id}")
 def get_item_by_id_route(ownerid: str, id: str, db=Depends(db_client.get_session)):
-    item = item_by_id_serv(db, ownerid, id)
+    item = item_read_serv.item_by_id_serv(db, ownerid, id)
 
     return JSONResponse(SingleItemResponse(data=item).model_dump())
 
@@ -101,7 +95,7 @@ def download_many_files_route(
     ownerid: str,
     db: Session = Depends(db_client.get_session),
 ):
-    zip = download_many_serv(db, body.fileids, ownerid)
+    zip = item_read_serv.download_many_serv(db, body.fileids, ownerid)
 
     return StreamingResponse(zip, media_type="application/zip")
 
@@ -110,7 +104,7 @@ def download_many_files_route(
 def donwload_folder_route(
     ownerid: str, parentid: str, db: Session = Depends(db_client.get_session)
 ):
-    zip = download_folder_serv(db, ownerid, parentid)
+    zip = item_read_serv.download_folder_serv(db, ownerid, parentid)
 
     return StreamingResponse(
         zip,
@@ -123,14 +117,14 @@ def donwload_folder_route(
 def download_file_route(id: str, ownerid: str, db=Depends(db_client.get_session)):
 
     print(id)
-    url = download_serv(db, id, ownerid)
+    url = item_read_serv.download_serv(db, id, ownerid)
 
     return JSONResponse(SingleResponse(data=url).model_dump())
 
 
 @item_router.get("/preview/img/{ownerid}/{id}")
 def image_preview(ownerid: str, id: str, db: Session = Depends(db_client.get_session)):
-    url = image_preview_serv(db, ownerid, id)
+    url = item_read_serv.image_preview_serv(db, ownerid, id)
 
     return JSONResponse(SingleResponse(data=url).model_dump())
 
@@ -143,7 +137,7 @@ class UpdateNameBody(BaseModel):
 def put_name_route(
     id: str, ownerid: str, body: UpdateNameBody, db=Depends(db_client.get_session)
 ):
-    item = item_update_name(db, id, ownerid, body.name)
+    item = item_update_serv.item_update_name(db, id, ownerid, body.name)
 
     return JSONResponse(SingleItemResponse(data=item).model_dump())
 
@@ -156,7 +150,7 @@ class DeleteItemBody(BaseModel):
 def delete_item_route(
     ownerid: str, body: DeleteItemBody, db=Depends(db_client.get_session)
 ):
-    sucesses, failures = delete_items_serv(db, ownerid, body.itemids)
+    sucesses, failures = item_delete_serv.delete_items_serv(db, ownerid, body.itemids)
 
     return JSONResponse(
         SingleResponse(
@@ -167,7 +161,7 @@ def delete_item_route(
 
 @item_router.get("/breadcrumb/{ownerid}/{id}")
 def breadcrumb_route(id: str, ownerid: str, db=Depends(db_client.get_session)):
-    breadcrumb = breadcrumb_serv(db, ownerid, id)
+    breadcrumb = item_read_serv.breadcrumb_serv(db, ownerid, id)
 
     return JSONResponse(
         ListItemResponse(data=breadcrumb, count=len(breadcrumb)).model_dump()
