@@ -5,7 +5,7 @@ from app.clients.sqlalchemy_client import db_client
 from sqlalchemy.orm import Session
 
 from app.core.schemas import AuthRegisterResponse
-from app.service.auth_serv import register_serv
+from app.services.auth_serv import register_serv
 
 auth_router = APIRouter()
 
