@@ -2,40 +2,30 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Form, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from pytest import Session
 
+from app.core.schemas import (
+    FailureAndSuccess,
+    ListItemResponse,
+    SingleItemResponse,
+    SingleResponse,
+)
 from app.clients.sqlalchemy_client import db_client
-from app.core.schemas import (
-    FailureAndSuccess,
-    ListItemResponse,
-    SingleItemResponse,
-    SingleResponse,
-)
-from app.database.models.item_model import Item
-from app.core.schemas import (
-    FailureAndSuccess,
-    ListItemResponse,
-    SingleItemResponse,
-    SingleResponse,
-)
-from app.database.models.item_model import Item
 from app.enums.enums import ItemType
-from app.service.item_serv import (
-    breadcrumb_serv,
-    delete_items_serv,
-    delete_items_serv,
+from app.service.item_serv.item_create import item_save_folder_serv, item_save_item_serv
+from app.service.item_serv.item_delete import delete_items_serv
+from app.service.item_serv.item_read import (
     all_items_in_folder_serv,
     all_root_items_serv,
+    breadcrumb_serv,
     download_folder_serv,
     download_many_serv,
     download_serv,
     image_preview_serv,
     item_by_id_serv,
-    item_save_folder_serv,
-    item_save_item_serv,
-    item_update_name,
     search_serv,
 )
+from app.service.item_serv.item_update import item_update_name
 
 
 item_router = APIRouter()
@@ -179,4 +169,6 @@ def delete_item_route(
 def breadcrumb_route(id: str, ownerid: str, db=Depends(db_client.get_session)):
     breadcrumb = breadcrumb_serv(db, ownerid, id)
 
-    return JSONResponse(ListItemResponse(data=breadcrumb, count=len(breadcrumb)).model_dump())
+    return JSONResponse(
+        ListItemResponse(data=breadcrumb, count=len(breadcrumb)).model_dump()
+    )
