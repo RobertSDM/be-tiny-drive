@@ -51,8 +51,8 @@ def save_folder_route(body: SaveFolderBody, db=Depends(db_client.get_session)):
 
 
 @item_router.get("/all/{ownerid}")
-def get_all_items_route(ownerid: str, db=Depends(db_client.get_session)):
-    items = item_read_serv.all_root_items_serv(db, ownerid)
+def get_all_items_route(ownerid: str, p: int = 1, db=Depends(db_client.get_session)):
+    items = item_read_serv.all_root_items_serv(db, ownerid, p)
 
     return JSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
 
@@ -116,7 +116,6 @@ def donwload_folder_route(
 @item_router.get("/download/{ownerid}/{id}")
 def download_file_route(id: str, ownerid: str, db=Depends(db_client.get_session)):
 
-    print(id)
     url = item_read_serv.download_serv(db, id, ownerid)
 
     return JSONResponse(SingleResponse(data=url).model_dump())
