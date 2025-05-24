@@ -21,14 +21,18 @@ from app.enums.enums import ItemType
 from app.utils.execute_query import (
     execute_all,
     execute_first,
+    paginate,
 )
 from app.utils.utils import make_bucket_path
+from app.constants.database_variables import limit_per_page
 
 
 class _ItemReadServ:
 
-    def all_root_items_serv(self, db: Session, ownerid: str) -> list[Item]:
-        return execute_all(item_by_ownerid_parentid(db, ownerid, None))
+    def all_root_items_serv(self, db: Session, ownerid: str, page: int) -> list[Item]:
+        return execute_all(
+            paginate(item_by_ownerid_parentid(db, ownerid, None), limit_per_page, page)
+        )
 
     def item_by_id_serv(self, db: Session, ownerid: str, id: str):
         item = execute_first(item_by_id_ownerid(db, id, ownerid))
