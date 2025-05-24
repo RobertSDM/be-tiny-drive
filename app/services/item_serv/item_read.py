@@ -22,6 +22,7 @@ from app.utils.execute_query import (
     execute_all,
     execute_first,
     paginate,
+    query_pipe,
 )
 from app.utils.utils import make_bucket_path
 from app.constants.database_variables import limit_per_page
@@ -30,9 +31,12 @@ from app.constants.database_variables import limit_per_page
 class _ItemReadServ:
 
     def all_root_items_serv(self, db: Session, ownerid: str, page: int) -> list[Item]:
-        return execute_all(
-            paginate(item_by_ownerid_parentid(db, ownerid, None), limit_per_page, page)
+        pipe = query_pipe(
+            item_by_ownerid_parentid,
+            lambda query: paginate(query, limit_per_page, page),
+            execute_all,
         )
+        return pipe(db, ownerid, None)
 
     def item_by_id_serv(self, db: Session, ownerid: str, id: str):
         item = execute_first(item_by_id_ownerid(db, id, ownerid))

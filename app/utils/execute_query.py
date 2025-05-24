@@ -1,7 +1,21 @@
-from typing import TypeVar
+from typing import Callable, TypeVar
 from sqlalchemy.orm import Session, Query
 
 T = TypeVar("T")
+
+
+def query_pipe(*funcs: Callable):
+    def run(*args, **kwargs):
+        result = funcs[0](*args, **kwargs)
+        for func in funcs[1:]:
+            if result:
+                result = func(result)
+            else:
+                result = func()
+
+        return result
+
+    return run
 
 
 def paginate(query: Query[T], limit: int, page: int) -> list[T]:
