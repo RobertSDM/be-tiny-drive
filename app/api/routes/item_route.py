@@ -116,7 +116,6 @@ def donwload_folder_route(
 @item_router.get("/download/{ownerid}/{id}")
 def download_file_route(id: str, ownerid: str, db=Depends(db_client.get_session)):
 
-    print(id)
     url = item_read_serv.download_serv(db, id, ownerid)
 
     return JSONResponse(SingleResponse(data=url).model_dump())
