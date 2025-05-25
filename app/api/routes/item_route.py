@@ -11,7 +11,7 @@ from app.core.schemas import (
     SingleResponse,
 )
 from app.clients.sqlalchemy_client import db_client
-from app.enums.enums import ItemType
+from app.enums.enums import ItemType, Sort, SortOrder
 from app.services.item_serv import (
     item_create_serv,
     item_delete_serv,
@@ -51,17 +51,30 @@ def save_folder_route(body: SaveFolderBody, db=Depends(db_client.get_session)):
 
 
 @item_router.get("/all/{ownerid}")
-def get_all_items_route(ownerid: str, p: int = 1, db=Depends(db_client.get_session)):
-    items = item_read_serv.all_root_items_serv(db, ownerid, p)
+def get_all_items_route(
+    ownerid: str,
+    p: int = 0,
+    order: SortOrder = SortOrder.ASC,
+    sort: Sort = Sort.NAME,
+    db=Depends(db_client.get_session),
+):
+    items = item_read_serv.all_root_items_serv(db, ownerid, p, order, sort)
 
     return JSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
 
 
 @item_router.get("/all/{ownerid}/{parentid}")
 def get_all_item_in_folder_route(
-    ownerid: str, parentid: str, db=Depends(db_client.get_session)
+    ownerid: str,
+    parentid: str,
+    p: int = 0,
+    order: SortOrder = SortOrder.ASC,
+    sort: Sort = Sort.NAME,
+    db=Depends(db_client.get_session),
 ):
-    items = item_read_serv.all_items_in_folder_serv(db, ownerid, parentid)
+    items = item_read_serv.all_items_in_folder_serv(
+        db, ownerid, parentid, p, order, sort
+    )
 
     return JSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
 

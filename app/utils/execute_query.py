@@ -1,7 +1,32 @@
 from typing import Callable, TypeVar
-from sqlalchemy.orm import Session, Query
+from sqlalchemy.orm import Session, Query, InstrumentedAttribute
+
+from app.database.models.item_model import Item
+from app.enums.enums import Sort, SortOrder
 
 T = TypeVar("T")
+
+
+def order_by(
+    query: Query[T], columns: list[InstrumentedAttribute], sort_order: SortOrder
+):
+    match sort_order:
+        case SortOrder.ASC:
+            return query.order_by(columns[0].asc(), *(col.asc() for col in columns[1:]))
+        case SortOrder.DESC:
+            return query.order_by(
+                columns[0].desc(), *(col.desc() for col in columns[1:])
+            )
+
+
+def select_order(type: Sort) -> InstrumentedAttribute:
+    match type:
+        case Sort.NAME:
+            return Item.name
+        case Sort.CREATION_DATE:
+            return Item.creation_date
+        case Sort.UPDATE_DATE:
+            return Item.update_date
 
 
 def query_pipe(*funcs: Callable):
