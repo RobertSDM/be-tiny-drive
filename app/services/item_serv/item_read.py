@@ -13,16 +13,19 @@ from app.database.models import Item
 from app.database.repositories.item_repo import (
     item_by_id_ownerid,
     item_by_ownerid_parentid,
+    item_by_ownerid_parentid_type,
     items_by_ownerid_name,
     items_by_ownerid_name_type,
 )
 from app.constants.env_ import drive_bucketid
-from app.enums.enums import ItemType
+from app.enums.enums import ItemType, Sort, SortOrder
 from app.utils.execute_query import (
     execute_all,
     execute_first,
+    order_by,
     paginate,
     query_pipe,
+    select_order,
 )
 from app.utils.utils import make_bucket_path
 from app.constants.database_variables import limit_per_page, limit_per_search
@@ -30,9 +33,16 @@ from app.constants.database_variables import limit_per_page, limit_per_search
 
 class _ItemReadServ:
 
-    def all_root_items_serv(self, db: Session, ownerid: str, page: int) -> list[Item]:
+    def all_root_items_serv(
+        self, db: Session, ownerid: str, page: int, order: SortOrder, sort: Sort
+    ) -> list[Item]:
+
+        column = select_order(sort)
+
         pipe = query_pipe(
             item_by_ownerid_parentid,
+            lambda query: order_by(query, [Item.type], SortOrder.DESC),
+            lambda query: order_by(query, [column], order),
             lambda query: paginate(query, limit_per_page, page),
             execute_all,
         )
@@ -47,10 +57,20 @@ class _ItemReadServ:
         return item
 
     def all_items_in_folder_serv(
-        self, db: Session, ownerid: str, parentid: str | None, page: int
+        self,
+        db: Session,
+        ownerid: str,
+        parentid: str | None,
+        page: int,
+        order: SortOrder,
+        sort: Sort,
     ) -> list[Item]:
+        column = select_order(sort)
+
         pipe = query_pipe(
             item_by_ownerid_parentid,
+            lambda query: order_by(query, [Item.type], SortOrder.DESC),
+            lambda query: order_by(query, [column], order),
             lambda query: paginate(query, limit_per_page, page),
             execute_all,
         )
@@ -191,7 +211,7 @@ class _ItemReadServ:
         self, db: Session, ownerid: str, query: str, type: ItemType | None
     ) -> list[Item]:
         base_pipe = query_pipe(
-            lambda query: paginate(query, limit_per_search, 1),
+            lambda query: paginate(query, limit_per_search, 0),
             execute_all,
         )
 
