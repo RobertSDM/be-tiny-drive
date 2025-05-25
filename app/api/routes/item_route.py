@@ -1,6 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, Form, UploadFile
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, ORJSONResponse, StreamingResponse
 from pydantic import BaseModel
 from pytest import Session
 
@@ -32,7 +32,7 @@ def save_file_route(
 ):
     item = item_create_serv.item_save_item_serv(db, file, ownerid, parentid)
 
-    return JSONResponse(SingleItemResponse(data=item).model_dump())
+    return ORJSONResponse(SingleItemResponse(data=item).model_dump())
 
 
 class SaveFolderBody(BaseModel):
@@ -47,7 +47,7 @@ def save_folder_route(body: SaveFolderBody, db=Depends(db_client.get_session)):
         db, body.ownerid, body.name, body.parentid
     )
 
-    return JSONResponse(SingleItemResponse(data=folder).model_dump())
+    return ORJSONResponse(SingleItemResponse(data=folder).model_dump())
 
 
 @item_router.get("/all/{ownerid}")
@@ -60,7 +60,7 @@ def get_all_items_route(
 ):
     items = item_read_serv.all_root_items_serv(db, ownerid, p, order, sort)
 
-    return JSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
+    return ORJSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
 
 
 @item_router.get("/all/{ownerid}/{parentid}")
@@ -76,7 +76,7 @@ def get_all_item_in_folder_route(
         db, ownerid, parentid, p, order, sort
     )
 
-    return JSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
+    return ORJSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
 
 
 @item_router.get("/search/{ownerid}")
@@ -88,14 +88,14 @@ def item_search_route(
 ):
     items = item_read_serv.search_serv(db, ownerid, q, type)
 
-    return JSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
+    return ORJSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
 
 
 @item_router.get("/{ownerid}/{id}")
 def get_item_by_id_route(ownerid: str, id: str, db=Depends(db_client.get_session)):
     item = item_read_serv.item_by_id_serv(db, ownerid, id)
 
-    return JSONResponse(SingleItemResponse(data=item).model_dump())
+    return ORJSONResponse(SingleItemResponse(data=item).model_dump())
 
 
 class DownloadManyFilesBody(BaseModel):
@@ -131,14 +131,14 @@ def download_file_route(id: str, ownerid: str, db=Depends(db_client.get_session)
 
     url = item_read_serv.download_serv(db, id, ownerid)
 
-    return JSONResponse(SingleResponse(data=url).model_dump())
+    return ORJSONResponse(SingleResponse(data=url).model_dump())
 
 
 @item_router.get("/preview/img/{ownerid}/{id}")
 def image_preview(ownerid: str, id: str, db: Session = Depends(db_client.get_session)):
     url = item_read_serv.image_preview_serv(db, ownerid, id)
 
-    return JSONResponse(SingleResponse(data=url).model_dump())
+    return ORJSONResponse(SingleResponse(data=url).model_dump())
 
 
 class UpdateNameBody(BaseModel):
@@ -151,7 +151,7 @@ def put_name_route(
 ):
     item = item_update_serv.item_update_name(db, id, ownerid, body.name)
 
-    return JSONResponse(SingleItemResponse(data=item).model_dump())
+    return ORJSONResponse(SingleItemResponse(data=item).model_dump())
 
 
 class DeleteItemBody(BaseModel):
@@ -164,7 +164,7 @@ def delete_item_route(
 ):
     sucesses, failures = item_delete_serv.delete_items_serv(db, ownerid, body.itemids)
 
-    return JSONResponse(
+    return ORJSONResponse(
         SingleResponse(
             data=FailureAndSuccess(successes=sucesses, failures=failures)
         ).model_dump()
@@ -175,6 +175,6 @@ def delete_item_route(
 def breadcrumb_route(id: str, ownerid: str, db=Depends(db_client.get_session)):
     breadcrumb = item_read_serv.breadcrumb_serv(db, ownerid, id)
 
-    return JSONResponse(
+    return ORJSONResponse(
         ListItemResponse(data=breadcrumb, count=len(breadcrumb)).model_dump()
     )

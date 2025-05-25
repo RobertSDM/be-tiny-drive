@@ -4,7 +4,7 @@ from sqlalchemy import ForeignKey, func
 from app.enums.enums import ItemType
 from app.clients.sqlalchemy_client import Base
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class Item(Base):
@@ -17,13 +17,13 @@ class Item(Base):
     size_prefix: Mapped[str]
     type: Mapped[ItemType]
     content_type: Mapped[str]
-    update_date: Mapped[float] = mapped_column(
-        default=datetime.now().timestamp,
-        onupdate=datetime.now().timestamp,
+    update_date: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
         server_default=func.current_timestamp(),
     )
-    creation_date: Mapped[float] = mapped_column(
-        default=datetime.now().timestamp,
+    creation_date: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc),
         server_default=func.current_timestamp(),
     )
 

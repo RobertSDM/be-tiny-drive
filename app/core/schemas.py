@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from typing import TypeVar
 from pydantic import BaseModel, ConfigDict
 
@@ -17,8 +17,8 @@ class ItemModel(BaseModel):
     content_type: str
     type: str
     parentid: str | None
-    update_date: float
-    creation_date: float
+    update_date: datetime
+    creation_date: datetime
 
 
 class AccountModel(BaseModel):
@@ -27,7 +27,7 @@ class AccountModel(BaseModel):
     id: str
     username: str
     email: str
-    creation_date: datetime.datetime
+    creation_date: datetime
 
 
 # Schemas
@@ -41,7 +41,6 @@ class FailureAndSuccess[T](BaseModel):
 class LoginReturn(BaseModel):
     token: str
     user: AccountModel
-
 
 
 # API
