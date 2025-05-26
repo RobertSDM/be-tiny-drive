@@ -12,7 +12,9 @@ on:
 jobs:
   test-and-merge:
     runs-on: ubuntu-latest
-
+  
+    env:
+      ORIGINS: "${{ secrets.ORIGINS }}"
     steps:
       - name: Checkout
         uses: actions/checkout@v3
