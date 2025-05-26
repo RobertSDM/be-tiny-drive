@@ -10,9 +10,9 @@ from app.database.repositories.item_repo import (
 )
 from app.constants.env_ import drive_bucketid
 from app.enums.enums import ItemType
-from app.utils.execute_query import (
-    execute_all,
-    execute_first,
+from app.utils.query import (
+    exec_all,
+    exec_first,
 )
 from app.database.repositories.item_repo import item_delete
 from app.utils.utils import make_bucket_path
@@ -40,7 +40,7 @@ class _ItemDeleteServ:
     ):
         for c in children:
             if c.type == ItemType.FOLDER:
-                children = execute_all(item_by_ownerid_parentid(db, ownerid, c.id))
+                children = exec_all(item_by_ownerid_parentid(db, ownerid, c.id))
                 self._dfs_delete_items(db, children, ownerid, successes, failures)
             else:
                 if self._delete_item_from_storage(c):
@@ -55,14 +55,14 @@ class _ItemDeleteServ:
         failures = list()
 
         for id in items:
-            item = execute_first(item_by_id_ownerid(db, id, ownerid))
+            item = exec_first(item_by_id_ownerid(db, id, ownerid))
 
             if not item:
                 failures.append(id)
                 continue
 
             if item.type == ItemType.FOLDER:
-                items = execute_all(item_by_ownerid_parentid(db, ownerid, item.id))
+                items = exec_all(item_by_ownerid_parentid(db, ownerid, item.id))
                 self._dfs_delete_items(db, items, ownerid, successes, failures)
                 successes.append(item.id)
             else:

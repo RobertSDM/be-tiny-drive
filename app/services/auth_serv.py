@@ -6,11 +6,11 @@ from app.database.repositories.account_repo import (
     account_by_email,
     account_save,
 )
-from app.utils.execute_query import execute_exists
+from app.utils.query import exec_exists
 
 
 def register_serv(db: Session, username: str, email: str, password: str) -> Account:
-    exists = execute_exists(db, account_by_email(db, email))
+    exists = exec_exists(db, account_by_email(db, email))
 
     if exists:
         raise AccountAlreadyExists()
@@ -19,6 +19,11 @@ def register_serv(db: Session, username: str, email: str, password: str) -> Acco
     if not resp.user:
         return AccountRegistrationError()
 
-    account = Account(id=resp.user.id, username=username, email=resp.user.email, creation_date=resp.user.created_at)
+    account = Account(
+        id=resp.user.id,
+        username=username,
+        email=resp.user.email,
+        creation_date=resp.user.created_at,
+    )
 
     return account_save(db, account)

@@ -13,19 +13,18 @@ from app.database.models import Item
 from app.database.repositories.item_repo import (
     item_by_id_ownerid,
     item_by_ownerid_parentid,
-    item_by_ownerid_parentid_type,
     items_by_ownerid_name,
     items_by_ownerid_name_type,
 )
 from app.constants.env_ import drive_bucketid
 from app.enums.enums import ItemType, Sort, SortOrder
-from app.utils.execute_query import (
-    execute_all,
-    execute_first,
+from app.utils.query import (
+    exec_all,
+    exec_first,
     order_by,
     paginate,
-    query_pipe,
-    select_order,
+    pipeline,
+    select_order_item_column,
 )
 from app.utils.utils import make_bucket_path
 from app.constants.database_variables import limit_per_page, limit_per_search
@@ -36,20 +35,10 @@ class _ItemReadServ:
     def all_root_items_serv(
         self, db: Session, ownerid: str, page: int, order: SortOrder, sort: Sort
     ) -> list[Item]:
-
-        column = select_order(sort)
-
-        pipe = query_pipe(
-            item_by_ownerid_parentid,
-            lambda query: order_by(query, [Item.type], SortOrder.DESC),
-            lambda query: order_by(query, [column], order),
-            lambda query: paginate(query, limit_per_page, page),
-            execute_all,
-        )
-        return pipe(db, ownerid, None)
+        return self.all_items_in_folder_serv(db, ownerid, None, page, order, sort)
 
     def item_by_id_serv(self, db: Session, ownerid: str, id: str):
-        item = execute_first(item_by_id_ownerid(db, id, ownerid))
+        item = exec_first(item_by_id_ownerid(db, id, ownerid))
 
         if not item:
             raise ItemNotFound()
@@ -65,19 +54,18 @@ class _ItemReadServ:
         order: SortOrder,
         sort: Sort,
     ) -> list[Item]:
-        column = select_order(sort)
+        column = select_order_item_column(sort)
 
-        pipe = query_pipe(
+        pipe = pipeline(
             item_by_ownerid_parentid,
-            lambda query: order_by(query, [Item.type], SortOrder.DESC),
             lambda query: order_by(query, [column], order),
             lambda query: paginate(query, limit_per_page, page),
-            execute_all,
+            exec_all,
         )
         return pipe(db, ownerid, parentid)
 
     def download_serv(self, db, id: str, ownerid: str) -> str:
-        item = execute_first(item_by_id_ownerid(db, id, ownerid))
+        item = exec_first(item_by_id_ownerid(db, id, ownerid))
 
         if not item:
             raise ItemNotFound()
@@ -98,7 +86,7 @@ class _ItemReadServ:
         to_download = list()
 
         for id in fileids:
-            item = execute_first(item_by_id_ownerid(db, id, ownerid))
+            item = exec_first(item_by_id_ownerid(db, id, ownerid))
             if not item:
                 raise ItemNotFound()
 
@@ -147,7 +135,7 @@ class _ItemReadServ:
     def _dfs_zip_items(
         self, db: Session, ownerid: str, zip: zipfile.ZipFile, folder: Item, path: str
     ) -> io.BytesIO:
-        items = execute_all(item_by_ownerid_parentid(db, ownerid, folder.id))
+        items = exec_all(item_by_ownerid_parentid(db, ownerid, folder.id))
 
         for item in items:
             if item.type == ItemType.FILE:
@@ -177,7 +165,7 @@ class _ItemReadServ:
         yield from self._stream_buffer(buffer)
 
     def _get_folder_or_raise(self, db: Session, ownerid: str, id: str) -> Item:
-        folder = execute_first(item_by_id_ownerid(db, id, ownerid))
+        folder = exec_first(item_by_id_ownerid(db, id, ownerid))
 
         if not folder:
             raise ParentFolderNotFound()
@@ -192,7 +180,7 @@ class _ItemReadServ:
         yield from self._stream_buffer(buffer)
 
     def image_preview_serv(self, db: Session, ownerid: str, id: str) -> str:
-        item = execute_first(item_by_id_ownerid(db, id, ownerid))
+        item = exec_first(item_by_id_ownerid(db, id, ownerid))
 
         if not item:
             raise ItemNotFound()
@@ -210,17 +198,17 @@ class _ItemReadServ:
     def search_serv(
         self, db: Session, ownerid: str, query: str, type: ItemType | None
     ) -> list[Item]:
-        base_pipe = query_pipe(
+        base_pipe = pipeline(
             lambda query: paginate(query, limit_per_search, 0),
-            execute_all,
+            exec_all,
         )
 
         if type:
-            return query_pipe(items_by_ownerid_name_type, base_pipe)(
+            return pipeline(items_by_ownerid_name_type, base_pipe)(
                 db, ownerid, query, type
             )
 
-        return query_pipe(items_by_ownerid_name, base_pipe)(db, ownerid, query)
+        return pipeline(items_by_ownerid_name, base_pipe)(db, ownerid, query)
 
     def _climb_file_tree(self, db: Session, ownerid: str, parentid: str) -> list[Item]:
 

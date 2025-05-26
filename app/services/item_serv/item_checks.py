@@ -6,7 +6,7 @@ from app.database.repositories.item_repo import (
     item_by_ownerid_parentid_fullname,
 )
 from app.enums.enums import ItemType
-from app.utils.execute_query import execute_exists
+from app.utils.query import exec_exists
 
 
 class _ItemChecks:
@@ -20,7 +20,7 @@ class _ItemChecks:
         type: ItemType,
     ) -> None:
         name = filename.split("/")[-1]
-        exists = execute_exists(
+        exists = exec_exists(
             db, item_by_ownerid_parentid_fullname(db, ownerid, parentid, name)
         )
         if exists:
@@ -30,7 +30,7 @@ class _ItemChecks:
         if not parentid:
             return
 
-        exists = execute_exists(db, item_by_id_ownerid(db, parentid, ownerid))
+        exists = exec_exists(db, item_by_id_ownerid(db, parentid, ownerid))
         if not exists:
             raise ParentFolderNotFound()
 

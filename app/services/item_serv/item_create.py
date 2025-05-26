@@ -13,7 +13,7 @@ from app.database.repositories.item_repo import (
 from app.enums.enums import ItemType
 from app.interfaces.storage_interface import StorageClientInterface
 from app.services.item_serv.item_checks import item_checks
-from app.utils.execute_query import execute_first
+from app.utils.query import exec_first
 from app.utils.utils import make_bucket_path, normalize_file_size
 from app.constants.env_ import drive_bucketid
 
@@ -87,7 +87,7 @@ class _ItemCreateServ:
         crr_parentid = parentid
 
         for f in folders:
-            folder = execute_first(
+            folder = exec_first(
                 item_by_ownerid_parentid_fullname(db, ownerid, crr_parentid, f.name)
             )
 
