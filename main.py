@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI
+from fastapi.responses import JSONResponse
 import uvicorn
 from app.api.exeption_handling.domain_error_handler import domain_error_handler
 from app.api.middlewares.auth_middleware import auth_middleware
@@ -28,6 +29,12 @@ app.include_router(
     account_router, prefix="/account", dependencies=[Depends(auth_middleware)]
 )
 app.add_exception_handler(DomainError, domain_error_handler)
+
+
+@app.get("/")
+def root():
+    return "hello world"
+
 
 if __name__ == "__main__":
     uvicorn.run(
