@@ -1,5 +1,4 @@
 import subprocess
-from time import sleep
 
 import pytest
 
@@ -10,7 +9,7 @@ def test_app_init():
 
         if pross.returncode != 0:
             pytest.fail(pross.stderr)
-            
+
         pross.terminate()
     except subprocess.TimeoutExpired:
         pass
