@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TypeVar
+from typing import Generic, TypeVar
 from pydantic import BaseModel, ConfigDict
 
 T = TypeVar("T")
@@ -34,7 +34,7 @@ class AccountModel(BaseModel):
 # Schemas
 
 
-class FailureAndSuccess[T](BaseModel):
+class FailureAndSuccess(BaseModel, Generic[T]):
     failures: list[T]
     successes: list[T]
 
@@ -56,17 +56,17 @@ class DefaultResponse(BaseModel):
     success: bool = True
 
 
-class FailureAndSuccess[T](BaseModel):
+class FailureAndSuccess(BaseModel, Generic[T]):
     failures: list[T]
     successes: list[T]
 
 
-class ListResponse[T](DefaultResponse):
+class ListResponse(DefaultResponse, Generic[T]):
     data: list[T]
     count: int
 
 
-class SingleResponse[T](DefaultResponse):
+class SingleResponse(DefaultResponse, Generic[T]):
     data: T
 
 
