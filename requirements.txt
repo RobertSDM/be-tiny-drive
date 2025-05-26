@@ -8,3 +8,4 @@ python-jose==3.4.0
 supabase==2.15.1
 python-multipart==0.0.20
 psycopg2-binary==2.9.9
+orjson==3.10.3
