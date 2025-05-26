@@ -13,8 +13,9 @@ supabase_key = os.getenv("SUPABASE_KEY")
 jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
 drive_bucketid = os.getenv("STORAGE_BUCKET_ID")
 
-database_url = database_url if mode == Mode.PROD else "sqlite:///database.db"
+database_url = database_url if mode == Mode.PROD.value else "sqlite:///database.db"
+print(database_url)
 origins = origins.split(";")
 port = int(port if port else 4500)
-debug = "info" if mode == Mode.PROD else "debug"
+debug = "info" if mode == Mode.PROD.value else "debug"
 host = "0.0.0.0"
