@@ -4,7 +4,7 @@ from sqlalchemy import ForeignKey, func
 from app.enums.enums import ItemType
 from app.clients.sqlalchemy_client import Base
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class Item(Base):
@@ -13,18 +13,17 @@ class Item(Base):
     id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid4()))
     name: Mapped[str]
     extension: Mapped[str]
-    path: Mapped[str]
     size: Mapped[int]
     size_prefix: Mapped[str]
     type: Mapped[ItemType]
-    data: Mapped[bytes]
-    update_date: Mapped[float] = mapped_column(
-        default=datetime.now().timestamp,
-        onupdate=datetime.now().timestamp,
+    content_type: Mapped[str]
+    update_date: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
         server_default=func.current_timestamp(),
     )
-    creation_date: Mapped[float] = mapped_column(
-        default=datetime.now().timestamp,
+    creation_date: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc),
         server_default=func.current_timestamp(),
     )
 
@@ -36,5 +35,5 @@ class Item(Base):
     items: Mapped[list["Item"]] = relationship(back_populates="parent", cascade="all")
 
     # owner
-    ownerid: Mapped[Optional[str]] = mapped_column(ForeignKey("user.id"))
-    owner: Mapped["User"] = relationship(back_populates="items")
+    ownerid: Mapped[Optional[str]] = mapped_column(ForeignKey("tb_account.id"))
+    owner: Mapped["Account"] = relationship(back_populates="items")

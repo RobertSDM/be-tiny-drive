@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session, Query
 
 from ..models import Item
@@ -10,32 +10,18 @@ def item_by_id_ownerid(db: Session, id: str, ownerid: str) -> Query[Item]:
     return db.query(Item).where(and_(Item.id == id, Item.ownerid == ownerid))
 
 
-def item_by_id(db: Session, id: str) -> Query[Item]:
-    return db.query(Item).where(Item.id == id)
-
-
-def item_by_id_type(db: Session, id: str, type: ItemType) -> Query[Item]:
-    return db.query(Item).where(and_(Item.id == id, Item.type == type))
-
-
-def item_by_ownerid_parentid_path(
-    db: Session, parentid: str, ownerid: str, path: str
+def item_by_id_ownerid_type(
+    db: Session, id: str, ownerid: str, type: ItemType
 ) -> Query[Item]:
     return db.query(Item).where(
-        and_(
-            and_(Item.path == path, Item.parentid == parentid), Item.ownerid == ownerid
-        )
+        and_(and_(Item.id == id, Item.ownerid == ownerid), Item.type == type)
     )
 
 
-def item_by_ownerid_parentid_type(
-    db: Session, parentid: int, ownerid: int, type: str
+def item_by_ownerid_parentid_fullname(
+    db: Session, ownerid: str, path: str
 ) -> Query[Item]:
-    return db.query(Item).where(
-        and_(
-            and_(Item.parentid == parentid, Item.type == type), Item.ownerid == ownerid
-        )
-    )
+    return db.query(Item).where(and_(Item.path == path, Item.ownerid == ownerid))
 
 
 def item_save(db: Session, item: Item) -> Item:
@@ -58,8 +44,38 @@ def item_search(db: Session, search: str, ownerid: str) -> Query[Item]:
     )
 
 
-def items_by_ownerid(db: Session, ownerid: int) -> Query[Item]:
-    return db.query(Item).where(Item.ownerid == ownerid)
+def items_by_ownerid_name_type(
+    db: Session, ownerid: int, query: str, type: ItemType
+) -> Query[Item]:
+    return db.query(Item).where(
+        and_(
+            and_(Item.ownerid == ownerid, Item.type == type),
+            Item.name.ilike(f"%{query}%"),
+        ),
+    )
+
+
+def items_by_ownerid_name(db: Session, ownerid: int, query: str) -> Query[Item]:
+    return db.query(Item).where(
+        and_(
+            Item.ownerid == ownerid,
+            Item.name.ilike(f"%{query}%"),
+        )
+    )
+
+
+def item_by_ownerid_parentid_fullname(
+    db: Session, ownerid: str, parentid: Optional[str], fullname: str
+) -> Query[Item]:
+    return db.query(Item).where(
+        and_(
+            and_(
+                Item.ownerid == ownerid,
+                Item.parentid == parentid,
+            ),
+            (Item.name + Item.extension) == fullname,
+        ),
+    )
 
 
 def item_by_ownerid_parentid(
@@ -67,4 +83,14 @@ def item_by_ownerid_parentid(
 ) -> Query[Item]:
     return db.query(Item).where(
         and_(Item.ownerid == ownerid, Item.parentid == parentid)
+    )
+
+
+def item_by_ownerid_parentid_type(
+    db: Session, ownerid: str, parentid: Optional[str], type: ItemType
+) -> Query[Item]:
+    return db.query(Item).where(
+        and_(
+            and_(Item.ownerid == ownerid, Item.parentid == parentid), Item.type == type
+        )
     )

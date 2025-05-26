@@ -1,5 +1,7 @@
+from datetime import datetime
 from typing import TypeVar
 from pydantic import BaseModel, ConfigDict
+
 
 # ORM Models
 
@@ -10,29 +12,35 @@ class ItemModel(BaseModel):
     id: str
     name: str
     extension: str
-    path: str
     size: int
     size_prefix: str
+    content_type: str
     type: str
     parentid: str | None
-    update_date: float
-    creation_date: float
+    update_date: datetime
+    creation_date: datetime
 
 
-class UserModel(BaseModel):
+class AccountModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
     username: str
     email: str
+    creation_date: datetime
 
 
 # Schemas
 
 
+class FailureAndSuccess[T](BaseModel):
+    failures: list[T]
+    successes: list[T]
+
+
 class LoginReturn(BaseModel):
     token: str
-    user: UserModel
+    user: AccountModel
 
 
 # API
@@ -50,6 +58,11 @@ class DefaultResponse(BaseModel):
     success: bool = True
 
 
+class FailureAndSuccess[T](BaseModel):
+    failures: list[T]
+    successes: list[T]
+
+
 class ListResponse[T](DefaultResponse):
     data: list[T]
     count: int
@@ -59,8 +72,17 @@ class SingleResponse[T](DefaultResponse):
     data: T
 
 
-class AuthResponse(SingleResponse[UserModel]):
-    token: str | None = None
+class AccountResponse(SingleResponse[AccountModel]):
+    pass
+
+
+class AuthRegisterResponse(SingleResponse[AccountModel]):
+    pass
+
+
+class AuthLoginResponse(SingleResponse[AccountModel]):
+    access_token: str
+    refresh_token: str
 
 
 class ListItemResponse(ListResponse[ItemModel]):
@@ -68,10 +90,6 @@ class ListItemResponse(ListResponse[ItemModel]):
 
 
 class SingleItemResponse(SingleResponse[ItemModel]):
-    pass
-
-
-class UserResponse(SingleResponse[UserModel]):
     pass
 
 

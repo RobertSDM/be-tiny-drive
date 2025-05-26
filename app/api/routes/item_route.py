@@ -1,96 +1,180 @@
-from typing import Annotated, Optional
-from fastapi import APIRouter, Depends, Form
-from fastapi.responses import JSONResponse
+from typing import Annotated
+from fastapi import APIRouter, Depends, Form, UploadFile
+from fastapi.responses import JSONResponse, ORJSONResponse, StreamingResponse
 from pydantic import BaseModel
+from pytest import Session
 
+from app.core.schemas import (
+    FailureAndSuccess,
+    ListItemResponse,
+    SingleItemResponse,
+    SingleResponse,
+)
 from app.clients.sqlalchemy_client import db_client
-from app.core.schemas import ListItemResponse, SingleItemResponse
-from app.enums.enums import ItemType
-from app.service.item_serv import (
-    delete_item_serv,
-    all_items_in_folder_serv,
-    all_root_items_serv,
-    item_by_id_serv,
+from app.enums.enums import ItemType, Sort, SortOrder
+from app.services.item_serv import (
     item_create_serv,
-    item_update_name,
+    item_delete_serv,
+    item_read_serv,
+    item_update_serv,
 )
 
 
 item_router = APIRouter()
 
 
-class SaveRequest(BaseModel):
-    # file: Annotated[bytes, File()]
-    name: Annotated[str, Form()]
-    extension: Annotated[str, Form()]
-    path: Annotated[str, Form()]
-    size: Annotated[int, Form()]
-    ownerid: Annotated[str, Form()]
-    type: Annotated[ItemType, Form()]
-    parentid: Annotated[Optional[str], Form()]
-
-
 @item_router.post("/save", status_code=200)
 def save_file_route(
-    request: SaveRequest,
+    file: UploadFile,
+    ownerid: Annotated[str, Form()],
+    parentid: Annotated[str | None, Form()] = None,
     db=Depends(db_client.get_session),
 ):
-    item = item_create_serv(
-        db,
-        request.name,
-        request.parentid,
-        request.extension,
-        request.size,
-        bytes(),
-        request.ownerid,
-        request.path,
-        request.type,
+    item = item_create_serv.item_save_item_serv(db, file, ownerid, parentid)
+
+    return ORJSONResponse(SingleItemResponse(data=item).model_dump())
+
+
+class SaveFolderBody(BaseModel):
+    name: str
+    parentid: str | None
+    ownerid: str
+
+
+@item_router.post("/save/folder")
+def save_folder_route(body: SaveFolderBody, db=Depends(db_client.get_session)):
+    folder = item_create_serv.item_save_folder_serv(
+        db, body.ownerid, body.name, body.parentid
     )
 
-    return JSONResponse(SingleItemResponse(data=item).model_dump())
+    return ORJSONResponse(SingleItemResponse(data=folder).model_dump())
 
 
 @item_router.get("/all/{ownerid}")
-def all_items(ownerid: str, db=Depends(db_client.get_session)):
-    items = all_root_items_serv(db, ownerid)
+def get_all_items_route(
+    ownerid: str,
+    p: int = 0,
+    order: SortOrder = SortOrder.ASC,
+    sort: Sort = Sort.NAME,
+    db=Depends(db_client.get_session),
+):
+    items = item_read_serv.all_root_items_serv(db, ownerid, p, order, sort)
 
-    return JSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
+    return ORJSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
 
 
 @item_router.get("/all/{ownerid}/{parentid}")
-def all_item_in_folder(ownerid: str, parentid: str, db=Depends(db_client.get_session)):
-    items = all_items_in_folder_serv(db, ownerid, parentid)
+def get_all_item_in_folder_route(
+    ownerid: str,
+    parentid: str,
+    p: int = 0,
+    order: SortOrder = SortOrder.ASC,
+    sort: Sort = Sort.NAME,
+    db=Depends(db_client.get_session),
+):
+    items = item_read_serv.all_items_in_folder_serv(
+        db, ownerid, parentid, p, order, sort
+    )
 
-    return JSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
+    return ORJSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
+
+
+@item_router.get("/search/{ownerid}")
+def item_search_route(
+    ownerid: str,
+    q: str,
+    type: ItemType | None = None,
+    db: Session = Depends(db_client.get_session),
+):
+    items = item_read_serv.search_serv(db, ownerid, q, type)
+
+    return ORJSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
 
 
 @item_router.get("/{ownerid}/{id}")
-def item_by_id(ownerid: str, id: str, db=Depends(db_client.get_session)):
-    item = item_by_id_serv(db, ownerid, id)
+def get_item_by_id_route(ownerid: str, id: str, db=Depends(db_client.get_session)):
+    item = item_read_serv.item_by_id_serv(db, ownerid, id)
 
-    return JSONResponse(SingleItemResponse(data=item).model_dump())
+    return ORJSONResponse(SingleItemResponse(data=item).model_dump())
 
 
-# @item_router.get("/download/{id}/{owner_id}")
-# def __download_file(id: str, owner_id: str, db=Depends(db_client.get_session)):
-#     data, formated_byte_data = download_serv(db, id, owner_id)
+class DownloadManyFilesBody(BaseModel):
+    fileids: list[str]
 
-#     return {"data": formated_byte_data, "name": data.fullname}
+
+@item_router.get("/download/many/{ownerid}")
+def download_many_files_route(
+    body: DownloadManyFilesBody,
+    ownerid: str,
+    db: Session = Depends(db_client.get_session),
+):
+    zip = item_read_serv.download_many_serv(db, body.fileids, ownerid)
+
+    return StreamingResponse(zip, media_type="application/zip")
+
+
+@item_router.get("/download/folder/{ownerid}/{parentid}")
+def donwload_folder_route(
+    ownerid: str, parentid: str, db: Session = Depends(db_client.get_session)
+):
+    zip = item_read_serv.download_folder_serv(db, ownerid, parentid)
+
+    return StreamingResponse(
+        zip,
+        media_type="application/zip",
+        headers={"Content-Disposition": "attachment; filename='downloaded_content'"},
+    )
+
+
+@item_router.get("/download/{ownerid}/{id}")
+def download_file_route(id: str, ownerid: str, db=Depends(db_client.get_session)):
+
+    url = item_read_serv.download_serv(db, id, ownerid)
+
+    return ORJSONResponse(SingleResponse(data=url).model_dump())
+
+
+@item_router.get("/preview/img/{ownerid}/{id}")
+def image_preview(ownerid: str, id: str, db: Session = Depends(db_client.get_session)):
+    url = item_read_serv.image_preview_serv(db, ownerid, id)
+
+    return ORJSONResponse(SingleResponse(data=url).model_dump())
 
 
 class UpdateNameBody(BaseModel):
     name: str
 
 
-@item_router.put("/update/{id}/name")
-def update_name(id: str, body: UpdateNameBody, db=Depends(db_client.get_session)):
-    item = item_update_name(db, id, body.name)
+@item_router.put("/update/{ownerid}/{id}/name")
+def put_name_route(
+    id: str, ownerid: str, body: UpdateNameBody, db=Depends(db_client.get_session)
+):
+    item = item_update_serv.item_update_name(db, id, ownerid, body.name)
 
-    return JSONResponse(SingleItemResponse(data=item).model_dump())
+    return ORJSONResponse(SingleItemResponse(data=item).model_dump())
 
 
-@item_router.delete("/delete/{ownerid}/{id}")
-def delete_file_by_id(ownerid: str, id: str, db=Depends(db_client.get_session)):
-    item = delete_item_serv(db, ownerid, id)
+class DeleteItemBody(BaseModel):
+    itemids: list[str]
 
-    return JSONResponse(SingleItemResponse(data=item).model_dump())
+
+@item_router.delete("/delete/{ownerid}")
+def delete_item_route(
+    ownerid: str, body: DeleteItemBody, db=Depends(db_client.get_session)
+):
+    sucesses, failures = item_delete_serv.delete_items_serv(db, ownerid, body.itemids)
+
+    return ORJSONResponse(
+        SingleResponse(
+            data=FailureAndSuccess(successes=sucesses, failures=failures)
+        ).model_dump()
+    )
+
+
+@item_router.get("/breadcrumb/{ownerid}/{id}")
+def breadcrumb_route(id: str, ownerid: str, db=Depends(db_client.get_session)):
+    breadcrumb = item_read_serv.breadcrumb_serv(db, ownerid, id)
+
+    return ORJSONResponse(
+        ListItemResponse(data=breadcrumb, count=len(breadcrumb)).model_dump()
+    )

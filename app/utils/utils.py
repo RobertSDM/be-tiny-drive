@@ -1,14 +1,28 @@
 import math
 
+from app.database.models.item_model import Item
 
-def get_sufix_to_bytes(byte_size: int):
+
+def normalize_file_size(byte_size: int):
+    """
+    Transform a size in bytes into a normalized size with its prefix
+    """
+
     prefix = ["b", "Kb", "Mb", "Gb"]
 
     pos_prefix = 0
     devided_byte = byte_size
 
-    while devided_byte >= 1024 and pos_prefix < len(prefix) - 1:
+    while devided_byte >= 1024 and pos_prefix < len(prefix):
         devided_byte /= 1024
         pos_prefix += 1
 
     return math.ceil(devided_byte), prefix[pos_prefix]
+
+
+def make_bucket_path(item: Item):
+    """
+    Make the bucket path for a storage item file
+    """
+
+    return f"user-{item.ownerid}/drive/{item.id}{item.extension}"

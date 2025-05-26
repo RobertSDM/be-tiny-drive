@@ -5,7 +5,7 @@ class DomainError(Exception):
         super().__init__(self.message)
 
 
-class UserAlreadyExists(DomainError):
+class AccountAlreadyExists(DomainError):
     def __init__(self):
         self.message = f"the user already exists"
         super().__init__(self.message, 409)
@@ -41,10 +41,16 @@ class ItemExistsInFolder(DomainError):
         super().__init__(self.message, 409)
 
 
-class UserDoesNotExists(DomainError):
+class AccountDoesNotExists(DomainError):
     def __init__(self):
-        self.message = f"the user don't exist"
+        self.message = f"the account don't exist"
         super().__init__(self.message, 404)
+
+
+class AccountRegistrationError(DomainError):
+    def __init__(self):
+        self.message = "error registring the user"
+        super().__init__(self.message, 500)
 
 
 class InvalidPassword(DomainError):
@@ -53,10 +59,23 @@ class InvalidPassword(DomainError):
         super().__init__(self.message, 422)
 
 
-class NoAuthenticationHeader(DomainError):
+class NoAuthorizationHeader(DomainError):
     def __init__(self):
-        self.message = "the authentication header was not present in the request"
+        self.message = "the authorization header was not present in the request"
         super().__init__(self.message, 422)
+
+
+class InvalidItemToPreview(DomainError):
+    def __init__(self):
+        self.message = "the item is not elegible to preview"
+        super().__init__(self.message, 422)
+
+
+class IndentityMismatch(DomainError):
+
+    def __init__(self):
+        self.message = "account mismatch"
+        super().__init__(self.message, 401)
 
 
 class InvalidJWTToken(DomainError):
