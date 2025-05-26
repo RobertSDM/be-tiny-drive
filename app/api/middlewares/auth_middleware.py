@@ -1,6 +1,6 @@
 from fastapi import Request
 from jose import jwt
-from jwt import InvalidTokenError, ExpiredSignatureError
+from jose.exceptions import ExpiredSignatureError, JWTError
 
 from app.core.exceptions import (
     AccountDoesNotExists,
@@ -36,7 +36,7 @@ async def auth_middleware(req: Request):
         if ownerid and ownerid != resp["sub"]:
             raise IndentityMismatch()
 
-    except InvalidTokenError:
+    except JWTError:
         raise InvalidJWTToken()
     except ExpiredSignatureError:
         raise JWTTokenExpired()

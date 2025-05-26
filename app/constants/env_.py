@@ -5,7 +5,6 @@ from app.enums.enums import Mode
 
 # Environment variables
 mode = os.getenv("MODE")
-secret_key = os.getenv("SECRET_KEY")
 database_url = os.getenv("DATABASE_URL")
 origins = os.getenv("ORIGINS")
 port = os.getenv("PORT")
