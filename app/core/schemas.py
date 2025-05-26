@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import TypeVar
 from pydantic import BaseModel, ConfigDict
 
+T = TypeVar("T")
 
 # ORM Models
 
@@ -48,9 +49,6 @@ class LoginReturn(BaseModel):
 
 class Error(BaseModel):
     message: str
-
-
-T = TypeVar("T")
 
 
 class DefaultResponse(BaseModel):
