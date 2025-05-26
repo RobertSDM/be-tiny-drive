@@ -15,6 +15,14 @@ jobs:
   
     env:
       ORIGINS: "${{ secrets.ORIGINS }}"
+      DATABASE_PASSWORD: "${{ secrets.DATABASE_PASSWORD }}"
+      DATABASE_URL: "${{ secrets.DATABASE_URL }}"
+      SUPABASE_URL: "${{ secrets.SUPABASE_URL }}"
+      SUPABASE_KEY: "${{ secrets.SUPABASE_KEY }}"
+      SUPABASE_JWT_SECRET: "${{ secrets.SUPABASE_JWT_SECRET }}"
+      STORAGE_BUCKET_ID: "${{ secrets.STORAGE_BUCKET_ID }}"
+      
+      
     steps:
       - name: Checkout
         uses: actions/checkout@v3
