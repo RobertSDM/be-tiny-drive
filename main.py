@@ -1,5 +1,4 @@
 from fastapi import Depends, FastAPI
-from fastapi.responses import JSONResponse
 import uvicorn
 from app.api.exeption_handling.domain_error_handler import domain_error_handler
 from app.api.middlewares.auth_middleware import auth_middleware

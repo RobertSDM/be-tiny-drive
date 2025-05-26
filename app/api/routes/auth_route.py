@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse, ORJSONResponse
+from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel
 from app.clients.sqlalchemy_client import db_client
 from sqlalchemy.orm import Session
