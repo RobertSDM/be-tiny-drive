@@ -6,7 +6,7 @@ from app.constants.env import mode, supabase_key, supabase_url
 
 
 def get_auth_client_instance() -> AuthenticationInterface:
-    if mode == Mode.PROD:
+    if mode == Mode.PROD.value:
         return SupabaseAuthenticationClient(supabase_url, supabase_key)
     else:
         return MockAuthenticationClient()
