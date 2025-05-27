@@ -23,10 +23,8 @@ app.add_middleware(
 
 
 app.include_router(auth_router, prefix="/auth")
-app.include_router(item_router, prefix="/item", dependencies=[Depends(auth_middleware)])
-app.include_router(
-    account_router, prefix="/account", dependencies=[Depends(auth_middleware)]
-)
+app.include_router(item_router, prefix="/item")
+app.include_router(account_router, prefix="/account")
 app.add_exception_handler(DomainError, domain_error_handler)
 
 

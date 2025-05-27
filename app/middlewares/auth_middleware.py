@@ -1,42 +1,35 @@
-from fastapi import Request
-from jose import jwt
-from jose.exceptions import ExpiredSignatureError, JWTError
+from typing import Annotated
+from fastapi import Depends, Request
 
 from app.core.exceptions import (
     AccountDoesNotExists,
-    InvalidJWTToken,
-    JWTTokenExpired,
     NoAuthorizationHeader,
     IndentityMismatch,
 )
-from app.constants.env import jwt_secret
+from app.core.select_dependency import get_auth_client_instance
 from app.database.client.sqlalchemy_client import db_client
 from app.database.repositories.account_repo import account_by_id
+from app.interfaces.authentication_interface import AuthenticationInterface
 from app.utils.query import exec_exists
 
 
-async def auth_middleware(req: Request):
+async def auth_middleware(
+    req: Request,
+    auth_client: Annotated[AuthenticationInterface, Depends(get_auth_client_instance)],
+):
     authorization = req.headers.get("Authorization")
     if not authorization:
         raise NoAuthorizationHeader()
 
     token = authorization.replace("Bearer ", "")
-    try:
-        resp = jwt.decode(
-            token, jwt_secret, algorithms="HS256", audience="authenticated"
-        )
+    resp = auth_client.verifyToken(token)
 
-        db = next(db_client.get_session())
-        exists = exec_exists(db, account_by_id(db, resp["sub"]))
+    db = next(db_client.get_session())
+    exists = exec_exists(db, account_by_id(db, resp["sub"]))
 
-        if not exists:
-            raise AccountDoesNotExists()
+    if not exists:
+        raise AccountDoesNotExists()
 
-        ownerid = req.path_params.get("ownerid", None)
-        if ownerid and ownerid != resp["sub"]:
-            raise IndentityMismatch()
-
-    except JWTError:
-        raise InvalidJWTToken()
-    except ExpiredSignatureError:
-        raise JWTTokenExpired()
+    ownerid = req.path_params.get("ownerid", None)
+    if ownerid and ownerid != resp["sub"]:
+        raise IndentityMismatch()
