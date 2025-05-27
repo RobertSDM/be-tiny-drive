@@ -1,30 +1,36 @@
 from sqlalchemy.orm import Session
-from app.core.select_dependency import get_auth_client_instance
 from app.core.exceptions import AccountAlreadyExists, AccountRegistrationError
 from app.database.models.account_model import Account
 from app.database.repositories.account_repo import (
     account_by_email,
     account_save,
 )
+from app.interfaces.authentication_interface import AuthenticationInterface
 from app.utils.query import exec_exists
 
 
-def register_serv(db: Session, username: str, email: str, password: str) -> Account:
-    exists = exec_exists(db, account_by_email(db, email))
+class AuthenticationService:
 
-    if exists:
-        raise AccountAlreadyExists()
+    def __init__(self, auth_client: AuthenticationInterface):
+        self.auth_client = auth_client
 
-    auth_client = get_auth_client_instance()
-    resp = auth_client.registerPassword(email, password)
-    if not resp:
-        return AccountRegistrationError()
+    def register_serv(
+        self, db: Session, username: str, email: str, password: str
+    ) -> Account:
+        exists = exec_exists(db, account_by_email(db, email))
 
-    account = Account(
-        id=resp.id,
-        username=username,
-        email=resp.email,
-        creation_date=resp.creation_date,
-    )
+        if exists:
+            raise AccountAlreadyExists()
 
-    return account_save(db, account)
+        resp = self.auth_client.registerPassword(email, password)
+        if not resp:
+            return AccountRegistrationError()
+
+        account = Account(
+            id=resp.id,
+            username=username,
+            email=resp.email,
+            creation_date=resp.creation_date,
+        )
+
+        return account_save(db, account)
