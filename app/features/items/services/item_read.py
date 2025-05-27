@@ -3,7 +3,9 @@ from typing import Any, BinaryIO, Generator
 import zipfile
 from sqlalchemy.orm import Session
 
-from app.clients.supabase.storage_client import storage
+from app.features.storage.supabase_storage_client import (
+    supabase_storage_client as storage_client,
+)
 from app.core.exceptions import (
     InvalidItemToPreview,
     ItemNotFound,
@@ -16,18 +18,17 @@ from app.database.repositories.item_repo import (
     items_by_ownerid_name,
     items_by_ownerid_name_type,
 )
-from app.constants.env_ import drive_bucketid
+from app.constants.env import drive_bucketid
 from app.enums.enums import ItemType, Sort, SortOrder
 from app.utils.query import (
     exec_all,
     exec_first,
     order_by,
     paginate,
-    pipeline,
     select_order_item_column,
 )
-from app.utils.utils import make_bucket_path
-from app.constants.database_variables import limit_per_page, limit_per_search
+from app.utils.utils import make_bucket_path, pipeline
+from app.constants.db_vars import limit_per_page, limit_per_search
 
 
 class _ItemReadServ:
@@ -72,7 +73,7 @@ class _ItemReadServ:
 
         if item.type == ItemType.FILE:
             bucket_item_path = make_bucket_path(item)
-            url = storage.signedURL(
+            url = storage_client.signedURL(
                 drive_bucketid, bucket_item_path, 5 * 60, f"{item.name}{item.extension}"
             )
 
@@ -100,7 +101,7 @@ class _ItemReadServ:
         with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zip:
             for item in items:
                 try:
-                    file = storage.download(
+                    file = storage_client.download(
                         drive_bucketid,
                         make_bucket_path(item),
                     )
@@ -140,7 +141,7 @@ class _ItemReadServ:
         for item in items:
             if item.type == ItemType.FILE:
                 try:
-                    file = storage.download(
+                    file = storage_client.download(
                         drive_bucketid,
                         make_bucket_path(item),
                     )
@@ -190,7 +191,7 @@ class _ItemReadServ:
 
         try:
             bucket_item_path = make_bucket_path(item)
-            url = storage.signedURL(drive_bucketid, bucket_item_path, 3600)
+            url = storage_client.signedURL(drive_bucketid, bucket_item_path, 3600)
         except Exception as e:
             raise e
         return url

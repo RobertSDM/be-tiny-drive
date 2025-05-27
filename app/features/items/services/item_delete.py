@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.clients.supabase.storage_client import storage
+from app.features.storage.supabase_storage_client import supabase_storage_client as storage_client
 
 from app.database.models import Item
 from app.database.repositories.item_repo import (
@@ -8,7 +8,7 @@ from app.database.repositories.item_repo import (
     item_by_ownerid_parentid,
     item_delete,
 )
-from app.constants.env_ import drive_bucketid
+from app.constants.env import drive_bucketid
 from app.enums.enums import ItemType
 from app.utils.query import (
     exec_all,
@@ -22,7 +22,7 @@ class _ItemDeleteServ:
 
     def _delete_item_from_storage(self, item: Item) -> bool:
         try:
-            storage.remove(
+            storage_client.remove(
                 drive_bucketid,
                 make_bucket_path(item),
             )

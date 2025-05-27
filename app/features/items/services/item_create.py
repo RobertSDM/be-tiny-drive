@@ -3,7 +3,9 @@ from fastapi import UploadFile
 import storage3
 from sqlalchemy.orm import Session
 
-from app.clients.supabase.storage_client import storage
+from app.features.storage.supabase_storage_client import (
+    supabase_storage_client as storage_client,
+)
 from app.core.exceptions import ItemExistsInFolder
 from app.database.models.item_model import Item
 from app.database.repositories.item_repo import (
@@ -11,11 +13,10 @@ from app.database.repositories.item_repo import (
     item_save,
 )
 from app.enums.enums import ItemType
-from app.interfaces.storage_interface import StorageClientInterface
-from app.services.item_serv.item_checks import item_checks
+from app.features.items.services import item_checks
 from app.utils.query import exec_first
 from app.utils.utils import make_bucket_path, normalize_file_size
-from app.constants.env_ import drive_bucketid
+from app.constants.env import drive_bucketid
 
 
 class _ItemCreateServ:
@@ -65,11 +66,9 @@ class _ItemCreateServ:
 
         return folders, file
 
-    def _upload_file_to_storage(
-        self, filedata: UploadFile, file: Item, storage: StorageClientInterface
-    ):
+    def _upload_file_to_storage(self, filedata: UploadFile, file: Item):
         try:
-            storage.save(
+            storage_client.save(
                 drive_bucketid,
                 filedata.content_type,
                 make_bucket_path(file),
@@ -112,7 +111,7 @@ class _ItemCreateServ:
             ownerid,
         )
 
-        self._upload_file_to_storage(filedata, file, storage)
+        self._upload_file_to_storage(filedata, file)
         crr_parentid = self._create_folders(db, ownerid, parentid, folders)
 
         item_checks.check_duplicate_name(
