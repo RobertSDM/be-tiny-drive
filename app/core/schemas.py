@@ -34,6 +34,12 @@ class AccountModel(BaseModel):
 # Schemas
 
 
+class RegisterPassword(BaseModel):
+    id: str
+    creation_date: str
+    email: str
+
+
 class FailureAndSuccess(BaseModel, Generic[T]):
     failures: list[T]
     successes: list[T]
