@@ -7,7 +7,7 @@ env-run:
 	
 mock-db:
 	$(CURDIR)/venv/Scripts/activate.bat && \
-	docker container run --name mock_db -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres:16-alpine && \
+	docker container run --rm --name mock_db -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres:16-alpine && \
 	timeout 5 && \
 	alembic upgrade head && \
 	python -m app.scripts.db_load_mock_data
