@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.features.auth.client.supabase.auth_client import auth_client
+from app.features.auth.client.supabase_auth_client import auth_client
 from app.core.exceptions import AccountAlreadyExists, AccountRegistrationError
 from app.database.models.account_model import Account
 from app.database.repositories.account_repo import (
@@ -15,7 +15,7 @@ def register_serv(db: Session, username: str, email: str, password: str) -> Acco
     if exists:
         raise AccountAlreadyExists()
 
-    resp = auth_client.register(email, password)
+    resp = auth_client.registerPassword(email, password)
     if not resp.user:
         return AccountRegistrationError()
 

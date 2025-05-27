@@ -7,7 +7,7 @@ class SupabaseAuthClient(AuthenticationInterface):
     def __init__(self, url: str, key: str):
         self.suauth = create_client(url, key).auth
 
-    def register(self, email: str, password: str):
+    def registerPassword(self, email: str, password: str):
         return self.suauth.sign_up(
             {
                 "email": email,

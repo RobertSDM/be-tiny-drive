@@ -3,7 +3,7 @@ from fastapi import UploadFile
 import storage3
 from sqlalchemy.orm import Session
 
-from app.features.auth.client.supabase.storage_client import storage
+from app.features.storage.supabase_storage_client import storage
 from app.core.exceptions import ItemExistsInFolder
 from app.database.models.item_model import Item
 from app.database.repositories.item_repo import (

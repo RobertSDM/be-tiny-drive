@@ -3,7 +3,7 @@ from typing import Any, BinaryIO, Generator
 import zipfile
 from sqlalchemy.orm import Session
 
-from app.features.auth.client.supabase.storage_client import storage
+from app.features.storage.supabase_storage_client import storage
 from app.core.exceptions import (
     InvalidItemToPreview,
     ItemNotFound,
