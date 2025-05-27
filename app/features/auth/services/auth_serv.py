@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.clients.supabase.auth_client import auth_client
+from app.features.auth.client.supabase.auth_client import auth_client
 from app.core.exceptions import AccountAlreadyExists, AccountRegistrationError
 from app.database.models.account_model import Account
 from app.database.repositories.account_repo import (

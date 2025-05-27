@@ -9,8 +9,8 @@ from app.core.exceptions import (
     NoAuthorizationHeader,
     IndentityMismatch,
 )
-from app.constants.env_ import jwt_secret
-from app.clients.sqlalchemy_client import db_client
+from app.constants.env import jwt_secret
+from app.database.client.sqlalchemy_client import db_client
 from app.database.repositories.account_repo import account_by_id
 from app.utils.query import exec_exists
 

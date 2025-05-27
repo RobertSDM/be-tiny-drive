@@ -1,6 +1,6 @@
 from supabase import create_client
 from app.interfaces.authentication_interface import AuthenticationInterface
-from app.constants.env_ import supabase_url, supabase_key
+from app.constants.env import supabase_url, supabase_key
 
 
 class SupabaseAuthClient(AuthenticationInterface):

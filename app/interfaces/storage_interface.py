@@ -5,28 +5,28 @@ from typing import BinaryIO
 class StorageClientInterface(ABC):
     @abstractmethod
     def save(self, bucketid: str, content_type: str, file: BinaryIO):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def remove(self, bucketid: str, fileid: str):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def update(self, bucketid: str, fileid: str):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def get(self, bucketid: str, fileid: str):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def download(self, bucketid: str, fileid: str) -> BinaryIO:
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def list(self, buckedid: str, path: str) -> list[dict[str, any]]:
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def signedURL(self, buckedid: str, fileid: str, expire_in: int):
-        pass
+        raise NotImplementedError()

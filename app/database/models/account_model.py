@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 from datetime import datetime
-from app.clients.sqlalchemy_client import Base
+from app.database.client.sqlalchemy_client import Base
 
 
 class Account(Base):

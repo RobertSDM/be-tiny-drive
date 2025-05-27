@@ -2,7 +2,7 @@ from typing import BinaryIO
 from storage3 import SyncStorageClient
 from app.interfaces.storage_interface import StorageClientInterface
 from supabase import create_client
-from app.constants.env_ import supabase_key, supabase_url
+from app.constants.env import supabase_key, supabase_url
 
 
 class SupabaseStorageClient(StorageClientInterface):

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import ORJSONResponse
 from sqlalchemy.orm import Session
-from app.clients.sqlalchemy_client import db_client
+from app.database.client.sqlalchemy_client import db_client
 from app.core.schemas import AccountResponse
-from app.services.account_serv import account_get_serv
+from app.features.account.services.account_serv import account_get_serv
 
 account_router = APIRouter()
 

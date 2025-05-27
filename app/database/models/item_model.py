@@ -2,7 +2,7 @@ from typing import Optional
 from uuid import uuid4
 from sqlalchemy import ForeignKey, func
 from app.enums.enums import ItemType
-from app.clients.sqlalchemy_client import Base
+from app.database.client.sqlalchemy_client import Base
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime, timezone
 

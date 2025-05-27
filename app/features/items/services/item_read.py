@@ -23,10 +23,9 @@ from app.utils.query import (
     exec_first,
     order_by,
     paginate,
-    pipeline,
     select_order_item_column,
 )
-from app.utils.utils import make_bucket_path
+from app.utils.utils import make_bucket_path, pipeline
 from app.constants.db_vars import limit_per_page, limit_per_search
 
 

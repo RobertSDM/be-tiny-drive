@@ -3,7 +3,7 @@ from fastapi import UploadFile
 import storage3
 from sqlalchemy.orm import Session
 
-from app.clients.supabase.storage_client import storage
+from app.features.auth.client.supabase.storage_client import storage
 from app.core.exceptions import ItemExistsInFolder
 from app.database.models.item_model import Item
 from app.database.repositories.item_repo import (
@@ -12,10 +12,10 @@ from app.database.repositories.item_repo import (
 )
 from app.enums.enums import ItemType
 from app.interfaces.storage_interface import StorageClientInterface
-from app.services.item_serv.item_checks import item_checks
+from app.features.items.services import item_checks
 from app.utils.query import exec_first
 from app.utils.utils import make_bucket_path, normalize_file_size
-from app.constants.env_ import drive_bucketid
+from app.constants.env import drive_bucketid
 
 
 class _ItemCreateServ:
