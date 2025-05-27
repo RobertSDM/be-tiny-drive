@@ -14,19 +14,8 @@ class SupabaseStorageClient(StorageClientInterface):
             path, file, {"content-type": content_type}
         )
 
-    def update(self, bucketid, fileid):
-        pass
-
     def remove(self, bucketid: str, fileid: str):
         return self.sustorage.from_(bucketid).remove(fileid)
-
-    def get(self, bucketid: str, fileid: str) -> str:
-        data = self.sustorage.from_(bucketid).create_signed_url(fileid, 60)
-        self.sustorage.from_().create_signed_url
-        return data["signedURL"]
-
-    def list(self, bucketid: str, path: str) -> str:
-        return self.sustorage.from_(bucketid).list(path)
 
     def download(self, bucketid, fileid) -> bytes:
         return self.sustorage.from_(bucketid).download(fileid)
@@ -39,4 +28,4 @@ class SupabaseStorageClient(StorageClientInterface):
         )["signedUrl"]
 
 
-storage = SupabaseStorageClient(supabase_url, supabase_key)
+supabase_storage_client = SupabaseStorageClient(supabase_url, supabase_key)

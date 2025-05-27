@@ -8,23 +8,11 @@ class StorageClientInterface(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def remove(self, bucketid: str, fileid: str):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def update(self, bucketid: str, fileid: str):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get(self, bucketid: str, fileid: str):
+    def remove(self, bucketid: str, fileid: str) -> None:
         raise NotImplementedError()
 
     @abstractmethod
     def download(self, bucketid: str, fileid: str) -> BinaryIO:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def list(self, buckedid: str, path: str) -> list[dict[str, any]]:
         raise NotImplementedError()
 
     @abstractmethod
