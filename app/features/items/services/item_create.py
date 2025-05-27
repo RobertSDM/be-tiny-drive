@@ -13,7 +13,7 @@ from app.database.repositories.item_repo import (
     item_save,
 )
 from app.enums.enums import ItemType
-from app.features.items.services import item_checks
+from app.features.items.services.item_checks import item_checks
 from app.utils.query import exec_first
 from app.utils.utils import make_bucket_path, normalize_file_size
 from app.constants.env import drive_bucketid
