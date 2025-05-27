@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-from app.constants.env_ import database_url
+from app.constants.env import database_url
 from app.interfaces.database_interface import DatabaseClientInterface
 
 

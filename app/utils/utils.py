@@ -1,6 +1,21 @@
 import math
+from typing import Callable
 
 from app.database.models.item_model import Item
+
+
+def pipeline(*funcs: Callable):
+    def run(*args, **kwargs):
+        result = funcs[0](*args, **kwargs)
+        for func in funcs[1:]:
+            if result:
+                result = func(result)
+            else:
+                result = func()
+
+        return result
+
+    return run
 
 
 def normalize_file_size(byte_size: int):

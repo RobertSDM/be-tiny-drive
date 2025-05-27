@@ -9,10 +9,10 @@ from app.core.exceptions import (
     NoAuthorizationHeader,
     IndentityMismatch,
 )
-from app.constants.env_ import jwt_secret
-from app.clients.sqlalchemy_client import db_client
+from app.constants.env import jwt_secret
+from app.database.client.sqlalchemy_client import db_client
 from app.database.repositories.account_repo import account_by_id
-from app.utils.execute_query import execute_exists
+from app.utils.query import exec_exists
 
 
 async def auth_middleware(req: Request):
@@ -27,7 +27,7 @@ async def auth_middleware(req: Request):
         )
 
         db = next(db_client.get_session())
-        exists = execute_exists(db, account_by_id(db, resp["sub"]))
+        exists = exec_exists(db, account_by_id(db, resp["sub"]))
 
         if not exists:
             raise AccountDoesNotExists()

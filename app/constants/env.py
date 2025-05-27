@@ -1,9 +1,7 @@
 import os
-
 from app.enums.enums import Mode
 
 
-# Environment variables
 mode = os.getenv("MODE")
 database_url = os.getenv("DATABASE_URL")
 origins = os.getenv("ORIGINS")

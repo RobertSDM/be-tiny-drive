@@ -1,6 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, Form, UploadFile
-from fastapi.responses import JSONResponse, ORJSONResponse, StreamingResponse
+from fastapi.responses import ORJSONResponse, StreamingResponse
 from pydantic import BaseModel
 from pytest import Session
 
@@ -10,9 +10,9 @@ from app.core.schemas import (
     SingleItemResponse,
     SingleResponse,
 )
-from app.clients.sqlalchemy_client import db_client
+from app.database.client.sqlalchemy_client import db_client
 from app.enums.enums import ItemType, Sort, SortOrder
-from app.services.item_serv import (
+from app.features.items.services import (
     item_create_serv,
     item_delete_serv,
     item_read_serv,

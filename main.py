@@ -1,13 +1,13 @@
 from fastapi import Depends, FastAPI
 import uvicorn
 from app.api.exeption_handling.domain_error_handler import domain_error_handler
-from app.api.middlewares.auth_middleware import auth_middleware
-from app.api.routes import auth_router
-from app.api.routes.item_route import item_router
-from app.api.routes.account_route import account_router
+from app.middlewares.auth_middleware import auth_middleware
+from app.features.auth.api.auth_router import auth_router
+from app.features.items.api.item_router import item_router
+from app.features.account.api.auth_router import account_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.exceptions import DomainError
-from app.constants.env_ import debug, host, origins, port
+from app.constants.env import debug, host, origins, port
 
 app = FastAPI(title="Tiny Drive", description="Backend API for tiny-drive project")
 
@@ -28,6 +28,12 @@ app.include_router(
     account_router, prefix="/account", dependencies=[Depends(auth_middleware)]
 )
 app.add_exception_handler(DomainError, domain_error_handler)
+
+
+@app.get("/")
+def root():
+    return "hello world"
+
 
 if __name__ == "__main__":
     uvicorn.run(
