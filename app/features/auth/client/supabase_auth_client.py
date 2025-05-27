@@ -7,7 +7,7 @@ from app.interfaces.authentication_interface import (
 from app.constants.env import supabase_url, supabase_key
 
 
-class SupabaseAuthClient(AuthenticationInterface):
+class SupabaseAuthenticationClient(AuthenticationInterface):
     def __init__(self, url: str, key: str):
         self.suauth = create_client(url, key).auth
 
@@ -25,6 +25,3 @@ class SupabaseAuthClient(AuthenticationInterface):
         return RegisterPassword(
             id=resp.user.id, creation_date=resp.user.created_at, email=resp.user.email
         )
-
-
-supabase_auth_client = SupabaseAuthClient(supabase_url, supabase_key)

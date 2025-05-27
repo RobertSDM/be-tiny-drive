@@ -18,9 +18,10 @@ from app.features.items.services import (
     item_read_serv,
     item_update_serv,
 )
+from app.middlewares.auth_middleware import auth_middleware
 
 
-item_router = APIRouter()
+item_router = APIRouter(dependencies=[Depends(auth_middleware)])
 
 
 @item_router.post("/save", status_code=200)
