@@ -21,6 +21,7 @@ jobs:
       SUPABASE_KEY: "${{ secrets.SUPABASE_KEY }}"
       SUPABASE_JWT_SECRET: "${{ secrets.SUPABASE_JWT_SECRET }}"
       STORAGE_BUCKET_ID: "${{ secrets.STORAGE_BUCKET_ID }}"
+      MODE: ${{ secrets.MODE }}
       
       
     steps:
