@@ -16,9 +16,9 @@ from app.database.repositories.item_repo import (
     item_by_ownerid_parentid_fullname,
     item_save,
 )
-from app.enums.enums import ItemType
+from app.enums.enums import ItemType, ProcessingState
 from app.features.items.services.item_checks import item_checks
-from app.utils.query import exec_first
+from app.utils.query import exec_first, update
 from app.utils.utils import (
     compress_file,
     decompress,
@@ -51,6 +51,7 @@ class _ItemCreateServ:
                 size_prefix="",
                 content_type="",
                 name=name,
+                processing_state=ProcessingState.COMPLETE.value,
                 ownerid=ownerid,
                 type=ItemType.FOLDER,
             )
@@ -179,6 +180,12 @@ class _ItemCreateServ:
                 make_bucket_file_preview_path(item),
                 data.read(),
             )
+
+            update(
+                item_by_id_ownerid(db, id, ownerid),
+                {"processing_state": ProcessingState.COMPLETE.value},
+            )
+            db.commit()
         else:
             raise FeatureNotSupported()
 
