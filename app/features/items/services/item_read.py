@@ -27,7 +27,7 @@ from app.utils.query import (
     paginate,
     select_order_item_column,
 )
-from app.utils.utils import compress_file, decompress_file, make_bucket_path, reducer
+from app.utils.utils import compress_file, decompress, make_bucket_file_path, make_bucket_file_preview_path, pipeline
 from app.constants.db_vars import limit_per_page, limit_per_search
 
 
@@ -57,7 +57,7 @@ class _ItemReadServ:
     ) -> list[Item]:
         column = select_order_item_column(sort)
 
-        pipe = reducer(
+        pipe = pipeline(
             item_by_ownerid_parentid,
             lambda query: order_by(query, [column], order),
             lambda query: paginate(query, limit_per_page, page),
@@ -67,7 +67,7 @@ class _ItemReadServ:
 
     def download_serv(
         self, db, id: str, ownerid: str
-    ) -> tuple[Generator[bytes, Any, None], str]:
+    ) -> tuple[Generator[bytes, Any, None], str, str]:
         item = exec_first(item_by_id_ownerid(db, id, ownerid))
 
         if not item:
@@ -76,14 +76,14 @@ class _ItemReadServ:
         if item.type == ItemType.FILE:
             file = storage_client.download(
                 drive_bucketid,
-                make_bucket_path(item),
+                make_bucket_file_path(item),
             )
 
-            data = reducer(decompress_file)(file)
+            data = pipeline(decompress)(file)
 
             stream = self._stream_buffer(io.BytesIO(data))
 
-            return stream, item.content_type
+            return stream, item.content_type, f"{item.name}{item.extension}"
 
         return ""
 
@@ -109,11 +109,11 @@ class _ItemReadServ:
                 try:
                     file = storage_client.download(
                         drive_bucketid,
-                        make_bucket_path(item),
+                        make_bucket_file_path(item),
                     )
 
-                    data = reducer(
-                        decompress_file,
+                    data = pipeline(
+                        decompress,
                     )(file)
 
                     zip.writestr(f"{item.name}{item.extension}", data)
@@ -153,10 +153,10 @@ class _ItemReadServ:
                 try:
                     file = storage_client.download(
                         drive_bucketid,
-                        make_bucket_path(item),
+                        make_bucket_file_path(item),
                     )
 
-                    data = reducer(decompress_file)(file)
+                    data = pipeline(decompress)(file)
 
                     file_path = self._gen_zip_path(path, f"{item.name}{item.extension}")
                     zip.writestr(
@@ -192,36 +192,34 @@ class _ItemReadServ:
         buffer = self._build_folder_zip(db, ownerid, folder)
         yield from self._stream_buffer(buffer)
 
-    def image_preview_serv(self, db: Session, ownerid: str, id: str) -> str:
+    def preview_serv(self, db: Session, ownerid: str, id: str) -> str:
         item = exec_first(item_by_id_ownerid(db, id, ownerid))
 
         if not item:
             raise ItemNotFound()
 
-        if not item.content_type.startswith("image"):
-            raise InvalidItemToPreview()
-
         try:
-            bucket_item_path = make_bucket_path(item)
+            bucket_item_path = make_bucket_file_preview_path(item)
             url = storage_client.signedURL(drive_bucketid, bucket_item_path, 3600)
         except Exception as e:
             raise e
+        
         return url
 
     def search_serv(
         self, db: Session, ownerid: str, query: str, type: ItemType | None
     ) -> list[Item]:
-        base_pipe = reducer(
+        base_pipe = pipeline(
             lambda query: paginate(query, limit_per_search, 0),
             exec_all,
         )
 
         if type:
-            return reducer(items_by_ownerid_name_type, base_pipe)(
+            return pipeline(items_by_ownerid_name_type, base_pipe)(
                 db, ownerid, query, type
             )
 
-        return reducer(items_by_ownerid_name, base_pipe)(db, ownerid, query)
+        return pipeline(items_by_ownerid_name, base_pipe)(db, ownerid, query)
 
     def _climb_file_tree(self, db: Session, ownerid: str, parentid: str) -> list[Item]:
 
