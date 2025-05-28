@@ -17,7 +17,7 @@ from app.utils.query import (
     exec_first,
 )
 from app.database.repositories.item_repo import item_delete
-from app.utils.utils import make_bucket_file_path
+from app.utils.utils import make_bucket_file_path, make_bucket_file_preview_path
 
 
 class _ItemDeleteServ:
@@ -28,6 +28,12 @@ class _ItemDeleteServ:
                 drive_bucketid,
                 make_bucket_file_path(item),
             )
+            
+            storage_client.remove(
+                drive_bucketid,
+                make_bucket_file_preview_path(item),
+            )
+
             return True
         except:
             return False

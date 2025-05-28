@@ -33,7 +33,7 @@ def decompress(file: bytes) -> bytes:
     return dctx.decompress(file)
 
 
-def image_to_jpg(im: ImageFile, quality: int = 80) -> io.BytesIO:
+def image_to_jpg(im: ImageFile, quality: int = 70) -> io.BytesIO:
     buffer = io.BytesIO()
 
     if im.mode != "RGB":
@@ -73,8 +73,8 @@ def make_bucket_file_path(item: Item) -> str:
     Make the bucket path for a storage item file
     """
 
-    return f"user-{item.ownerid}/drive/{item.id}{item.extension}"
+    return f"user-{item.ownerid}/drive/{item.id}"
 
 
 def make_bucket_file_preview_path(item: Item) -> str:
-    return f"user-{item.ownerid}/preview/{item.id}{item.extension}"
+    return f"user-{item.ownerid}/preview/{item.id}"

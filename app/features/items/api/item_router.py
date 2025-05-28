@@ -127,22 +127,37 @@ def donwload_folder_route(
     return StreamingResponse(
         zip,
         media_type="application/zip",
-        headers={"Content-Disposition": "attachment; filename='downloaded_content'"},
+        headers={
+            "Content-Disposition": "attachment;filename=downloaded_content",
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
     )
 
 
 @item_router.get("/download/{ownerid}/{id}")
 def download_file_route(id: str, ownerid: str, db=Depends(db_client.get_session)):
-    data, content_type = item_read_serv.download_serv(db, id, ownerid)
+    data, content_type, filename = item_read_serv.download_serv(db, id, ownerid)
 
-    return StreamingResponse(data, media_type=content_type)
+    return StreamingResponse(
+        data,
+        media_type=content_type,
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )
 
 
-@item_router.get("/preview/img/{ownerid}/{id}")
+@item_router.get("/preview/{ownerid}/{id}")
 def image_preview(ownerid: str, id: str, db: Session = Depends(db_client.get_session)):
-    url = item_read_serv.image_preview_serv(db, ownerid, id)
+    url = item_read_serv.preview_serv(db, ownerid, id)
 
-    return ORJSONResponse(SingleResponse(data=url).model_dump())
+    return ORJSONResponse(
+        SingleResponse(data=url).model_dump(),
+        headers={
+            "Cache-Control": "max-age=3600, private",
+        },
+    )
 
 
 class UpdateNameBody(BaseModel):

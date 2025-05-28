@@ -27,7 +27,7 @@ from app.utils.query import (
     paginate,
     select_order_item_column,
 )
-from app.utils.utils import compress_file, decompress, make_bucket_file_path, pipeline
+from app.utils.utils import compress_file, decompress, make_bucket_file_path, make_bucket_file_preview_path, pipeline
 from app.constants.db_vars import limit_per_page, limit_per_search
 
 
@@ -67,7 +67,7 @@ class _ItemReadServ:
 
     def download_serv(
         self, db, id: str, ownerid: str
-    ) -> tuple[Generator[bytes, Any, None], str]:
+    ) -> tuple[Generator[bytes, Any, None], str, str]:
         item = exec_first(item_by_id_ownerid(db, id, ownerid))
 
         if not item:
@@ -83,7 +83,7 @@ class _ItemReadServ:
 
             stream = self._stream_buffer(io.BytesIO(data))
 
-            return stream, item.content_type
+            return stream, item.content_type, f"{item.name}{item.extension}"
 
         return ""
 
@@ -192,20 +192,18 @@ class _ItemReadServ:
         buffer = self._build_folder_zip(db, ownerid, folder)
         yield from self._stream_buffer(buffer)
 
-    def image_preview_serv(self, db: Session, ownerid: str, id: str) -> str:
+    def preview_serv(self, db: Session, ownerid: str, id: str) -> str:
         item = exec_first(item_by_id_ownerid(db, id, ownerid))
 
         if not item:
             raise ItemNotFound()
 
-        if not item.content_type.startswith("image"):
-            raise InvalidItemToPreview()
-
         try:
-            bucket_item_path = make_bucket_file_path(item)
+            bucket_item_path = make_bucket_file_preview_path(item)
             url = storage_client.signedURL(drive_bucketid, bucket_item_path, 3600)
         except Exception as e:
             raise e
+        
         return url
 
     def search_serv(
