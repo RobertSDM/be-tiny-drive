@@ -10,6 +10,7 @@ from app.core.exceptions import (
     InvalidItemToPreview,
     ItemNotFound,
     ParentFolderNotFound,
+    PreviewStillProcessing,
 )
 from app.database.models import Item
 from app.database.repositories.item_repo import (
@@ -19,7 +20,7 @@ from app.database.repositories.item_repo import (
     items_by_ownerid_name_type,
 )
 from app.constants.env import drive_bucketid
-from app.enums.enums import ItemType, Sort, SortOrder
+from app.enums.enums import ItemType, ProcessingState, Sort, SortOrder
 from app.utils.query import (
     exec_all,
     exec_first,
@@ -197,6 +198,9 @@ class _ItemReadServ:
 
         if not item:
             raise ItemNotFound()
+
+        if item.processing_state == ProcessingState.STABLE.value:
+            raise PreviewStillProcessing()
 
         try:
             bucket_item_path = make_bucket_file_preview_path(item)
