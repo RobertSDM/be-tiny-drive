@@ -27,7 +27,7 @@ from app.utils.query import (
     paginate,
     select_order_item_column,
 )
-from app.utils.utils import make_bucket_path, pipeline
+from app.utils.utils import compress_file, decompress_file, make_bucket_path, reducer
 from app.constants.db_vars import limit_per_page, limit_per_search
 
 
@@ -57,7 +57,7 @@ class _ItemReadServ:
     ) -> list[Item]:
         column = select_order_item_column(sort)
 
-        pipe = pipeline(
+        pipe = reducer(
             item_by_ownerid_parentid,
             lambda query: order_by(query, [column], order),
             lambda query: paginate(query, limit_per_page, page),
@@ -65,19 +65,25 @@ class _ItemReadServ:
         )
         return pipe(db, ownerid, parentid)
 
-    def download_serv(self, db, id: str, ownerid: str) -> str:
+    def download_serv(
+        self, db, id: str, ownerid: str
+    ) -> tuple[Generator[bytes, Any, None], str]:
         item = exec_first(item_by_id_ownerid(db, id, ownerid))
 
         if not item:
             raise ItemNotFound()
 
         if item.type == ItemType.FILE:
-            bucket_item_path = make_bucket_path(item)
-            url = storage_client.signedURL(
-                drive_bucketid, bucket_item_path, 5 * 60, f"{item.name}{item.extension}"
+            file = storage_client.download(
+                drive_bucketid,
+                make_bucket_path(item),
             )
 
-            return url
+            data = reducer(decompress_file)(file)
+
+            stream = self._stream_buffer(io.BytesIO(data))
+
+            return stream, item.content_type
 
         return ""
 
@@ -106,7 +112,11 @@ class _ItemReadServ:
                         make_bucket_path(item),
                     )
 
-                    zip.writestr(f"{item.name}{item.extension}", file)
+                    data = reducer(
+                        decompress_file,
+                    )(file)
+
+                    zip.writestr(f"{item.name}{item.extension}", data)
 
                 except Exception as e:
                     raise e
@@ -146,10 +156,12 @@ class _ItemReadServ:
                         make_bucket_path(item),
                     )
 
+                    data = reducer(decompress_file)(file)
+
                     file_path = self._gen_zip_path(path, f"{item.name}{item.extension}")
                     zip.writestr(
                         file_path,
-                        file,
+                        data,
                     )
 
                 except Exception as e:
@@ -199,17 +211,17 @@ class _ItemReadServ:
     def search_serv(
         self, db: Session, ownerid: str, query: str, type: ItemType | None
     ) -> list[Item]:
-        base_pipe = pipeline(
+        base_pipe = reducer(
             lambda query: paginate(query, limit_per_search, 0),
             exec_all,
         )
 
         if type:
-            return pipeline(items_by_ownerid_name_type, base_pipe)(
+            return reducer(items_by_ownerid_name_type, base_pipe)(
                 db, ownerid, query, type
             )
 
-        return pipeline(items_by_ownerid_name, base_pipe)(db, ownerid, query)
+        return reducer(items_by_ownerid_name, base_pipe)(db, ownerid, query)
 
     def _climb_file_tree(self, db: Session, ownerid: str, parentid: str) -> list[Item]:
 
