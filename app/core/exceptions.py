@@ -11,6 +11,12 @@ class FeatureNotSupported(DomainError):
         super().__init__(self.message, 500)
 
 
+class PreviewStillProcessing(DomainError):
+    def __init__(self):
+        self.message = "the requested preview still processing. Wait some seconds"
+        super().__init__(self.message, 204)
+
+
 class AccountAlreadyExists(DomainError):
     def __init__(self):
         self.message = f"the user already exists"
