@@ -1,4 +1,7 @@
+import io
 import math
+from PIL import Image, ImageOps
+from PIL.ImageFile import ImageFile
 from typing import Callable
 
 import zstandard
@@ -6,7 +9,7 @@ import zstandard
 from app.database.models.item_model import Item
 
 
-def reducer(*funcs: Callable):
+def pipeline(*funcs: Callable):
     def run(*args, **kwargs):
         result = funcs[0](*args, **kwargs)
         for func in funcs[1:]:
@@ -19,13 +22,36 @@ def reducer(*funcs: Callable):
 
     return run
 
+
 def compress_file(file: bytes) -> bytes:
     cctx = zstandard.ZstdCompressor()
     return cctx.compress(file)
 
-def decompress_file(file: bytes) -> bytes:
+
+def decompress(file: bytes) -> bytes:
     dctx = zstandard.ZstdDecompressor()
     return dctx.decompress(file)
+
+
+def image_to_jpg(im: ImageFile, quality: int = 80) -> io.BytesIO:
+    buffer = io.BytesIO()
+
+    if im.mode != "RGB":
+        im = im.convert("RGB")
+    elif im.mode == "JPEG" or im.mode == "JPG":
+        im.save(buffer)
+        buffer.seek(0)
+        return buffer
+
+    im.save(buffer, "JPEG", optimize=True, quality=quality)
+
+    buffer.seek(0)
+    return buffer
+
+
+def resize_image(im: ImageFile, size: tuple[int, int] = (1920, 1080)) -> ImageFile:
+    return ImageOps.contain(im, size)
+
 
 def normalize_file_size(byte_size: int):
     """
@@ -42,9 +68,13 @@ def normalize_file_size(byte_size: int):
         size /= 1024
 
 
-def make_bucket_path(item: Item):
+def make_bucket_file_path(item: Item) -> str:
     """
     Make the bucket path for a storage item file
     """
 
     return f"user-{item.ownerid}/drive/{item.id}{item.extension}"
+
+
+def make_bucket_file_preview_path(item: Item) -> str:
+    return f"user-{item.ownerid}/preview/{item.id}{item.extension}"

@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, Form, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, UploadFile
 from fastapi.responses import FileResponse, ORJSONResponse, StreamingResponse
 from pydantic import BaseModel
 from pytest import Session
@@ -24,14 +24,18 @@ from app.middlewares.auth_middleware import auth_middleware
 item_router = APIRouter(dependencies=[Depends(auth_middleware)])
 
 
-@item_router.post("/save", status_code=200)
+@item_router.post("/save")
 def save_file_route(
     file: UploadFile,
+    background_tasks: BackgroundTasks,
     ownerid: Annotated[str, Form()],
     parentid: Annotated[str | None, Form()] = None,
     db=Depends(db_client.get_session),
 ):
     item = item_create_serv.item_save_item_serv(db, file, ownerid, parentid)
+    background_tasks.add_task(
+        item_create_serv.item_create_preview_serv, db, item.ownerid, item.id
+    )
 
     return ORJSONResponse(SingleItemResponse(data=item).model_dump())
 

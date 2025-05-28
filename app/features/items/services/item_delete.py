@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 
-from app.features.storage.supabase_storage_client import supabase_storage_client as storage_client
+from app.features.storage.supabase_storage_client import (
+    supabase_storage_client as storage_client,
+)
 
 from app.database.models import Item
 from app.database.repositories.item_repo import (
@@ -15,7 +17,7 @@ from app.utils.query import (
     exec_first,
 )
 from app.database.repositories.item_repo import item_delete
-from app.utils.utils import make_bucket_path
+from app.utils.utils import make_bucket_file_path
 
 
 class _ItemDeleteServ:
@@ -24,7 +26,7 @@ class _ItemDeleteServ:
         try:
             storage_client.remove(
                 drive_bucketid,
-                make_bucket_path(item),
+                make_bucket_file_path(item),
             )
             return True
         except:

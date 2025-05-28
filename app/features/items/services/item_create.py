@@ -1,6 +1,7 @@
+import io
 from uuid import uuid4
 
-import zstandard
+from PIL import Image
 from fastapi import UploadFile
 import storage3
 from sqlalchemy.orm import Session
@@ -8,16 +9,26 @@ from sqlalchemy.orm import Session
 from app.features.storage.supabase_storage_client import (
     supabase_storage_client as storage_client,
 )
-from app.core.exceptions import ItemExistsInFolder
+from app.core.exceptions import FeatureNotSupported, ItemExistsInFolder, ItemNotFound
 from app.database.models.item_model import Item
 from app.database.repositories.item_repo import (
+    item_by_id_ownerid,
     item_by_ownerid_parentid_fullname,
     item_save,
 )
 from app.enums.enums import ItemType
 from app.features.items.services.item_checks import item_checks
 from app.utils.query import exec_first
-from app.utils.utils import compress_file, make_bucket_path, normalize_file_size, reducer
+from app.utils.utils import (
+    compress_file,
+    decompress,
+    image_to_jpg,
+    make_bucket_file_path,
+    make_bucket_file_preview_path,
+    normalize_file_size,
+    pipeline,
+    resize_image,
+)
 from app.constants.env import drive_bucketid
 
 
@@ -71,7 +82,7 @@ class _ItemCreateServ:
     def _upload_file_to_storage(self, filedata: bytes, content_type: str, file: Item):
         try:
             storage_client.save(
-                drive_bucketid, content_type, make_bucket_path(file), filedata
+                drive_bucketid, content_type, make_bucket_file_path(file), filedata
             )
         except storage3.exceptions.StorageApiError as e:
             if e.status == "409":
@@ -99,8 +110,6 @@ class _ItemCreateServ:
 
         return crr_parentid
 
-   
-
     def item_save_item_serv(
         self, db: Session, filedata: UploadFile, ownerid: str, parentid: str | None
     ) -> Item:
@@ -112,7 +121,7 @@ class _ItemCreateServ:
             ownerid,
         )
 
-        data = reducer(
+        data = pipeline(
             compress_file,
         )(filedata.file.read())
 
@@ -146,6 +155,32 @@ class _ItemCreateServ:
         )
 
         return item_save(db, folder)
+
+    def item_create_preview_serv(self, db: Session, ownerid: str, id: str):
+        item = exec_first(item_by_id_ownerid(db, id, ownerid))
+        if not item:
+            raise ItemNotFound()
+
+        if item.content_type.startswith("image"):
+            bytedata = storage_client.download(
+                drive_bucketid, make_bucket_file_path(item)
+            )
+
+            data = pipeline(
+                decompress,
+                lambda b: Image.open(io.BytesIO(b)),
+                resize_image,
+                image_to_jpg,
+            )(bytedata)
+
+            storage_client.save(
+                drive_bucketid,
+                item.content_type,
+                make_bucket_file_preview_path(item),
+                data.read(),
+            )
+        else:
+            raise FeatureNotSupported()
 
 
 item_create_serv = _ItemCreateServ()
