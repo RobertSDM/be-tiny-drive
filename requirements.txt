@@ -2,6 +2,7 @@ fastapi==0.113.0
 SQLAlchemy==2.0.30
 uvicorn==0.29.0
 alembic==1.15.2
+zstandard==0.23.0
 python-dotenv==1.0.1
 pytest==8.3.5
 python-jose==3.4.0

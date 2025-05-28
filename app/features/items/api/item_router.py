@@ -1,6 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, Form, UploadFile
-from fastapi.responses import ORJSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, ORJSONResponse, StreamingResponse
 from pydantic import BaseModel
 from pytest import Session
 
@@ -129,10 +129,9 @@ def donwload_folder_route(
 
 @item_router.get("/download/{ownerid}/{id}")
 def download_file_route(id: str, ownerid: str, db=Depends(db_client.get_session)):
+    data, content_type = item_read_serv.download_serv(db, id, ownerid)
 
-    url = item_read_serv.download_serv(db, id, ownerid)
-
-    return ORJSONResponse(SingleResponse(data=url).model_dump())
+    return StreamingResponse(data, media_type=content_type)
 
 
 @item_router.get("/preview/img/{ownerid}/{id}")

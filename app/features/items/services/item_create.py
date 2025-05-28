@@ -1,4 +1,6 @@
 from uuid import uuid4
+
+import zstandard
 from fastapi import UploadFile
 import storage3
 from sqlalchemy.orm import Session
@@ -15,7 +17,7 @@ from app.database.repositories.item_repo import (
 from app.enums.enums import ItemType
 from app.features.items.services.item_checks import item_checks
 from app.utils.query import exec_first
-from app.utils.utils import make_bucket_path, normalize_file_size
+from app.utils.utils import compress_file, make_bucket_path, normalize_file_size, reducer
 from app.constants.env import drive_bucketid
 
 
@@ -66,13 +68,10 @@ class _ItemCreateServ:
 
         return folders, file
 
-    def _upload_file_to_storage(self, filedata: UploadFile, file: Item):
+    def _upload_file_to_storage(self, filedata: bytes, content_type: str, file: Item):
         try:
             storage_client.save(
-                drive_bucketid,
-                filedata.content_type,
-                make_bucket_path(file),
-                filedata.file.read(),
+                drive_bucketid, content_type, make_bucket_path(file), filedata
             )
         except storage3.exceptions.StorageApiError as e:
             if e.status == "409":
@@ -100,6 +99,8 @@ class _ItemCreateServ:
 
         return crr_parentid
 
+   
+
     def item_save_item_serv(
         self, db: Session, filedata: UploadFile, ownerid: str, parentid: str | None
     ) -> Item:
@@ -111,7 +112,11 @@ class _ItemCreateServ:
             ownerid,
         )
 
-        self._upload_file_to_storage(filedata, file)
+        data = reducer(
+            compress_file,
+        )(filedata.file.read())
+
+        self._upload_file_to_storage(data, filedata.content_type, file)
         crr_parentid = self._create_folders(db, ownerid, parentid, folders)
 
         item_checks.check_duplicate_name(

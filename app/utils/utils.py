@@ -1,10 +1,12 @@
 import math
 from typing import Callable
 
+import zstandard
+
 from app.database.models.item_model import Item
 
 
-def pipeline(*funcs: Callable):
+def reducer(*funcs: Callable):
     def run(*args, **kwargs):
         result = funcs[0](*args, **kwargs)
         for func in funcs[1:]:
@@ -17,22 +19,27 @@ def pipeline(*funcs: Callable):
 
     return run
 
+def compress_file(file: bytes) -> bytes:
+    cctx = zstandard.ZstdCompressor()
+    return cctx.compress(file)
+
+def decompress_file(file: bytes) -> bytes:
+    dctx = zstandard.ZstdDecompressor()
+    return dctx.decompress(file)
 
 def normalize_file_size(byte_size: int):
     """
     Transform a size in bytes into a normalized size with its prefix
     """
 
-    prefix = ["b", "Kb", "Mb", "Gb"]
+    prefix = ["B", "KB", "MB", "GB"]
+    size = byte_size
 
-    pos_prefix = 0
-    devided_byte = byte_size
+    for p in prefix:
+        if size < 1024:
+            return math.ceil(size), p
 
-    while devided_byte >= 1024 and pos_prefix < len(prefix):
-        devided_byte /= 1024
-        pos_prefix += 1
-
-    return math.ceil(devided_byte), prefix[pos_prefix]
+        size /= 1024
 
 
 def make_bucket_path(item: Item):
