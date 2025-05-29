@@ -1,5 +1,8 @@
 from sqlalchemy.orm import Session
+import storage3
+import storage3.exceptions
 
+from app.core.exceptions import ItemNotFound
 from app.features.storage.supabase_storage_client import (
     supabase_storage_client as storage_client,
 )
@@ -28,14 +31,18 @@ class _ItemDeleteServ:
                 drive_bucketid,
                 make_bucket_file_path(item),
             )
-            
+
             storage_client.remove(
                 drive_bucketid,
                 make_bucket_file_preview_path(item),
             )
 
             return True
-        except:
+        except storage3.exceptions.StorageApiError as e:
+            match e.code:
+                case "NoSuchUpload":
+                    raise ItemNotFound()
+
             return False
 
     def _dfs_delete_items(
