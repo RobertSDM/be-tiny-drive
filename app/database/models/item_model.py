@@ -1,7 +1,7 @@
 from typing import Optional
 from uuid import uuid4
-from sqlalchemy import ForeignKey, func
-from app.enums.enums import ItemType
+from sqlalchemy import ForeignKey, func, text
+from app.enums.enums import ItemType, ProcessingState
 from app.database.client.sqlalchemy_client import Base
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime, timezone
@@ -17,6 +17,10 @@ class Item(Base):
     size_prefix: Mapped[str]
     type: Mapped[ItemType]
     content_type: Mapped[str]
+    processing_state: Mapped[ProcessingState] = mapped_column(
+        server_default=text(ProcessingState.COMPLETE.value),
+        default=ProcessingState.STABLE.name,
+    )
     update_date: Mapped[datetime] = mapped_column(
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),

@@ -10,6 +10,7 @@ from app.core.exceptions import (
     InvalidItemToPreview,
     ItemNotFound,
     ParentFolderNotFound,
+    PreviewStillProcessing,
 )
 from app.database.models import Item
 from app.database.repositories.item_repo import (
@@ -19,7 +20,7 @@ from app.database.repositories.item_repo import (
     items_by_ownerid_name_type,
 )
 from app.constants.env import drive_bucketid
-from app.enums.enums import ItemType, Sort, SortOrder
+from app.enums.enums import ItemType, ProcessingState, Sort, SortOrder
 from app.utils.query import (
     exec_all,
     exec_first,
@@ -27,7 +28,7 @@ from app.utils.query import (
     paginate,
     select_order_item_column,
 )
-from app.utils.utils import make_bucket_path, pipeline
+from app.utils.utils import compress_file, decompress, make_bucket_file_path, make_bucket_file_preview_path, pipeline
 from app.constants.db_vars import limit_per_page, limit_per_search
 
 
@@ -65,19 +66,25 @@ class _ItemReadServ:
         )
         return pipe(db, ownerid, parentid)
 
-    def download_serv(self, db, id: str, ownerid: str) -> str:
+    def download_serv(
+        self, db, id: str, ownerid: str
+    ) -> tuple[Generator[bytes, Any, None], str, str]:
         item = exec_first(item_by_id_ownerid(db, id, ownerid))
 
         if not item:
             raise ItemNotFound()
 
         if item.type == ItemType.FILE:
-            bucket_item_path = make_bucket_path(item)
-            url = storage_client.signedURL(
-                drive_bucketid, bucket_item_path, 5 * 60, f"{item.name}{item.extension}"
+            file = storage_client.download(
+                drive_bucketid,
+                make_bucket_file_path(item),
             )
 
-            return url
+            data = pipeline(decompress)(file)
+
+            stream = self._stream_buffer(io.BytesIO(data))
+
+            return stream, item.content_type, f"{item.name}{item.extension}"
 
         return ""
 
@@ -103,10 +110,14 @@ class _ItemReadServ:
                 try:
                     file = storage_client.download(
                         drive_bucketid,
-                        make_bucket_path(item),
+                        make_bucket_file_path(item),
                     )
 
-                    zip.writestr(f"{item.name}{item.extension}", file)
+                    data = pipeline(
+                        decompress,
+                    )(file)
+
+                    zip.writestr(f"{item.name}{item.extension}", data)
 
                 except Exception as e:
                     raise e
@@ -143,13 +154,15 @@ class _ItemReadServ:
                 try:
                     file = storage_client.download(
                         drive_bucketid,
-                        make_bucket_path(item),
+                        make_bucket_file_path(item),
                     )
+
+                    data = pipeline(decompress)(file)
 
                     file_path = self._gen_zip_path(path, f"{item.name}{item.extension}")
                     zip.writestr(
                         file_path,
-                        file,
+                        data,
                     )
 
                 except Exception as e:
@@ -180,20 +193,21 @@ class _ItemReadServ:
         buffer = self._build_folder_zip(db, ownerid, folder)
         yield from self._stream_buffer(buffer)
 
-    def image_preview_serv(self, db: Session, ownerid: str, id: str) -> str:
+    def preview_serv(self, db: Session, ownerid: str, id: str) -> str:
         item = exec_first(item_by_id_ownerid(db, id, ownerid))
 
         if not item:
             raise ItemNotFound()
 
-        if not item.content_type.startswith("image"):
-            raise InvalidItemToPreview()
+        if item.processing_state == ProcessingState.STABLE:
+            raise PreviewStillProcessing()
 
         try:
-            bucket_item_path = make_bucket_path(item)
+            bucket_item_path = make_bucket_file_preview_path(item)
             url = storage_client.signedURL(drive_bucketid, bucket_item_path, 3600)
         except Exception as e:
             raise e
+        
         return url
 
     def search_serv(

@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import Generic, TypeVar
 from pydantic import BaseModel, ConfigDict
 
+from app.enums.enums import ProcessingState
+
 T = TypeVar("T")
 
 # ORM Models
@@ -17,6 +19,7 @@ class ItemModel(BaseModel):
     size_prefix: str
     content_type: str
     type: str
+    processing_state: ProcessingState
     parentid: str | None
     update_date: datetime
     creation_date: datetime
