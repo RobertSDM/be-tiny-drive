@@ -12,3 +12,4 @@ python-multipart==0.0.20
 psycopg2-binary==2.9.9
 orjson==3.10.3
 httpx==0.28.1
+pillow-avif-plugin==1.5.2

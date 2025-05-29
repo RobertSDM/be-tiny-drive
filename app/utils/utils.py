@@ -1,7 +1,8 @@
 import io
 import math
-from PIL import Image, ImageOps
+from PIL import ImageOps
 from PIL.ImageFile import ImageFile
+import pillow_avif
 from typing import Callable
 
 import zstandard

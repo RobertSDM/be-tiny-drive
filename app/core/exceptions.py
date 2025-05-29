@@ -13,8 +13,8 @@ class FeatureNotSupported(DomainError):
 
 class PreviewStillProcessing(DomainError):
     def __init__(self):
-        self.message = "the requested preview still processing. Wait some seconds"
-        super().__init__(self.message, 204)
+        self.message = "the requested preview still processing. Wait a few seconds"
+        super().__init__(self.message, 202)
 
 
 class AccountAlreadyExists(DomainError):

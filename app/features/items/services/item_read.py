@@ -199,7 +199,7 @@ class _ItemReadServ:
         if not item:
             raise ItemNotFound()
 
-        if item.processing_state == ProcessingState.STABLE.value:
+        if item.processing_state == ProcessingState.STABLE:
             raise PreviewStillProcessing()
 
         try:
