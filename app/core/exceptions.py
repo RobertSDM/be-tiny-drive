@@ -17,6 +17,12 @@ class PreviewStillProcessing(DomainError):
         super().__init__(self.message, 202)
 
 
+class ItemKeyExistsInStorage(DomainError):
+    def __init__(self):
+        self.message = "error saving the file"
+        super().__init__(self.message, 500)
+
+
 class AccountAlreadyExists(DomainError):
     def __init__(self):
         self.message = f"the user already exists"

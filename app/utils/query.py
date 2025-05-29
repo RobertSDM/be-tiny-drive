@@ -19,8 +19,6 @@ def select_order_item_column(type: Sort) -> InstrumentedAttribute:
     match type:
         case Sort.NAME:
             return Item.name
-        case Sort.CREATION_DATE:
-            return Item.creation_date
         case Sort.UPDATE_DATE:
             return Item.update_date
 
