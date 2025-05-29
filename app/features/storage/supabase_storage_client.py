@@ -9,7 +9,7 @@ class SupabaseStorageClient(StorageClientInterface):
     def __init__(self, url: str, key: str):
         self.sustorage: SyncStorageClient = create_client(url, key).storage
 
-    def save(self, bucketid: str, content_type: str, path: str, file: BinaryIO):
+    def save(self, bucketid: str, content_type: str, path: str, file: bytes):
         return self.sustorage.from_(bucketid).upload(
             path, file, {"content-type": content_type}
         )

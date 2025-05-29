@@ -5,6 +5,18 @@ class DomainError(Exception):
         super().__init__(self.message)
 
 
+class FeatureNotSupported(DomainError):
+    def __init__(self):
+        self.message = "feature not supported yet"
+        super().__init__(self.message, 500)
+
+
+class PreviewStillProcessing(DomainError):
+    def __init__(self):
+        self.message = "the requested preview still processing. Wait a few seconds"
+        super().__init__(self.message, 202)
+
+
 class AccountAlreadyExists(DomainError):
     def __init__(self):
         self.message = f"the user already exists"
