@@ -5,8 +5,10 @@ from pydantic import BaseModel
 from pytest import Session
 
 from app.core.schemas import (
+    DefaultResponse,
     FailureAndSuccess,
     ListItemResponse,
+    ListResponse,
     SingleItemResponse,
     SingleResponse,
 )
@@ -53,6 +55,7 @@ def save_folder_route(body: SaveFolderBody, db=Depends(db_client.get_session)):
     )
 
     return ORJSONResponse(SingleItemResponse(data=folder).model_dump())
+
 
 @item_router.get("/all/{ownerid}")
 def get_all_items_route(
@@ -127,7 +130,7 @@ def donwload_folder_route(
         zip,
         media_type="application/zip",
         headers={
-            "Content-Disposition": "attachment;filename=downloaded_content",
+            "Content-Disposition": "attachment; filename=\"downloaded_content\"",
             "Access-Control-Expose-Headers": "Content-Disposition",
         },
     )
@@ -141,7 +144,7 @@ def download_file_route(id: str, ownerid: str, db=Depends(db_client.get_session)
         data,
         media_type=content_type,
         headers={
-            "Content-Disposition": f"attachment; filename={filename}",
+            "Content-Disposition": f"attachment; filename=\"{filename}\"",
             "Access-Control-Expose-Headers": "Content-Disposition",
         },
     )
@@ -180,11 +183,10 @@ class DeleteItemBody(BaseModel):
 def delete_item_route(
     ownerid: str, body: DeleteItemBody, db=Depends(db_client.get_session)
 ):
-    sucesses, failures = item_delete_serv.delete_items_serv(db, ownerid, body.itemids)
-
+    deleted = item_delete_serv.delete_items_serv(db, ownerid, body.itemids)
     return ORJSONResponse(
         SingleResponse(
-            data=FailureAndSuccess(successes=sucesses, failures=failures)
+            data=FailureAndSuccess(successes=deleted, failures=[])
         ).model_dump()
     )
 
