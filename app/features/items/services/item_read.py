@@ -16,6 +16,7 @@ from app.database.models import Item
 from app.database.repositories.item_repo import (
     item_by_id_ownerid,
     item_by_ownerid_parentid,
+    item_by_ownerid_parentid_non_deleted,
     items_by_ownerid_name,
     items_by_ownerid_name_type,
 )
@@ -64,7 +65,7 @@ class _ItemReadServ:
         column = select_order_item_column(sort)
 
         pipe = pipeline(
-            item_by_ownerid_parentid,
+            item_by_ownerid_parentid_non_deleted,
             lambda query: order_by(
                 query, [column], order if sort != Sort.UPDATE_DATE else SortOrder.DESC
             ),

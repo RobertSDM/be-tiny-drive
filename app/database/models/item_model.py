@@ -17,6 +17,7 @@ class Item(Base):
     size_prefix: Mapped[str]
     type: Mapped[ItemType]
     content_type: Mapped[str]
+    to_delete: Mapped[bool] = mapped_column(default=False)
     processing_state: Mapped[ProcessingState] = mapped_column(
         server_default=text(ProcessingState.COMPLETE.value),
         default=ProcessingState.STABLE.name,
