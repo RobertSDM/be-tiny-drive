@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel
-from app.core.select_dependency import get_auth_client_instance
+from app.core.select_dependency import AuthClientSingleton
 from app.database.client.sqlalchemy_client import db_client
 from sqlalchemy.orm import Session
 
@@ -21,9 +21,8 @@ class RegisterBody(BaseModel):
 def register(
     body: RegisterBody,
     db: Session = Depends(db_client.get_session),
-    auth_client=Depends(get_auth_client_instance),
+    auth_client=Depends(AuthClientSingleton.get_auth_client_instance),
 ):
-    auth_service = AuthenticationService(auth_client)
-    account = auth_service.register_serv(db, body.username, body.email, body.password)
+    account = auth_client.register_serv(db, body.username, body.email, body.password)
 
     return ORJSONResponse(AuthRegisterResponse(data=account).model_dump())

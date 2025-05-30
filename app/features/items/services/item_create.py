@@ -5,11 +5,17 @@ from PIL import Image
 from fastapi import UploadFile
 import storage3
 from sqlalchemy.orm import Session
+import storage3.exceptions
 
 from app.features.storage.supabase_storage_client import (
     supabase_storage_client as storage_client,
 )
-from app.core.exceptions import FeatureNotSupported, ItemExistsInFolder, ItemNotFound
+from app.core.exceptions import (
+    FeatureNotSupported,
+    ItemExistsInFolder,
+    ItemKeyExistsInStorage,
+    ItemNotFound,
+)
 from app.database.models.item_model import Item
 from app.database.repositories.item_repo import (
     item_by_id_ownerid,
@@ -80,14 +86,17 @@ class _ItemCreateServ:
 
         return folders, file
 
-    def _upload_file_to_storage(self, filedata: bytes, content_type: str, file: Item):
+    def _upload_file_to_storage(
+        self, filedata: bytes, content_type: str, path: str, file: Item
+    ):
         try:
-            storage_client.save(
-                drive_bucketid, content_type, make_bucket_file_path(file), filedata
-            )
+            storage_client.save(drive_bucketid, content_type, path, filedata)
         except storage3.exceptions.StorageApiError as e:
-            if e.status == "409":
-                raise ItemExistsInFolder(file.name, file.type.value)
+            match e.code:
+                case "ResourceAlreadyExists":
+                    raise ItemExistsInFolder(file.name, file.type.value)
+                case "KeyAlreadyExists":
+                    raise ItemKeyExistsInStorage()
 
             raise e
 
@@ -117,16 +126,28 @@ class _ItemCreateServ:
 
         item_checks.check_parent_exists(db, ownerid, parentid)
 
-        folders, file = self._create_items_from_path(
-            filedata,
-            ownerid,
-        )
+        max_retries, retries = 3, 0
 
-        data = pipeline(
-            compress_file,
-        )(filedata.file.read())
+        while retries < max_retries:
+            folders, file = self._create_items_from_path(
+                filedata,
+                ownerid,
+            )
 
-        self._upload_file_to_storage(data, filedata.content_type, file)
+            data = pipeline(
+                compress_file,
+            )(filedata.file.read())
+
+            try:
+                self._upload_file_to_storage(
+                    data, filedata.content_type, make_bucket_file_path(file), file
+                )
+                break
+            except ItemKeyExistsInStorage as e:
+                retries += 1
+                if retries == max_retries:
+                    raise e
+
         crr_parentid = self._create_folders(db, ownerid, parentid, folders)
 
         item_checks.check_duplicate_name(
@@ -174,11 +195,11 @@ class _ItemCreateServ:
                 image_to_jpg,
             )(bytedata)
 
-            storage_client.save(
-                drive_bucketid,
-                item.content_type,
-                make_bucket_file_preview_path(item),
+            self._upload_file_to_storage(
                 data.read(),
+                "image/jpg",
+                make_bucket_file_preview_path(item),
+                item,
             )
 
             update(

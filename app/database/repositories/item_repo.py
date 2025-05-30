@@ -2,6 +2,8 @@ from typing import Optional
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session, Query
 
+from app.decorators.timer import timer
+
 from ..models import Item
 from app.enums.enums import ItemType
 

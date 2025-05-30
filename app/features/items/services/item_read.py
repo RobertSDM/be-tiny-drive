@@ -3,11 +3,11 @@ from typing import Any, BinaryIO, Generator
 import zipfile
 from sqlalchemy.orm import Session
 
+from app.decorators.timer import timer_method
 from app.features.storage.supabase_storage_client import (
     supabase_storage_client as storage_client,
 )
 from app.core.exceptions import (
-    InvalidItemToPreview,
     ItemNotFound,
     ParentFolderNotFound,
     PreviewStillProcessing,
@@ -28,7 +28,12 @@ from app.utils.query import (
     paginate,
     select_order_item_column,
 )
-from app.utils.utils import compress_file, decompress, make_bucket_file_path, make_bucket_file_preview_path, pipeline
+from app.utils.utils import (
+    decompress,
+    make_bucket_file_path,
+    make_bucket_file_preview_path,
+    pipeline,
+)
 from app.constants.db_vars import limit_per_page, limit_per_search
 
 
@@ -60,7 +65,9 @@ class _ItemReadServ:
 
         pipe = pipeline(
             item_by_ownerid_parentid,
-            lambda query: order_by(query, [column], order),
+            lambda query: order_by(
+                query, [column], order if sort != Sort.UPDATE_DATE else SortOrder.DESC
+            ),
             lambda query: paginate(query, limit_per_page, page),
             exec_all,
         )
@@ -207,7 +214,7 @@ class _ItemReadServ:
             url = storage_client.signedURL(drive_bucketid, bucket_item_path, 3600)
         except Exception as e:
             raise e
-        
+
         return url
 
     def search_serv(

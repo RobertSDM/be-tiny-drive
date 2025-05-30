@@ -39,7 +39,7 @@ class AccountModel(BaseModel):
 
 class RegisterPassword(BaseModel):
     id: str
-    creation_date: str
+    creation_date: datetime
     email: str
 
 

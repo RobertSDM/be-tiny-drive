@@ -8,6 +8,7 @@ from typing import Callable
 import zstandard
 
 from app.database.models.item_model import Item
+from app.decorators.timer import timer
 
 
 def pipeline(*funcs: Callable):
@@ -51,6 +52,9 @@ def image_to_jpg(im: ImageFile, quality: int = 70) -> io.BytesIO:
 
 
 def resize_image(im: ImageFile, size: tuple[int, int] = (1920, 1080)) -> ImageFile:
+    if im.size[0] < size[0] or im.size[1] < size[1]:
+        return im
+
     return ImageOps.contain(im, size)
 
 

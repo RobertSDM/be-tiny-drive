@@ -1,7 +1,7 @@
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 import uvicorn
 from app.api.exeption_handling.domain_error_handler import domain_error_handler
-from app.middlewares.auth_middleware import auth_middleware
+
 from app.features.auth.api.auth_router import auth_router
 from app.features.items.api.item_router import item_router
 from app.features.account.api.auth_router import account_router
