@@ -17,9 +17,7 @@ from app.utils.query import exec_exists, exec_first
 
 async def auth_middleware(
     req: Request,
-    auth_client: AuthenticationInterface = Depends(
-        AuthClientSingleton.get_auth_client_instance
-    ),
+    auth_client: AuthenticationInterface = Depends(AuthClientSingleton.get_instance),
     db: Session = Depends(db_client.get_session),
 ):
     authorization = req.headers.get("Authorization")

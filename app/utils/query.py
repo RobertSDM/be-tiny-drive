@@ -2,7 +2,6 @@ from typing import TypeVar
 from sqlalchemy.orm import Session, Query, InstrumentedAttribute
 
 from app.database.models.item_model import Item
-from app.decorators.timer import timer
 from app.enums.enums import Sort, SortOrder
 
 T = TypeVar("T")
@@ -31,16 +30,13 @@ def update(query: Query[T], data: dict[any, any]) -> None:
     query.update(data)
 
 
-@timer
 def exec_all(query: Query[T]) -> list[T]:
     return query.all()
 
 
-@timer
 def exec_first(query: Query[T]) -> T | None:
     return query.first()
 
 
-@timer
 def exec_exists(db: Session, query: Query[T]) -> bool:
     return db.query(query.exists()).scalar()
