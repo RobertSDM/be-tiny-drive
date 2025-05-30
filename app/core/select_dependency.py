@@ -5,11 +5,11 @@ from app.interfaces.authentication_interface import AuthenticationInterface
 from app.constants.env import mode, supabase_key, supabase_url
 
 
-class AuthClientSingleton():
+class AuthClientSingleton:
     _instance = None
 
     @staticmethod
-    def get_auth_client_instance() -> AuthenticationInterface:
+    def get_instance() -> AuthenticationInterface:
         if not AuthClientSingleton._instance:
             if mode == Mode.PROD.value:
                 AuthClientSingleton._instance = SupabaseAuthenticationClient(

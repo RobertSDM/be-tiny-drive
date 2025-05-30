@@ -21,8 +21,9 @@ class RegisterBody(BaseModel):
 def register(
     body: RegisterBody,
     db: Session = Depends(db_client.get_session),
-    auth_client=Depends(AuthClientSingleton.get_auth_client_instance),
+    auth_client=Depends(AuthClientSingleton.get_instance),
 ):
-    account = auth_client.register_serv(db, body.username, body.email, body.password)
+    auth_service = AuthenticationService(auth_client)
+    account = auth_service.register_serv(db, body.username, body.email, body.password)
 
     return ORJSONResponse(AuthRegisterResponse(data=account).model_dump())
