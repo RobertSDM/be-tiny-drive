@@ -3,6 +3,7 @@ from typing import Any, BinaryIO, Generator
 import zipfile
 from sqlalchemy.orm import Session
 
+from app.decorators.timer import timer_method
 from app.features.storage.supabase_storage_client import (
     supabase_storage_client as storage_client,
 )

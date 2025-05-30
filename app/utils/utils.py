@@ -8,6 +8,7 @@ from typing import Callable
 import zstandard
 
 from app.database.models.item_model import Item
+from app.decorators.timer import timer
 
 
 def pipeline(*funcs: Callable):

@@ -2,6 +2,7 @@ from typing import Any, Optional
 from jose import ExpiredSignatureError, JWTError, jwt
 from supabase import create_client
 from app.core.exceptions import InvalidJWTToken, JWTTokenExpired
+from app.decorators.timer import timer_method
 from app.interfaces.authentication_interface import (
     AuthenticationInterface,
     RegisterPassword,
