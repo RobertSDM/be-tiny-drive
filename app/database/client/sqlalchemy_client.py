@@ -7,7 +7,7 @@ from app.interfaces.database_interface import DatabaseClientInterface
 
 class SQLAlchemyClient(DatabaseClientInterface):
     def __init__(self, conn_str: str):
-        self.engine = sa.create_engine(conn_str, echo="debug")
+        self.engine = sa.create_engine(conn_str)
         self.session_maker = sessionmaker(self.engine)
 
     def get_session(self):
