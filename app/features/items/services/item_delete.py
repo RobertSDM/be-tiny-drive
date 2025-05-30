@@ -18,6 +18,7 @@ from app.enums.enums import ItemType
 from app.utils.query import (
     exec_all,
     exec_first,
+    update,
 )
 from app.database.repositories.item_repo import item_delete
 from app.utils.utils import make_bucket_file_path, make_bucket_file_preview_path
@@ -25,70 +26,61 @@ from app.utils.utils import make_bucket_file_path, make_bucket_file_preview_path
 
 class _ItemDeleteServ:
 
-    def _delete_item_from_storage(self, item: Item) -> bool:
-        try:
-            storage_client.remove(
-                drive_bucketid,
-                make_bucket_file_path(item),
-            )
+    # def _delete_item_from_storage(self, item: Item) -> bool:
+    #     try:
+    #         storage_client.remove(
+    #             drive_bucketid,
+    #             make_bucket_file_path(item),
+    #         )
 
-            storage_client.remove(
-                drive_bucketid,
-                make_bucket_file_preview_path(item),
-            )
+    #         storage_client.remove(
+    #             drive_bucketid,
+    #             make_bucket_file_preview_path(item),
+    #         )
 
-            return True
-        except storage3.exceptions.StorageApiError as e:
-            match e.code:
-                case "NoSuchUpload":
-                    raise ItemNotFound()
+    #         return True
+    #     except storage3.exceptions.StorageApiError as e:
+    #         match e.code:
+    #             case "NoSuchUpload":
+    #                 raise ItemNotFound()
 
-            return False
+    #         return False
 
-    def _dfs_delete_items(
-        self,
-        db: Session,
-        children: list[Item],
-        ownerid: str,
-        successes: list[str],
-        failures: list[str],
-    ):
-        for c in children:
-            if c.type == ItemType.FOLDER:
-                children = exec_all(item_by_ownerid_parentid(db, ownerid, c.id))
-                self._dfs_delete_items(db, children, ownerid, successes, failures)
-            else:
-                if self._delete_item_from_storage(c):
-                    successes.append(c.id)
-                else:
-                    failures.append(c.id)
+    # def _dfs_delete_items(
+    #     self,
+    #     db: Session,
+    #     children: list[Item],
+    #     ownerid: str,
+    #     successes: list[str],
+    #     failures: list[str],
+    # ):
+    #     for c in children:
+    #         if c.type == ItemType.FOLDER:
+    #             children = exec_all(item_by_ownerid_parentid(db, ownerid, c.id))
+    #             self._dfs_delete_items(db, children, ownerid, successes, failures)
+    #         else:
+    #             if self._delete_item_from_storage(c):
+    #                 successes.append(c.id)
+    #             else:
+    #                 failures.append(c.id)
 
     def delete_items_serv(
         self, db: Session, ownerid: str, items: list[str]
-    ) -> tuple[list[str], list[str]]:
-        successes = list()
-        failures = list()
+    ) -> list[str]:
+        deleted = []
 
         for id in items:
             item = exec_first(item_by_id_ownerid(db, id, ownerid))
 
             if not item:
-                failures.append(id)
                 continue
 
-            if item.type == ItemType.FOLDER:
-                items = exec_all(item_by_ownerid_parentid(db, ownerid, item.id))
-                self._dfs_delete_items(db, items, ownerid, successes, failures)
-                successes.append(item.id)
-            else:
-                if self._delete_item_from_storage(item):
-                    successes.append(id)
-                else:
-                    failures.append(id)
+            item.to_delete = True
+            db.commit()
 
-            item_delete(db, item)
+            deleted.append(id)
 
-        return successes, failures
+        return deleted
 
 
 item_delete_serv = _ItemDeleteServ()

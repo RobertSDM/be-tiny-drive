@@ -88,6 +88,16 @@ def item_by_ownerid_parentid(
     )
 
 
+def item_by_ownerid_parentid_non_deleted(
+    db: Session, ownerid: str, parentid: Optional[str]
+) -> Query[Item]:
+    return db.query(Item).where(
+        and_(
+            Item.ownerid == ownerid, Item.parentid == parentid, Item.to_delete == False
+        )
+    )
+
+
 def item_by_ownerid_parentid_type(
     db: Session, ownerid: str, parentid: Optional[str], type: ItemType
 ) -> Query[Item]:
