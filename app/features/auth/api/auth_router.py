@@ -1,6 +1,7 @@
+from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.responses import ORJSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.core.select_dependency import AuthClientSingleton
 from app.database.client.sqlalchemy_client import db_client
 from sqlalchemy.orm import Session
@@ -12,9 +13,11 @@ auth_router = APIRouter()
 
 
 class RegisterBody(BaseModel):
-    username: str
-    email: str
-    password: str
+    username: Annotated[str, Field(min_length=4, max_length=50)]
+    email: Annotated[
+        str, Field(min_length=6, max_length=50, pattern=r"^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$")
+    ]
+    password: Annotated[str, Field(min_length=8, max_length=50)]
 
 
 @auth_router.post("/register")
