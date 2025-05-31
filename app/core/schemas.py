@@ -100,11 +100,6 @@ class SingleItemResponse(SingleResponse[ItemModel]):
     pass
 
 
-class LoginRequest(BaseModel):
-    email: str
-    password: str
-
-
 class RegisterRequest(BaseModel):
     email: str
     username: str
