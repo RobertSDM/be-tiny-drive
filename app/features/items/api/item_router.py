@@ -5,10 +5,8 @@ from pydantic import BaseModel
 from pytest import Session
 
 from app.core.schemas import (
-    DefaultResponse,
     FailureAndSuccess,
     ListItemResponse,
-    ListResponse,
     SingleItemResponse,
     SingleResponse,
 )
