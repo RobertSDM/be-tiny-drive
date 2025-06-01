@@ -3,7 +3,7 @@ from pytest import Session
 from app.core.exceptions import ItemExistsInFolder, ParentFolderNotFound
 from app.database.repositories.item_repo import (
     item_by_id_ownerid,
-    item_by_ownerid_parentid_fullname,
+    item_by_ownerid_parentid_fullname_non_deleted,
 )
 from app.enums.enums import ItemType
 from app.utils.query import exec_exists
@@ -21,10 +21,11 @@ class _ItemChecks:
     ) -> None:
         name = filename.split("/")[-1]
         exists = exec_exists(
-            db, item_by_ownerid_parentid_fullname(db, ownerid, parentid, name)
+            db,
+            item_by_ownerid_parentid_fullname_non_deleted(db, ownerid, parentid, name),
         )
         if exists:
-            raise ItemExistsInFolder(name, type)
+            raise ItemExistsInFolder(name, type.value)
 
     def check_parent_exists(self, db: Session, ownerid: str, parentid: str | None):
         if not parentid:

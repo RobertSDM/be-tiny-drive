@@ -75,8 +75,12 @@ class _ItemDeleteServ:
             if not item:
                 continue
 
-            item.to_delete = True
-            db.commit()
+            if item.type == ItemType.FOLDER:
+                children = exec_all(item_by_ownerid_parentid(db, ownerid, id))
+                children = [c.id for c in children]
+                self.delete_items_serv(db, ownerid, children)
+
+            update(item_by_id_ownerid(db, id, ownerid), {"to_delete": True})
 
             deleted.append(id)
 

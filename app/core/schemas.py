@@ -57,7 +57,7 @@ class LoginReturn(BaseModel):
 
 
 class Error(BaseModel):
-    message: str
+    message: str | list | dict
 
 
 class DefaultResponse(BaseModel):
