@@ -2,7 +2,6 @@ from typing import Optional
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session, Query
 
-from app.decorators.timer import timer
 
 from ..models import Item
 from app.enums.enums import ItemType
@@ -51,7 +50,8 @@ def items_by_ownerid_name_type(
 ) -> Query[Item]:
     return db.query(Item).where(
         and_(
-            and_(Item.ownerid == ownerid, Item.type == type),
+            Item.ownerid == ownerid,
+            Item.type == type,
             Item.name.ilike(f"%{query}%"),
         ),
     )
@@ -71,11 +71,22 @@ def item_by_ownerid_parentid_fullname(
 ) -> Query[Item]:
     return db.query(Item).where(
         and_(
-            and_(
-                Item.ownerid == ownerid,
-                Item.parentid == parentid,
-            ),
+            Item.ownerid == ownerid,
+            Item.parentid == parentid,
             (Item.name + Item.extension) == fullname,
+        ),
+    )
+
+
+def item_by_ownerid_parentid_fullname_non_deleted(
+    db: Session, ownerid: str, parentid: Optional[str], fullname: str
+) -> Query[Item]:
+    return db.query(Item).where(
+        and_(
+            Item.ownerid == ownerid,
+            Item.parentid == parentid,
+            func.concat(Item.name, Item.extension) == fullname,
+            Item.to_delete.is_(False),
         ),
     )
 
@@ -102,7 +113,5 @@ def item_by_ownerid_parentid_type(
     db: Session, ownerid: str, parentid: Optional[str], type: ItemType
 ) -> Query[Item]:
     return db.query(Item).where(
-        and_(
-            and_(Item.ownerid == ownerid, Item.parentid == parentid), Item.type == type
-        )
+        and_(Item.ownerid == ownerid, Item.parentid == parentid, Item.type == type)
     )
