@@ -12,8 +12,8 @@ You can access the project and test it using this link: [Tiny Drive](https://tin
 
 if you don't want to login with your own email, you can use this login I've created for tests: 
 ```
-**Email:** tiny.test.drive@gmail.com 
-**Senha:** 12345678
+Email: tiny.test.drive@gmail.com 
+Senha: 12345678
 ```
 
 # Main Features
