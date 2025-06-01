@@ -74,7 +74,7 @@ make env-run
 
 -   The authentication is static. The data is:
 
-```json
+```javascript
 // jwt_token is to be sent in the authorization header
 
 {
