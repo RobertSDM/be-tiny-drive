@@ -15,6 +15,7 @@ from app.core.exceptions import (
 from app.database.models import Item
 from app.database.repositories.item_repo import (
     item_by_id_ownerid,
+    item_by_id_ownerid_type,
     item_by_ownerid_parentid,
     item_by_ownerid_parentid_non_deleted,
     items_by_ownerid_name,
@@ -102,7 +103,7 @@ class _ItemReadServ:
         to_download = list()
 
         for id in fileids:
-            item = exec_first(item_by_id_ownerid(db, id, ownerid))
+            item = exec_first(item_by_id_ownerid_type(db, id, ownerid, ItemType.FILE))
             if not item:
                 raise ItemNotFound()
 
@@ -202,7 +203,7 @@ class _ItemReadServ:
         yield from self._stream_buffer(buffer)
 
     def preview_serv(self, db: Session, ownerid: str, id: str) -> str:
-        item = exec_first(item_by_id_ownerid(db, id, ownerid))
+        item = exec_first(item_by_id_ownerid_type(db, id, ownerid, ItemType.FILE))
 
         if not item:
             raise ItemNotFound()
