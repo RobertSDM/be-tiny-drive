@@ -7,6 +7,7 @@ import storage3
 from sqlalchemy.orm import Session
 import storage3.exceptions
 
+from app.core.validation_errors import InvalidItemName, ItemToDeep
 from app.features.storage.supabase_storage_client import (
     supabase_storage_client as storage_client,
 )
@@ -20,6 +21,7 @@ from app.database.models.item_model import Item
 from app.database.repositories.item_repo import (
     item_by_id_ownerid,
     item_by_ownerid_parentid_fullname,
+    item_by_ownerid_parentid_fullname_non_deleted,
     item_save,
 )
 from app.enums.enums import ItemType, ProcessingState
@@ -36,6 +38,7 @@ from app.utils.utils import (
     resize_image,
 )
 from app.constants.env import drive_bucketid
+from app.core.validations import validate_item_name, max_folder_depth
 
 
 class _ItemCreateServ:
@@ -102,12 +105,13 @@ class _ItemCreateServ:
 
     def _create_folders(
         self, db: Session, ownerid: str, parentid: str | None, folders: list[Item]
-    ) -> str | None:
+    ) -> tuple[Item, str]:
         crr_parentid = parentid
+        first_folder = None
 
         for f in folders:
             folder = exec_first(
-                item_by_ownerid_parentid_fullname(db, ownerid, crr_parentid, f.name)
+                item_by_ownerid_parentid_fullname_non_deleted(db, ownerid, crr_parentid, f.name)
             )
 
             if folder:
@@ -116,13 +120,21 @@ class _ItemCreateServ:
 
             f.parentid = crr_parentid
             crr_parentid = f.id
-            item_save(db, f)
+            
+            saved_folder = item_save(db, f)
 
-        return crr_parentid
+            if not first_folder:
+                first_folder = saved_folder
+
+        return first_folder, crr_parentid
 
     def item_save_item_serv(
         self, db: Session, filedata: UploadFile, ownerid: str, parentid: str | None
     ) -> Item:
+        name = filedata.filename.split("/")[-1].split(".")[0]
+
+        if not validate_item_name(name):
+            raise InvalidItemName(name)
 
         item_checks.check_parent_exists(db, ownerid, parentid)
 
@@ -133,6 +145,9 @@ class _ItemCreateServ:
                 filedata,
                 ownerid,
             )
+
+            if len(folders) > max_folder_depth:
+                raise ItemToDeep(file.name + file.extension)
 
             data = pipeline(
                 compress_file,
@@ -148,21 +163,27 @@ class _ItemCreateServ:
                 if retries == max_retries:
                     raise e
 
-        crr_parentid = self._create_folders(db, ownerid, parentid, folders)
+        first_folder, crr_parentid = self._create_folders(
+            db, ownerid, parentid, folders
+        )
 
         item_checks.check_duplicate_name(
-            db, ownerid, crr_parentid, filedata.filename, ItemType.FILE.value
+            db, ownerid, crr_parentid, filedata.filename, ItemType.FILE
         )
 
         file.parentid = crr_parentid
-        return item_save(db, file)
+        saved_item = item_save(db, file)
+
+        print(first_folder)
+        return saved_item if len(folders) == 0 else first_folder
 
     def item_save_folder_serv(
         self, db: Session, ownerid: str, name: str, parentid: str | None
     ):
-        item_checks.check_duplicate_name(
-            db, ownerid, parentid, name, ItemType.FOLDER.value
-        )
+        if not validate_item_name(name):
+            raise InvalidItemName(name)
+
+        item_checks.check_duplicate_name(db, ownerid, parentid, name, ItemType.FOLDER)
         item_checks.check_parent_exists(db, ownerid, parentid)
 
         folder = Item(
@@ -208,6 +229,11 @@ class _ItemCreateServ:
             )
             db.commit()
         else:
+            update(
+                item_by_id_ownerid(db, id, ownerid),
+                {"processing_state": ProcessingState.COMPLETE.value},
+            )
+            db.commit()
             raise FeatureNotSupported()
 
 

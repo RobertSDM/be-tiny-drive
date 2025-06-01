@@ -57,7 +57,7 @@ class LoginReturn(BaseModel):
 
 
 class Error(BaseModel):
-    message: str
+    message: str | list | dict
 
 
 class DefaultResponse(BaseModel):
@@ -98,11 +98,6 @@ class ListItemResponse(ListResponse[ItemModel]):
 
 class SingleItemResponse(SingleResponse[ItemModel]):
     pass
-
-
-class LoginRequest(BaseModel):
-    email: str
-    password: str
 
 
 class RegisterRequest(BaseModel):

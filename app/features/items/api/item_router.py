@@ -35,9 +35,10 @@ def save_file_route(
     db=Depends(db_client.get_session),
 ):
     item = item_create_serv.item_save_item_serv(db, file, ownerid, parentid)
-    background_tasks.add_task(
-        item_create_serv.item_create_preview_serv, db, item.ownerid, item.id
-    )
+    if item.type == ItemType.FILE:
+        background_tasks.add_task(
+            item_create_serv.item_create_preview_serv, db, ownerid, item.id
+        )
 
     return ORJSONResponse(SingleItemResponse(data=item).model_dump())
 
@@ -130,7 +131,7 @@ def donwload_folder_route(
         zip,
         media_type="application/zip",
         headers={
-            "Content-Disposition": "attachment; filename=\"downloaded_content\"",
+            "Content-Disposition": 'attachment; filename="downloaded_content"',
             "Access-Control-Expose-Headers": "Content-Disposition",
         },
     )
@@ -144,7 +145,7 @@ def download_file_route(id: str, ownerid: str, db=Depends(db_client.get_session)
         data,
         media_type=content_type,
         headers={
-            "Content-Disposition": f"attachment; filename=\"{filename}\"",
+            "Content-Disposition": f'attachment; filename="{filename}"',
             "Access-Control-Expose-Headers": "Content-Disposition",
         },
     )
