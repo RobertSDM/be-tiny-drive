@@ -1,6 +1,8 @@
 from typing import Optional
 from uuid import uuid4
-from app.core.schemas import ItemType
+
+from sqlalchemy import ForeignKey
+from app.core.schemas import FileType
 from app.lib.sqlalchemy import Base
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime, timezone
@@ -14,7 +16,7 @@ class File(Base):
     extension: Mapped[str]
     size: Mapped[int]
     size_prefix: Mapped[str]
-    type: Mapped[ItemType]
+    type: Mapped[FileType]
     content_type: Mapped[str]
     to_delete: Mapped[bool] = mapped_column(
         default=False
@@ -32,7 +34,7 @@ class File(Base):
     )
 
     parentid: Mapped[Optional[str]] = mapped_column(ForeignKey("tb_file.id"))
-    parent: Mapped["File"] = relationship(back_populates="files", remote_side=[id])
+    parent: Mapped["File"] = relationship(back_populates="children", remote_side=[id])
 
     children: Mapped[list["File"]] = relationship(
         back_populates="parent", cascade="all"

@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import ItemNotFound
+from app.core.exceptions import FileNotFound
 from app.core.validation_errors import InvalidFileName
 from app.utils.utils import validate_item_name
 from app.database.models.file_model import File
@@ -17,7 +17,7 @@ class _ItemUpdateServ:
         item = exec_first(item_by_id_ownerid(db, id, ownerid))
 
         if not item:
-            raise ItemNotFound()
+            raise FileNotFound()
 
         item_checks.check_duplicate_name(
             db, ownerid, item.parentid, name + item.extension, item.type

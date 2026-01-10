@@ -9,7 +9,7 @@ from app.api.exception_handlers.validation_error import (
 )
 from app.core.validation_errors import FileValidationError
 from app.features.auth.auth_router import auth_router
-from app.features.file.item_router import item_router
+from app.features.file.file_router import item_router
 from app.features.account.auth_router import account_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.exceptions import DomainError

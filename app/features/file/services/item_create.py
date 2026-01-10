@@ -12,10 +12,10 @@ from app.lib.supabase.storage import (
     supabase_storage_client as storage_client,
 )
 from app.core.exceptions import (
-    FeatureNotSupported,
-    ItemExistsInFolder,
-    ItemKeyExistsInStorage,
-    ItemNotFound,
+    NotSupported,
+    FileAlreadyExists,
+    FileAlreadyExists,
+    FileNotFound,
 )
 from app.database.models.file_model import File
 from app.database.repositories.item_repo import (
@@ -23,7 +23,7 @@ from app.database.repositories.item_repo import (
     item_by_ownerid_parentid_fullname_non_deleted,
     item_save,
 )
-from app.core.schemas import ItemType, ProcessingState
+from app.core.schemas import FileType
 from app.features.file.services.item_checks import item_checks
 from app.utils.query import exec_first, update
 from app.utils.utils import (
@@ -37,7 +37,7 @@ from app.utils.utils import (
     resize_image,
 )
 from app.core.constants import MAX_RECURSIVE_DEPTH, SUPA_BUCKETID
-from utils.utils import validate_item_name
+from app.utils.utils import validate_item_name
 
 
 class _ItemCreateServ:
@@ -59,9 +59,8 @@ class _ItemCreateServ:
                 size_prefix="",
                 content_type="",
                 name=name,
-                processing_state=ProcessingState.COMPLETE.value,
                 ownerid=ownerid,
-                type=ItemType.FOLDER,
+                type=FileType.FOLDER,
             )
             folders.append(folder)
 
@@ -83,7 +82,7 @@ class _ItemCreateServ:
             size=normalized_size,
             size_prefix=prefix,
             ownerid=ownerid,
-            type=ItemType.FILE,
+            type=FileType.FILE,
         )
 
         return folders, file
@@ -96,9 +95,9 @@ class _ItemCreateServ:
         except storage3.exceptions.StorageApiError as e:
             match e.code:
                 case "ResourceAlreadyExists":
-                    raise ItemExistsInFolder(file.filename, file.type.value)
+                    raise FileAlreadyExists(file.filename, file.type.value)
                 case "KeyAlreadyExists":
-                    raise ItemKeyExistsInStorage()
+                    raise FileAlreadyExists()
 
             raise e
 
@@ -159,7 +158,7 @@ class _ItemCreateServ:
                     data, filedata.content_type, make_bucket_file_path(file), file
                 )
                 break
-            except ItemKeyExistsInStorage as e:
+            except FileAlreadyExists as e:
                 retries += 1
                 if retries == max_retries:
                     raise e
@@ -169,7 +168,7 @@ class _ItemCreateServ:
         )
 
         item_checks.check_duplicate_name(
-            db, ownerid, crr_parentid, filedata.filename, ItemType.FILE
+            db, ownerid, crr_parentid, filedata.filename, FileType.FILE
         )
 
         file.parentid = crr_parentid
@@ -184,7 +183,7 @@ class _ItemCreateServ:
         if not validate_item_name(name):
             raise InvalidFileName(name)
 
-        item_checks.check_duplicate_name(db, ownerid, parentid, name, ItemType.FOLDER)
+        item_checks.check_duplicate_name(db, ownerid, parentid, name, FileType.FOLDER)
         item_checks.check_parent_exists(db, ownerid, parentid)
 
         folder = File(
@@ -195,7 +194,7 @@ class _ItemCreateServ:
             extension="",
             size=0,
             size_prefix="",
-            type=ItemType.FOLDER,
+            type=FileType.FOLDER,
         )
 
         return item_save(db, folder)
@@ -203,7 +202,7 @@ class _ItemCreateServ:
     def item_create_preview_serv(self, db: Session, ownerid: str, id: str):
         item = exec_first(item_by_id_ownerid(db, id, ownerid))
         if not item:
-            raise ItemNotFound()
+            raise FileNotFound()
 
         if item.content_type.startswith("image"):
             bytedata = storage_client.download(
@@ -223,19 +222,10 @@ class _ItemCreateServ:
                 make_bucket_file_preview_path(item),
                 item,
             )
-
-            update(
-                item_by_id_ownerid(db, id, ownerid),
-                {"processing_state": ProcessingState.COMPLETE.value},
-            )
             db.commit()
         else:
-            update(
-                item_by_id_ownerid(db, id, ownerid),
-                {"processing_state": ProcessingState.COMPLETE.value},
-            )
             db.commit()
-            raise FeatureNotSupported()
+            raise NotSupported()
 
 
 item_create_serv = _ItemCreateServ()

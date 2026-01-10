@@ -2,9 +2,9 @@ from typing import Any, Optional
 from jose import ExpiredSignatureError, JWTError, jwt
 from supabase import create_client
 from app.core.exceptions import InvalidJWTToken, JWTTokenExpired
+from app.core.schemas import AccountReturnable
 from app.interfaces.authentication_interface import (
     AuthenticationInterface,
-    RegisterPassword,
 )
 from app.core.constants import JWT_SECRET
 
@@ -13,7 +13,9 @@ class SupabaseAuthenticationClient(AuthenticationInterface):
     def __init__(self, url: str, key: str):
         self.suauth = create_client(url, key).auth
 
-    def registerPassword(self, email: str, password: str) -> Optional[RegisterPassword]:
+    def AccountReturnable(
+        self, email: str, password: str
+    ) -> Optional[AccountReturnable]:
         resp = self.suauth.sign_up(
             {
                 "email": email,
@@ -24,7 +26,7 @@ class SupabaseAuthenticationClient(AuthenticationInterface):
         if not resp.user:
             return None
 
-        return RegisterPassword(
+        return AccountReturnable(
             id=resp.user.id, creation_date=resp.user.created_at, email=resp.user.email
         )
 

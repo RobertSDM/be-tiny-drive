@@ -1,8 +1,6 @@
 from datetime import datetime
-from typing import Generic, TypeVar
+from typing import List, Optional, TypeVar
 from pydantic import BaseModel, ConfigDict
-
-from app.core.enums import ProcessingState
 
 T = TypeVar("T")
 
@@ -26,117 +24,45 @@ class Mode(Enum):
     DEV = "dev"
 
 
-class ProcessingState(Enum):
-    """
-    STABLE set when the file is done from the main processing and is returned to the client. The rest of the processing happens in background (create preview, thumbnail, etc...)
-
-    COMPLETE set when all the file processing is completed
-    """
-
-    STABLE = "STABLE"
-    COMPLETE = "COMPLETE"
-
-
-class ItemType(Enum):
+class FileType(Enum):
     FILE = "FILE"
     FOLDER = "FOLDER"
 
 
-# ORM Models
+# DTOs
 
 
-class ItemModel(BaseModel):
+class FileReturnable(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
-    name: str
+    filename: str
     extension: str
     size: int
     size_prefix: str
     content_type: str
-    type: str
-    processing_state: ProcessingState
-    parentid: str | None
-    update_date: datetime
-    creation_date: datetime
+    type: FileType
+    parent: Optional["FileReturnable"]
+    content_type: str
+    updated_at: datetime
+    created_at: datetime
 
 
-class AccountModel(BaseModel):
+class AccountReturnable(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
     username: str
     email: str
-    creation_date: datetime
+    created_at: datetime
 
 
-# Schemas
+class FileResponseStructure(BaseModel):
+    files: List[FileReturnable]
+    parent: Optional[FileReturnable] = None
+    message: Optional[str] = ""
 
 
-class RegisterPassword(BaseModel):
-    id: str
-    creation_date: datetime
-    email: str
-
-
-class FailureAndSuccess(BaseModel, Generic[T]):
-    failures: list[T]
-    successes: list[T]
-
-
-class LoginReturn(BaseModel):
-    token: str
-    user: AccountModel
-
-
-# API
-
-
-class Error(BaseModel):
-    message: str | list | dict
-
-
-class DefaultResponse(BaseModel):
-    error: Error | None = None
-    success: bool = True
-
-
-class FailureAndSuccess(BaseModel, Generic[T]):
-    failures: list[T]
-    successes: list[T]
-
-
-class ListResponse(DefaultResponse, Generic[T]):
-    data: list[T]
-    count: int
-
-
-class SingleResponse(DefaultResponse, Generic[T]):
-    data: T
-
-
-class AccountResponse(SingleResponse[AccountModel]):
-    pass
-
-
-class AuthRegisterResponse(SingleResponse[AccountModel]):
-    pass
-
-
-class AuthLoginResponse(SingleResponse[AccountModel]):
-    access_token: str
-    refresh_token: str
-
-
-class ListItemResponse(ListResponse[ItemModel]):
-    pass
-
-
-class SingleItemResponse(SingleResponse[ItemModel]):
-    pass
-
-
-class RegisterRequest(BaseModel):
-    email: str
-    username: str
-    password: str
+class ErrorResponse(BaseModel):
+    message: str
+    description: str = ""

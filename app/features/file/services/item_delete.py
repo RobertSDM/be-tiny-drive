@@ -5,7 +5,7 @@ from app.database.repositories.item_repo import (
     item_by_id_ownerid,
     item_by_ownerid_parentid,
 )
-from app.core.schemas import ItemType
+from app.core.schemas import FileType
 from app.utils.query import (
     exec_all,
     exec_first,
@@ -66,7 +66,7 @@ class _ItemDeleteServ:
             if not item:
                 continue
 
-            if item.type == ItemType.FOLDER:
+            if item.type == FileType.FOLDER:
                 children = exec_all(item_by_ownerid_parentid(db, ownerid, id))
                 children = [c.id for c in children]
                 self.delete_items_serv(db, ownerid, children)

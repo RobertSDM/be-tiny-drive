@@ -7,9 +7,9 @@ from app.lib.supabase.storage import (
     supabase_storage_client as storage_client,
 )
 from app.core.exceptions import (
-    ItemNotFound,
-    ParentFolderNotFound,
-    PreviewStillProcessing,
+    FileNotFound,
+    ParentNotFound,
+    ProcessingPreview,
 )
 from app.database.models import File
 from app.database.repositories.item_repo import (
@@ -21,7 +21,7 @@ from app.database.repositories.item_repo import (
     items_by_ownerid_name_type,
 )
 from app.core.constants import SUPA_BUCKETID
-from app.core.schemas import ItemType, ProcessingState, Sort, SortOrder
+from app.core.schemas import FileType, Sort, SortOrder
 from app.utils.query import (
     exec_all,
     exec_first,
@@ -49,7 +49,7 @@ class _ItemReadServ:
         item = exec_first(item_by_id_ownerid(db, id, ownerid))
 
         if not item:
-            raise ItemNotFound()
+            raise FileNotFound()
 
         return item
 
@@ -80,9 +80,9 @@ class _ItemReadServ:
         item = exec_first(item_by_id_ownerid(db, id, ownerid))
 
         if not item:
-            raise ItemNotFound()
+            raise FileNotFound()
 
-        if item.type == ItemType.FILE:
+        if item.type == FileType.FILE:
             file = storage_client.download(
                 SUPA_BUCKETID,
                 make_bucket_file_path(item),
@@ -102,9 +102,9 @@ class _ItemReadServ:
         to_download = list()
 
         for id in fileids:
-            item = exec_first(item_by_id_ownerid_type(db, id, ownerid, ItemType.FILE))
+            item = exec_first(item_by_id_ownerid_type(db, id, ownerid, FileType.FILE))
             if not item:
-                raise ItemNotFound()
+                raise FileNotFound()
 
             to_download.append(item)
 
@@ -158,7 +158,7 @@ class _ItemReadServ:
         items = exec_all(item_by_ownerid_parentid(db, ownerid, folder.id))
 
         for item in items:
-            if item.type == ItemType.FILE:
+            if item.type == FileType.FILE:
                 try:
                     file = storage_client.download(
                         SUPA_BUCKETID,
@@ -192,7 +192,7 @@ class _ItemReadServ:
         folder = exec_first(item_by_id_ownerid(db, id, ownerid))
 
         if not folder:
-            raise ParentFolderNotFound()
+            raise ParentNotFound()
 
         return folder
 
@@ -204,13 +204,10 @@ class _ItemReadServ:
         yield from self._stream_buffer(buffer)
 
     def preview_serv(self, db: Session, ownerid: str, id: str) -> str:
-        item = exec_first(item_by_id_ownerid_type(db, id, ownerid, ItemType.FILE))
+        item = exec_first(item_by_id_ownerid_type(db, id, ownerid, FileType.FILE))
 
         if not item:
-            raise ItemNotFound()
-
-        if item.processing_state == ProcessingState.STABLE:
-            raise PreviewStillProcessing()
+            raise FileNotFound()
 
         try:
             bucket_item_path = make_bucket_file_preview_path(item)
@@ -221,7 +218,7 @@ class _ItemReadServ:
         return url
 
     def search_serv(
-        self, db: Session, ownerid: str, query: str, type: ItemType | None
+        self, db: Session, ownerid: str, query: str, type: FileType | None
     ) -> list[File]:
         base_pipe = pipeline(
             lambda query: paginate(query, LIMIT_PER_SEARCH, 0),

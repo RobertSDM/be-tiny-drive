@@ -2,7 +2,7 @@ from typing import TypeVar
 from sqlalchemy.orm import Session, Query, InstrumentedAttribute
 
 from app.database.models.file_model import File
-from app.core.enums import Sort, SortOrder
+from app.core.schemas import Sort, SortOrder
 
 T = TypeVar("T")
 

@@ -1,13 +1,11 @@
 from fastapi import Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import ORJSONResponse
 from app.core.exceptions import DomainError
-from app.core.schemas import DefaultResponse, Error
+from app.core.schemas import ErrorResponse, FileResponseStructure
 
 
 def domain_error_handler(request: Request, exc: DomainError):
-    return JSONResponse(
+    return ORJSONResponse(
         status_code=exc.status,
-        content=DefaultResponse(
-            success=False, error=Error(message=exc.message)
-        ).model_dump(),
+        content=ErrorResponse(message=exc.message).model_dump(),
     )

@@ -22,7 +22,7 @@ class AuthenticationService:
         if exists:
             raise AccountAlreadyExists()
 
-        resp = self.auth_client.registerPassword(email, password)
+        resp = self.auth_client.AccountReturnable(email, password)
         if not resp:
             return AccountRegistrationError()
 

@@ -1,5 +1,8 @@
 import os
 from app.core.schemas import Mode
+from dotenv import load_dotenv
+
+load_dotenv()
 
 default_db_url = "postgresql://postgres:password@localhost:5432/postgres"
 
@@ -22,7 +25,7 @@ SUPA_BUCKETID = (
 
 LOG_LEVEL = "info" if MODE == Mode.PROD.value else "debug"
 
-HOST = "0.0.0.0"
+HOST = "0.0.0.0" if MODE == Mode.PROD.value else "127.0.0.1"
 
 # limit for file return
 LIMIT_PER_PAGE = 20

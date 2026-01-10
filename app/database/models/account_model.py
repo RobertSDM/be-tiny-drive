@@ -10,6 +10,6 @@ class UserAccount(Base):
     id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid4()))
     username: Mapped[str]
     email: Mapped[str]
-    creation_date: Mapped[datetime]
+    created_at: Mapped[datetime]
 
     files: Mapped[list["File"]] = relationship(cascade="delete", back_populates="owner")

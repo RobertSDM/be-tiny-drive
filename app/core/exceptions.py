@@ -5,22 +5,16 @@ class DomainError(Exception):
         super().__init__(self.message)
 
 
-class FeatureNotSupported(DomainError):
+class NotSupported(DomainError):
     def __init__(self):
-        self.message = "Feature not supported yet"
-        super().__init__(self.message, 500)
+        self.message = "The resource you are trying to access is not supported yet"
+        super().__init__(self.message, 501)
 
 
-class PreviewStillProcessing(DomainError):
+class ProcessingPreview(DomainError):
     def __init__(self):
         self.message = "The requested preview still processing. Wait a few seconds"
         super().__init__(self.message, 202)
-
-
-class ItemKeyExistsInStorage(DomainError):
-    def __init__(self):
-        self.message = "Error saving the file"
-        super().__init__(self.message, 500)
 
 
 class AccountAlreadyExists(DomainError):
@@ -29,31 +23,31 @@ class AccountAlreadyExists(DomainError):
         super().__init__(self.message, 409)
 
 
-class ParentFolderNotFound(DomainError):
+class ParentNotFound(DomainError):
     def __init__(self):
-        self.message = f"The parent folder was not found"
+        self.message = f"The parent was not found"
         super().__init__(self.message, 404)
 
 
-class ItemNotFound(DomainError):
+class FileNotFound(DomainError):
     def __init__(self):
-        self.message = f"The item was not found"
+        self.message = f"The file was not found"
         super().__init__(self.message, 404)
 
 
-class ItemDeleteError(DomainError):
+class FileDeleteError(DomainError):
     def __init__(self):
         self.message = f"Error deleting the item"
         super().__init__(self.message, 500)
 
 
-class FileCannotBeParent(DomainError):
+class FileBeParent(DomainError):
     def __init__(self):
-        self.message = f"A file cannot be parent of a file or folder"
+        self.message = f"A file cannot be parent"
         super().__init__(self.message, 409)
 
 
-class ItemExistsInFolder(DomainError):
+class FileAlreadyExists(DomainError):
     def __init__(self, name: str, type: str):
         self.message = f"The {type.lower()} named '{name}' already exists in the folder"
         super().__init__(self.message, 409)
@@ -80,25 +74,25 @@ class InvalidPassword(DomainError):
 class NoAuthorizationHeader(DomainError):
     def __init__(self):
         self.message = "The authorization header was not present in the request"
-        super().__init__(self.message, 422)
+        super().__init__(self.message, 401)
 
 
-class InvalidItemToPreview(DomainError):
+class InvalidFileToPreview(DomainError):
     def __init__(self):
-        self.message = "The item is not elegible to preview"
-        super().__init__(self.message, 422)
+        self.message = "The item is not elegible for a preview"
+        super().__init__(self.message, 501)
 
 
 class IndentityMismatch(DomainError):
     def __init__(self):
         self.message = "Account mismatch"
-        super().__init__(self.message, 401)
+        super().__init__(self.message, 409)
 
 
 class InvalidJWTToken(DomainError):
     def __init__(self):
         self.message = "The token is invalid"
-        super().__init__(self.message, 422)
+        super().__init__(self.message, 401)
 
 
 class JWTTokenExpired(DomainError):

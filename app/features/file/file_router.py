@@ -4,14 +4,9 @@ from fastapi.responses import ORJSONResponse, StreamingResponse
 from pydantic import BaseModel
 from pytest import Session
 
-from app.core.schemas import (
-    FailureAndSuccess,
-    ListItemResponse,
-    SingleItemResponse,
-    SingleResponse,
-)
+from app.core.schemas import FileResponseStructure
 from app.lib.sqlalchemy import client
-from app.core.schemas import ItemType, Sort, SortOrder
+from app.core.schemas import FileType, Sort, SortOrder
 from app.features.file.services import (
     item_create_serv,
     item_delete_serv,
@@ -33,15 +28,15 @@ def save_file_route(
     db=Depends(client.get_session),
 ):
     item = item_create_serv.item_save_item_serv(db, file, ownerid, parentid)
-    if item.type == ItemType.FILE:
+    if item.type == FileType.FILE:
         background_tasks.add_task(
             item_create_serv.item_create_preview_serv, db, ownerid, item.id
         )
 
-    return ORJSONResponse(SingleItemResponse(data=item).model_dump())
+    return ORJSONResponse(FileResponseStructure(data=item).model_dump())
 
 
-@item_router.get("/")
+@item_router.get("/{ownerid}")
 def get_all_items_route(
     ownerid: str,
     p: int = 0,
@@ -51,7 +46,9 @@ def get_all_items_route(
 ):
     items = item_read_serv.all_root_items_serv(db, ownerid, p, order, sort)
 
-    return ORJSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
+    return ORJSONResponse(
+        FileResponseStructure(data=items, count=len(items)).model_dump()
+    )
 
 
 @item_router.get("/{parentid}/account/{ownerid}")
@@ -67,26 +64,30 @@ def get_all_item_in_folder_route(
         db, ownerid, parentid, p, order, sort
     )
 
-    return ORJSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
+    return ORJSONResponse(
+        FileResponseStructure(data=items, count=len(items)).model_dump()
+    )
 
 
 @item_router.get("/{ownerid}/search")
 def item_search_route(
     ownerid: str,
     q: str,
-    type: ItemType | None = None,
+    type: FileType | None = None,
     db: Session = Depends(client.get_session),
 ):
     items = item_read_serv.search_serv(db, ownerid, q, type)
 
-    return ORJSONResponse(ListItemResponse(data=items, count=len(items)).model_dump())
+    return ORJSONResponse(
+        FileResponseStructure(data=items, count=len(items)).model_dump()
+    )
 
 
 @item_router.get("/{id}/account/{ownerid}")
 def get_item_by_id_route(ownerid: str, id: str, db=Depends(client.get_session)):
     item = item_read_serv.item_by_id_serv(db, ownerid, id)
 
-    return ORJSONResponse(SingleItemResponse(data=item).model_dump())
+    return ORJSONResponse(FileResponseStructure(data=item).model_dump())
 
 
 class DownloadManyFilesBody(BaseModel):
@@ -139,7 +140,7 @@ def image_preview(ownerid: str, id: str, db: Session = Depends(client.get_sessio
     url = item_read_serv.preview_serv(db, ownerid, id)
 
     return ORJSONResponse(
-        SingleResponse(data=url).model_dump(),
+        FileResponseStructure(data=url).model_dump(),
         headers={
             "Cache-Control": "max-age=3600, private",
         },
@@ -156,7 +157,7 @@ def put_name_route(
 ):
     item = item_update_serv.item_update_name(db, id, ownerid, body.name)
 
-    return ORJSONResponse(SingleItemResponse(data=item).model_dump())
+    return ORJSONResponse(FileResponseStructure(data=item).model_dump())
 
 
 class DeleteItemBody(BaseModel):
@@ -168,11 +169,7 @@ def delete_item_route(
     ownerid: str, body: DeleteItemBody, db=Depends(client.get_session)
 ):
     deleted = item_delete_serv.delete_items_serv(db, ownerid, body.itemids)
-    return ORJSONResponse(
-        SingleResponse(
-            data=FailureAndSuccess(successes=deleted, failures=[])
-        ).model_dump()
-    )
+    return ORJSONResponse(FileResponseStructure(data=deleted)).model_dump()
 
 
 @item_router.get("/{id}/account}/{ownerid}/breadcrumb")
@@ -180,5 +177,5 @@ def breadcrumb_route(id: str, ownerid: str, db=Depends(client.get_session)):
     breadcrumb = item_read_serv.breadcrumb_serv(db, ownerid, id)
 
     return ORJSONResponse(
-        ListItemResponse(data=breadcrumb, count=len(breadcrumb)).model_dump()
+        FileResponseStructure(data=breadcrumb, count=len(breadcrumb)).model_dump()
     )

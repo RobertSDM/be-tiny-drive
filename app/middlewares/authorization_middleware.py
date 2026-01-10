@@ -7,7 +7,7 @@ from app.core.exceptions import (
     IndentityMismatch,
 )
 from app.core.authentication_client_singleton import AuthClientSingleton
-from app.database.client.sqlalchemy_client import db_client
+from app.lib.sqlalchemy import client
 from app.database.repositories.account_repo import account_by_id
 from app.interfaces.authentication_interface import AuthenticationInterface
 
@@ -15,7 +15,7 @@ from app.interfaces.authentication_interface import AuthenticationInterface
 async def authorization_middleware(
     req: Request,
     auth_client: AuthenticationInterface = Depends(AuthClientSingleton.get_instance),
-    db: Session = Depends(db_client.get_session),
+    db: Session = Depends(client.get_session),
 ):
     authorization = req.headers.get("Authorization")
     if not authorization:
@@ -24,7 +24,7 @@ async def authorization_middleware(
     token = authorization.replace("Bearer ", "")
     tokenValue = auth_client.validateToken(token)
 
-    exists = account_by_id(db, tokenValue["sub"]).exists()
+    exists = account_by_id(db, tokenValue["sub"]).first()
 
     if not exists:
         raise AccountNotExists()

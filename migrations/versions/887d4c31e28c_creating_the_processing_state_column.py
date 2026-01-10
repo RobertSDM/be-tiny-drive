@@ -7,7 +7,6 @@ Create Date: 2025-05-28 16:36:16.347107
 """
 
 from typing import Sequence, Union
-from app.core.enums import ProcessingState
 
 from alembic import op
 import sqlalchemy as sa

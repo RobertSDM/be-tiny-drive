@@ -1,12 +1,14 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
-from app.core.schemas import RegisterPassword
+from app.core.schemas import AccountReturnable
 
 
 class AuthenticationInterface(ABC):
     @abstractmethod
-    def registerPassword(self, email: str, password: str) -> Optional[RegisterPassword]:
+    def AccountReturnable(
+        self, email: str, password: str
+    ) -> Optional[AccountReturnable]:
         raise NotImplementedError()
 
     @abstractmethod

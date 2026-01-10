@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, Query
 
 
 from ..models import File
-from app.core.enums import ItemType
+from app.core.schemas import FileType
 
 
 def item_by_id_ownerid(db: Session, id: str, ownerid: str) -> Query[File]:
@@ -12,7 +12,7 @@ def item_by_id_ownerid(db: Session, id: str, ownerid: str) -> Query[File]:
 
 
 def item_by_id_ownerid_type(
-    db: Session, id: str, ownerid: str, type: ItemType
+    db: Session, id: str, ownerid: str, type: FileType
 ) -> Query[File]:
     return db.query(File).where(
         and_(and_(File.id == id, File.ownerid == ownerid), File.type == type)
@@ -46,7 +46,7 @@ def item_search(db: Session, search: str, ownerid: str) -> Query[File]:
 
 
 def items_by_ownerid_name_type(
-    db: Session, ownerid: int, query: str, type: ItemType
+    db: Session, ownerid: int, query: str, type: FileType
 ) -> Query[File]:
     return db.query(File).where(
         and_(
@@ -110,7 +110,7 @@ def item_by_ownerid_parentid_non_deleted(
 
 
 def item_by_ownerid_parentid_type(
-    db: Session, ownerid: str, parentid: Optional[str], type: ItemType
+    db: Session, ownerid: str, parentid: Optional[str], type: FileType
 ) -> Query[File]:
     return db.query(File).where(
         and_(File.ownerid == ownerid, File.parentid == parentid, File.type == type)
