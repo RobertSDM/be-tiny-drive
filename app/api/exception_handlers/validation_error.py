@@ -3,7 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.core.schemas import DefaultResponse, Error
-from app.core.validation_errors import ItemValidationError
+from app.core.validation_errors import FileValidationError
 
 CUSTOM_VALIDATION_MSG = {
     "string_too_short": "The {field} is too short",
@@ -24,7 +24,7 @@ def pydantic_error_handler(request: Request, exc: RequestValidationError):
     )
 
 
-def validation_error_handler(request: Request, exc: ItemValidationError):
+def validation_error_handler(request: Request, exc: FileValidationError):
     print(exc.message)
 
     return JSONResponse(

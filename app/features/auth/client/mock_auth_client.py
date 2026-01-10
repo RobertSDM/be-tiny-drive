@@ -11,5 +11,5 @@ class MockAuthenticationClient(AuthenticationInterface):
             email="test@gmail.com",
         )
 
-    def verifyToken(self, token) -> dict[str, Any]:
+    def validateToken(self, token) -> dict[str, Any]:
         return {"sub": "3acd40a6-f384-4e34-8f95-476a0dec91a6"}

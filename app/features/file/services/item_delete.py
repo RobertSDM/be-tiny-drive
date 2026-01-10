@@ -1,20 +1,11 @@
 from sqlalchemy.orm import Session
-import storage3
-import storage3.exceptions
 
-from app.core.exceptions import ItemNotFound
-from app.features.storage.supabase_storage_client import (
-    supabase_storage_client as storage_client,
-)
 
-from app.database.models import Item
 from app.database.repositories.item_repo import (
     item_by_id_ownerid,
     item_by_ownerid_parentid,
-    item_delete,
 )
-from app.constants.env import drive_bucketid
-from app.enums.enums import ItemType
+from app.core.schemas import ItemType
 from app.utils.query import (
     exec_all,
     exec_first,

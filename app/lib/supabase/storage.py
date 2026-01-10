@@ -1,11 +1,9 @@
-from typing import BinaryIO
 from storage3 import SyncStorageClient
-from app.interfaces.storage_interface import StorageClientInterface
 from supabase import create_client
-from app.constants.env import supabase_key, supabase_url
+from app.core.constants import SUPA_KEY, SUPA_URL
 
 
-class SupabaseStorageClient(StorageClientInterface):
+class SupabaseStorageClient:
     def __init__(self, url: str, key: str):
         self.sustorage: SyncStorageClient = create_client(url, key).storage
 
@@ -28,4 +26,4 @@ class SupabaseStorageClient(StorageClientInterface):
         )["signedUrl"]
 
 
-supabase_storage_client = SupabaseStorageClient(supabase_url, supabase_key)
+supabase_storage_client = SupabaseStorageClient(SUPA_URL, SUPA_KEY)

@@ -1,14 +1,15 @@
+from uuid import uuid4
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 from datetime import datetime
-from app.database.client.sqlalchemy_client import Base
+from app.lib.sqlalchemy import Base
 
 
-class Account(Base):
-    __tablename__ = "tb_account"
+class UserAccount(Base):
+    __tablename__ = "tb_user_account"
 
-    id: Mapped[str] = mapped_column(primary_key=True)
+    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid4()))
     username: Mapped[str]
     email: Mapped[str]
     creation_date: Mapped[datetime]
 
-    items: Mapped[list["Item"]] = relationship(cascade="delete", back_populates="owner")
+    files: Mapped[list["File"]] = relationship(cascade="delete", back_populates="owner")

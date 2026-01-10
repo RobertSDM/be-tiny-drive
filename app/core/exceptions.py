@@ -59,7 +59,7 @@ class ItemExistsInFolder(DomainError):
         super().__init__(self.message, 409)
 
 
-class AccountDoesNotExists(DomainError):
+class AccountNotExists(DomainError):
     def __init__(self):
         self.message = f"The account don't exist"
         super().__init__(self.message, 404)
@@ -90,7 +90,6 @@ class InvalidItemToPreview(DomainError):
 
 
 class IndentityMismatch(DomainError):
-
     def __init__(self):
         self.message = "Account mismatch"
         super().__init__(self.message, 401)

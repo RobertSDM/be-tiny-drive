@@ -1,11 +1,10 @@
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-from app.constants.env import database_url
-from app.interfaces.database_interface import DatabaseClientInterface
+from app.core.constants import DATABASE_URL
 
 
-class SQLAlchemyClient(DatabaseClientInterface):
+class SQLAlchemyClient:
     def __init__(self, conn_str: str):
         self.engine = sa.create_engine(conn_str)
         self.session_maker = sessionmaker(self.engine)
@@ -26,4 +25,4 @@ class Base(DeclarativeBase):
     pass
 
 
-db_client = SQLAlchemyClient(database_url)
+client = SQLAlchemyClient(DATABASE_URL)

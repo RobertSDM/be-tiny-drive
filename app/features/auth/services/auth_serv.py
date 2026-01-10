@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.core.exceptions import AccountAlreadyExists, AccountRegistrationError
-from app.database.models.account_model import Account
+from app.database.models.account_model import UserAccount
 from app.database.repositories.account_repo import (
     account_by_email,
     account_save,
@@ -16,7 +16,7 @@ class AuthenticationService:
 
     def register_serv(
         self, db: Session, username: str, email: str, password: str
-    ) -> Account:
+    ) -> UserAccount:
         exists = exec_exists(db, account_by_email(db, email))
 
         if exists:
@@ -26,7 +26,7 @@ class AuthenticationService:
         if not resp:
             return AccountRegistrationError()
 
-        account = Account(
+        account = UserAccount(
             id=resp.id,
             username=username,
             email=resp.email,

@@ -1,10 +1,11 @@
 from typing import TypeVar
 from sqlalchemy.orm import Session, Query, InstrumentedAttribute
 
-from app.database.models.item_model import Item
-from app.enums.enums import Sort, SortOrder
+from app.database.models.file_model import File
+from app.core.enums import Sort, SortOrder
 
 T = TypeVar("T")
+
 
 def order_by(query: Query[T], columns: list[InstrumentedAttribute], order: SortOrder):
     match order:
@@ -17,9 +18,9 @@ def order_by(query: Query[T], columns: list[InstrumentedAttribute], order: SortO
 def select_order_item_column(type: Sort) -> InstrumentedAttribute:
     match type:
         case Sort.NAME:
-            return Item.name
+            return File.filename
         case Sort.UPDATE_DATE:
-            return Item.update_date
+            return File.updated_at
 
 
 def paginate(query: Query[T], limit: int, page: int) -> Query[T]:

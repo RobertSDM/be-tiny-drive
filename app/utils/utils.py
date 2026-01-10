@@ -1,14 +1,11 @@
 import io
 import math
+import re
 from PIL import ImageOps
 from PIL.ImageFile import ImageFile
-import pillow_avif
 from typing import Callable
 
 import zstandard
-
-from app.database.models.item_model import Item
-from app.decorators.timer import timer
 
 
 def pipeline(*funcs: Callable):
@@ -58,9 +55,9 @@ def resize_image(im: ImageFile, size: tuple[int, int] = (1920, 1080)) -> ImageFi
     return ImageOps.contain(im, size)
 
 
-def normalize_file_size(byte_size: int):
+def byte_formatting(byte_size: int):
     """
-    Transform a size in bytes into a normalized size with its prefix
+    Format the size to be more readable
     """
 
     prefix = ["B", "KB", "MB", "GB"]
@@ -73,13 +70,26 @@ def normalize_file_size(byte_size: int):
         size /= 1024
 
 
-def make_bucket_file_path(item: Item) -> str:
+def make_bucket_file_path(ownerid: str, fileid: str) -> str:
     """
-    Make the bucket path for a storage item file
+    Make the bucket path for the file storage
     """
 
-    return f"user-{item.ownerid}/drive/{item.id}"
+    return f"user-{ownerid}/drive/{fileid}"
 
 
-def make_bucket_file_preview_path(item: Item) -> str:
-    return f"user-{item.ownerid}/preview/{item.id}"
+def make_bucket_file_preview_path(ownerid: str, fileid: str) -> str:
+    """
+    Make the bucket path for the preview storage
+
+    """
+    return f"user-{ownerid}/preview/{fileid}"
+
+
+def validate_item_name(name: str) -> bool:
+    name_regex = r"^[a-zA-Z0-9._\- ]+$"
+
+    if len(name) < 4 or len(name) > 50 or name == "":
+        return False
+
+    return re.match(name_regex, name)

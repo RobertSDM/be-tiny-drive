@@ -3,8 +3,7 @@ from typing import Any, BinaryIO, Generator
 import zipfile
 from sqlalchemy.orm import Session
 
-from app.decorators.timer import timer_method
-from app.features.storage.supabase_storage_client import (
+from app.lib.supabase.storage import (
     supabase_storage_client as storage_client,
 )
 from app.core.exceptions import (
@@ -12,7 +11,7 @@ from app.core.exceptions import (
     ParentFolderNotFound,
     PreviewStillProcessing,
 )
-from app.database.models import Item
+from app.database.models import File
 from app.database.repositories.item_repo import (
     item_by_id_ownerid,
     item_by_id_ownerid_type,
@@ -21,8 +20,8 @@ from app.database.repositories.item_repo import (
     items_by_ownerid_name,
     items_by_ownerid_name_type,
 )
-from app.constants.env import drive_bucketid
-from app.enums.enums import ItemType, ProcessingState, Sort, SortOrder
+from app.core.constants import SUPA_BUCKETID
+from app.core.schemas import ItemType, ProcessingState, Sort, SortOrder
 from app.utils.query import (
     exec_all,
     exec_first,
@@ -36,14 +35,14 @@ from app.utils.utils import (
     make_bucket_file_preview_path,
     pipeline,
 )
-from app.constants.db_vars import limit_per_page, limit_per_search
+from app.core.constants import LIMIT_PER_PAGE, LIMIT_PER_SEARCH
 
 
 class _ItemReadServ:
 
     def all_root_items_serv(
         self, db: Session, ownerid: str, page: int, order: SortOrder, sort: Sort
-    ) -> list[Item]:
+    ) -> list[File]:
         return self.all_items_in_folder_serv(db, ownerid, None, page, order, sort)
 
     def item_by_id_serv(self, db: Session, ownerid: str, id: str):
@@ -62,7 +61,7 @@ class _ItemReadServ:
         page: int,
         order: SortOrder,
         sort: Sort,
-    ) -> list[Item]:
+    ) -> list[File]:
         column = select_order_item_column(sort)
 
         pipe = pipeline(
@@ -70,7 +69,7 @@ class _ItemReadServ:
             lambda query: order_by(
                 query, [column], order if sort != Sort.UPDATE_DATE else SortOrder.DESC
             ),
-            lambda query: paginate(query, limit_per_page, page),
+            lambda query: paginate(query, LIMIT_PER_PAGE, page),
             exec_all,
         )
         return pipe(db, ownerid, parentid)
@@ -85,7 +84,7 @@ class _ItemReadServ:
 
         if item.type == ItemType.FILE:
             file = storage_client.download(
-                drive_bucketid,
+                SUPA_BUCKETID,
                 make_bucket_file_path(item),
             )
 
@@ -93,13 +92,13 @@ class _ItemReadServ:
 
             stream = self._stream_buffer(io.BytesIO(data))
 
-            return stream, item.content_type, f"{item.name}{item.extension}"
+            return stream, item.content_type, f"{item.filename}{item.extension}"
 
         return ""
 
     def _create_list_to_download(
         self, db: Session, ownerid: str, fileids: list[str]
-    ) -> list[Item]:
+    ) -> list[File]:
         to_download = list()
 
         for id in fileids:
@@ -111,14 +110,14 @@ class _ItemReadServ:
 
         return to_download
 
-    def _zip_items(self, items: list[Item]) -> io.BytesIO:
+    def _zip_items(self, items: list[File]) -> io.BytesIO:
         buffer = io.BytesIO()
 
         with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zip:
             for item in items:
                 try:
                     file = storage_client.download(
-                        drive_bucketid,
+                        SUPA_BUCKETID,
                         make_bucket_file_path(item),
                     )
 
@@ -126,7 +125,7 @@ class _ItemReadServ:
                         decompress,
                     )(file)
 
-                    zip.writestr(f"{item.name}{item.extension}", data)
+                    zip.writestr(f"{item.filename}{item.extension}", data)
 
                 except Exception as e:
                     raise e
@@ -144,17 +143,17 @@ class _ItemReadServ:
                 break
             yield b
 
-    def _build_folder_zip(self, db: Session, ownerid: str, root: Item):
+    def _build_folder_zip(self, db: Session, ownerid: str, root: File):
         buffer = io.BytesIO()
 
         with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zip:
-            self._dfs_zip_items(db, ownerid, zip, root, root.name)
+            self._dfs_zip_items(db, ownerid, zip, root, root.filename)
 
         buffer.seek(0)
         return buffer
 
     def _dfs_zip_items(
-        self, db: Session, ownerid: str, zip: zipfile.ZipFile, folder: Item, path: str
+        self, db: Session, ownerid: str, zip: zipfile.ZipFile, folder: File, path: str
     ) -> io.BytesIO:
         items = exec_all(item_by_ownerid_parentid(db, ownerid, folder.id))
 
@@ -162,13 +161,15 @@ class _ItemReadServ:
             if item.type == ItemType.FILE:
                 try:
                     file = storage_client.download(
-                        drive_bucketid,
+                        SUPA_BUCKETID,
                         make_bucket_file_path(item),
                     )
 
                     data = pipeline(decompress)(file)
 
-                    file_path = self._gen_zip_path(path, f"{item.name}{item.extension}")
+                    file_path = self._gen_zip_path(
+                        path, f"{item.filename}{item.extension}"
+                    )
                     zip.writestr(
                         file_path,
                         data,
@@ -177,7 +178,7 @@ class _ItemReadServ:
                 except Exception as e:
                     raise e
             else:
-                folder_path = self._gen_zip_path(path, item.name)
+                folder_path = self._gen_zip_path(path, item.filename)
                 self._dfs_zip_items(db, ownerid, zip, item, folder_path)
 
     def download_many_serv(
@@ -187,7 +188,7 @@ class _ItemReadServ:
         buffer = self._zip_items(items)
         yield from self._stream_buffer(buffer)
 
-    def _get_folder_or_raise(self, db: Session, ownerid: str, id: str) -> Item:
+    def _get_folder_or_raise(self, db: Session, ownerid: str, id: str) -> File:
         folder = exec_first(item_by_id_ownerid(db, id, ownerid))
 
         if not folder:
@@ -213,7 +214,7 @@ class _ItemReadServ:
 
         try:
             bucket_item_path = make_bucket_file_preview_path(item)
-            url = storage_client.signedURL(drive_bucketid, bucket_item_path, 3600)
+            url = storage_client.signedURL(SUPA_BUCKETID, bucket_item_path, 3600)
         except Exception as e:
             raise e
 
@@ -221,9 +222,9 @@ class _ItemReadServ:
 
     def search_serv(
         self, db: Session, ownerid: str, query: str, type: ItemType | None
-    ) -> list[Item]:
+    ) -> list[File]:
         base_pipe = pipeline(
-            lambda query: paginate(query, limit_per_search, 0),
+            lambda query: paginate(query, LIMIT_PER_SEARCH, 0),
             exec_all,
         )
 
@@ -234,7 +235,7 @@ class _ItemReadServ:
 
         return pipeline(items_by_ownerid_name, base_pipe)(db, ownerid, query)
 
-    def _climb_file_tree(self, db: Session, ownerid: str, parentid: str) -> list[Item]:
+    def _climb_file_tree(self, db: Session, ownerid: str, parentid: str) -> list[File]:
 
         item = self._get_folder_or_raise(db, ownerid, parentid)
         if not item.parentid:
@@ -245,7 +246,7 @@ class _ItemReadServ:
 
         return res
 
-    def breadcrumb_serv(self, db: Session, ownerid: str, id: str) -> list[Item]:
+    def breadcrumb_serv(self, db: Session, ownerid: str, id: str) -> list[File]:
         breadcrumb = self._climb_file_tree(db, ownerid, id)
 
         breadcrumb.reverse()

@@ -10,5 +10,5 @@ class AuthenticationInterface(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def verifyToken(self, token: str) -> dict[str, Any]:
+    def validateToken(self, token: str) -> dict[str, Any]:
         raise NotImplementedError()

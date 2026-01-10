@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/imgs/tiny-drive-logo.svg" />
+  <img src="./assets/icons/tiny-drive_logo.svg" />
 </p>
 
 # **TinyDrive (Server)**

@@ -5,7 +5,7 @@ from app.database.repositories.item_repo import (
     item_by_id_ownerid,
     item_by_ownerid_parentid_fullname_non_deleted,
 )
-from app.enums.enums import ItemType
+from app.core.schemas import ItemType
 from app.utils.query import exec_exists
 
 

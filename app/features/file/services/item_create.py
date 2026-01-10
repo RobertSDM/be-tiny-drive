@@ -7,8 +7,8 @@ import storage3
 from sqlalchemy.orm import Session
 import storage3.exceptions
 
-from app.core.validation_errors import InvalidItemName, ItemToDeep
-from app.features.storage.supabase_storage_client import (
+from app.core.validation_errors import InvalidFileName, ItemToDeep
+from app.lib.supabase.storage import (
     supabase_storage_client as storage_client,
 )
 from app.core.exceptions import (
@@ -17,15 +17,14 @@ from app.core.exceptions import (
     ItemKeyExistsInStorage,
     ItemNotFound,
 )
-from app.database.models.item_model import Item
+from app.database.models.file_model import File
 from app.database.repositories.item_repo import (
     item_by_id_ownerid,
-    item_by_ownerid_parentid_fullname,
     item_by_ownerid_parentid_fullname_non_deleted,
     item_save,
 )
-from app.enums.enums import ItemType, ProcessingState
-from app.features.items.services.item_checks import item_checks
+from app.core.schemas import ItemType, ProcessingState
+from app.features.file.services.item_checks import item_checks
 from app.utils.query import exec_first, update
 from app.utils.utils import (
     compress_file,
@@ -33,26 +32,26 @@ from app.utils.utils import (
     image_to_jpg,
     make_bucket_file_path,
     make_bucket_file_preview_path,
-    normalize_file_size,
+    byte_formatting,
     pipeline,
     resize_image,
 )
-from app.constants.env import drive_bucketid
-from app.core.validations import validate_item_name, max_folder_depth
+from app.core.constants import MAX_RECURSIVE_DEPTH, SUPA_BUCKETID
+from utils.utils import validate_item_name
 
 
 class _ItemCreateServ:
 
     def _create_items_from_path(
         self, file_data: UploadFile, ownerid: str
-    ) -> tuple[list[Item], Item]:
+    ) -> tuple[list[File], File]:
         folders = list()
 
         dirs: list[str] = file_data.filename.split("/")
         folder_names: list[str] = dirs[:-1]
 
         for name in folder_names:
-            folder = Item(
+            folder = File(
                 id=str(uuid4()),
                 extension="",
                 parentid=None,
@@ -73,9 +72,9 @@ class _ItemCreateServ:
             if len(name_splited) > 1 and name_splited[-1] != ""
             else ""
         )
-        normalized_size, prefix = normalize_file_size(file_data.size)
+        normalized_size, prefix = byte_formatting(file_data.size)
 
-        file = Item(
+        file = File(
             id=str(uuid4()),
             name=name,
             extension=extension,
@@ -90,28 +89,30 @@ class _ItemCreateServ:
         return folders, file
 
     def _upload_file_to_storage(
-        self, filedata: bytes, content_type: str, path: str, file: Item
+        self, filedata: bytes, content_type: str, path: str, file: File
     ):
         try:
-            storage_client.save(drive_bucketid, content_type, path, filedata)
+            storage_client.save(SUPA_BUCKETID, content_type, path, filedata)
         except storage3.exceptions.StorageApiError as e:
             match e.code:
                 case "ResourceAlreadyExists":
-                    raise ItemExistsInFolder(file.name, file.type.value)
+                    raise ItemExistsInFolder(file.filename, file.type.value)
                 case "KeyAlreadyExists":
                     raise ItemKeyExistsInStorage()
 
             raise e
 
     def _create_folders(
-        self, db: Session, ownerid: str, parentid: str | None, folders: list[Item]
-    ) -> tuple[Item, str]:
+        self, db: Session, ownerid: str, parentid: str | None, folders: list[File]
+    ) -> tuple[File, str]:
         crr_parentid = parentid
         first_folder = None
 
         for f in folders:
             folder = exec_first(
-                item_by_ownerid_parentid_fullname_non_deleted(db, ownerid, crr_parentid, f.name)
+                item_by_ownerid_parentid_fullname_non_deleted(
+                    db, ownerid, crr_parentid, f.filename
+                )
             )
 
             if folder:
@@ -120,7 +121,7 @@ class _ItemCreateServ:
 
             f.parentid = crr_parentid
             crr_parentid = f.id
-            
+
             saved_folder = item_save(db, f)
 
             if not first_folder:
@@ -130,11 +131,11 @@ class _ItemCreateServ:
 
     def item_save_item_serv(
         self, db: Session, filedata: UploadFile, ownerid: str, parentid: str | None
-    ) -> Item:
+    ) -> File:
         name = filedata.filename.split("/")[-1].split(".")[0]
 
         if not validate_item_name(name):
-            raise InvalidItemName(name)
+            raise InvalidFileName(name)
 
         item_checks.check_parent_exists(db, ownerid, parentid)
 
@@ -146,8 +147,8 @@ class _ItemCreateServ:
                 ownerid,
             )
 
-            if len(folders) > max_folder_depth:
-                raise ItemToDeep(file.name + file.extension)
+            if len(folders) > MAX_RECURSIVE_DEPTH:
+                raise ItemToDeep(file.filename + file.extension)
 
             data = pipeline(
                 compress_file,
@@ -181,12 +182,12 @@ class _ItemCreateServ:
         self, db: Session, ownerid: str, name: str, parentid: str | None
     ):
         if not validate_item_name(name):
-            raise InvalidItemName(name)
+            raise InvalidFileName(name)
 
         item_checks.check_duplicate_name(db, ownerid, parentid, name, ItemType.FOLDER)
         item_checks.check_parent_exists(db, ownerid, parentid)
 
-        folder = Item(
+        folder = File(
             name=name,
             ownerid=ownerid,
             parentid=parentid,
@@ -206,7 +207,7 @@ class _ItemCreateServ:
 
         if item.content_type.startswith("image"):
             bytedata = storage_client.download(
-                drive_bucketid, make_bucket_file_path(item)
+                SUPA_BUCKETID, make_bucket_file_path(item)
             )
 
             data = pipeline(

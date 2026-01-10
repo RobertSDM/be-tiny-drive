@@ -1,8 +1,8 @@
-from app.enums.enums import Mode
+from app.core.schemas import Mode
 from app.features.auth.client.mock_auth_client import MockAuthenticationClient
 from app.features.auth.client.supabase_auth_client import SupabaseAuthenticationClient
 from app.interfaces.authentication_interface import AuthenticationInterface
-from app.constants.env import mode, supabase_key, supabase_url
+from app.core.constants import MODE, SUPA_KEY, SUPA_URL
 
 
 class AuthClientSingleton:
@@ -11,9 +11,9 @@ class AuthClientSingleton:
     @staticmethod
     def get_instance() -> AuthenticationInterface:
         if not AuthClientSingleton._instance:
-            if mode == Mode.PROD.value:
+            if MODE == Mode.PROD.value:
                 AuthClientSingleton._instance = SupabaseAuthenticationClient(
-                    supabase_url, supabase_key
+                    SUPA_URL, SUPA_KEY
                 )
             else:
                 AuthClientSingleton._instance = MockAuthenticationClient()
