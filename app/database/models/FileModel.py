@@ -8,7 +8,7 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime, timezone
 
 
-class File(Base):
+class FileModel(Base):
     __tablename__ = "tb_file"
 
     id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid4()))
@@ -20,7 +20,7 @@ class File(Base):
     content_type: Mapped[str]
     to_delete: Mapped[bool] = mapped_column(
         default=False
-    )  # date when the file will be deleted
+    )  # date to when the file will be deleted
 
     updated_at: Mapped[datetime] = mapped_column(
         default=lambda: datetime.now(timezone.utc),
@@ -33,10 +33,12 @@ class File(Base):
         # server_default=func.current_timestamp(),
     )
 
-    parentid: Mapped[Optional[str]] = mapped_column(ForeignKey("tb_file.id"))
-    parent: Mapped["File"] = relationship(back_populates="children", remote_side=[id])
+    parentid: Mapped[Optional[str]] = mapped_column(ForeignKey("tb_file.id"), nullable=True)
+    parent: Mapped["FileModel"] = relationship(
+        back_populates="children", remote_side=[id]
+    )
 
-    children: Mapped[list["File"]] = relationship(
+    children: Mapped[list["FileModel"]] = relationship(
         back_populates="parent", cascade="all"
     )
 

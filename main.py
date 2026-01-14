@@ -9,7 +9,7 @@ from app.api.exception_handlers.validation_error import (
 )
 from app.core.validation_errors import FileValidationError
 from app.features.auth.auth_router import auth_router
-from app.features.file.file_router import item_router
+from app.features.file.file_router import file_router
 from app.features.account.auth_router import account_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.exceptions import DomainError
@@ -29,7 +29,7 @@ app.add_middleware(
 
 
 app.include_router(auth_router, prefix="/auth")
-app.include_router(item_router, prefix="/files")
+app.include_router(file_router, prefix="/files")
 app.include_router(account_router, prefix="/account")
 
 app.add_exception_handler(DomainError, domain_error_handler)

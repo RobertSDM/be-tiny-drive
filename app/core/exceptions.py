@@ -29,10 +29,14 @@ class ParentNotFound(DomainError):
         super().__init__(self.message, 404)
 
 
-class FileNotFound(DomainError):
+class NotFound(DomainError):
+    def __init__(self, message):
+        super().__init__(message, 404)
+
+
+class FileNotFound(NotFound):
     def __init__(self):
-        self.message = f"The file was not found"
-        super().__init__(self.message, 404)
+        super().__init__(f"The file not found")
 
 
 class FileDeleteError(DomainError):

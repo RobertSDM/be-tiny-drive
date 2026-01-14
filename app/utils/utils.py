@@ -5,8 +5,6 @@ from PIL import ImageOps
 from PIL.ImageFile import ImageFile
 from typing import Callable
 
-import zstandard
-
 
 def pipeline(*funcs: Callable):
     def run(*args, **kwargs):
@@ -20,16 +18,6 @@ def pipeline(*funcs: Callable):
         return result
 
     return run
-
-
-def compress_file(file: bytes) -> bytes:
-    cctx = zstandard.ZstdCompressor()
-    return cctx.compress(file)
-
-
-def decompress(file: bytes) -> bytes:
-    dctx = zstandard.ZstdDecompressor()
-    return dctx.decompress(file)
 
 
 def image_to_jpg(im: ImageFile, quality: int = 70) -> io.BytesIO:
@@ -70,7 +58,7 @@ def byte_formatting(byte_size: int):
         size /= 1024
 
 
-def make_bucket_file_path(ownerid: str, fileid: str) -> str:
+def make_file_bucket_path(ownerid: str, fileid: str) -> str:
     """
     Make the bucket path for the file storage
     """
@@ -78,7 +66,7 @@ def make_bucket_file_path(ownerid: str, fileid: str) -> str:
     return f"user-{ownerid}/drive/{fileid}"
 
 
-def make_bucket_file_preview_path(ownerid: str, fileid: str) -> str:
+def get_file_preview_bucket_path(ownerid: str, fileid: str) -> str:
     """
     Make the bucket path for the preview storage
 
@@ -86,7 +74,7 @@ def make_bucket_file_preview_path(ownerid: str, fileid: str) -> str:
     return f"user-{ownerid}/preview/{fileid}"
 
 
-def validate_item_name(name: str) -> bool:
+def validate_filename(name: str) -> bool:
     name_regex = r"^[a-zA-Z0-9._\- ]+$"
 
     if len(name) < 4 or len(name) > 50 or name == "":

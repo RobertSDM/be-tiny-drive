@@ -12,4 +12,4 @@ class UserAccount(Base):
     email: Mapped[str]
     created_at: Mapped[datetime]
 
-    files: Mapped[list["File"]] = relationship(cascade="delete", back_populates="owner")
+    files: Mapped[list["FileModel"]] = relationship(cascade="delete", back_populates="owner")

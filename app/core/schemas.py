@@ -8,10 +8,10 @@ T = TypeVar("T")
 from enum import Enum
 
 
-class Sort(Enum):
+class SortColumn(Enum):
     NAME = "name"
-    UPDATE_DATE = "upddate"
-    CREATION_DATE = "creadate"
+    UPDATED_AT = "upddate"
+    CREATED_AT = "creadate"
 
 
 class SortOrder(Enum):
