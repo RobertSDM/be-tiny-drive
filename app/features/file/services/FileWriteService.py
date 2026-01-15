@@ -13,6 +13,7 @@ from app.lib.supabase.storage import (
 from app.core.exceptions import (
     NotSupported,
     NotFound,
+    ParentNotFound,
 )
 from app.database.models.FileModel import FileModel
 from app.database.repositories.item_repo import (
@@ -24,14 +25,12 @@ from app.core.schemas import FileType
 from app.utils.query import exec_first
 from app.features.file.utils import (
     verify_name_duplicated,
-    folder_exists_or_raise,
     get_file_parent_or_raise,
     upload_file_to_storage,
 )
 from app.utils.utils import (
     image_to_jpg,
     make_file_bucket_path,
-    get_file_preview_bucket_path,
     byte_formatting,
     pipeline,
     resize_image,
@@ -138,7 +137,12 @@ class FileWriteService:
             raise InvalidFileName(name)
 
         if parentid is not None:
-            folder_exists_or_raise(db, ownerid, parentid)
+            exists = db.query(
+                file_by_id_ownerid(db, parentid, ownerid).exists()
+            ).scalar()
+
+            if not exists:
+                raise ParentNotFound()
 
         file, folders = self._create_file(
             metadata,
@@ -165,12 +169,12 @@ class FileWriteService:
         file.parentid = curr_parentid
         saved_item = item_save(db, file)
 
-        # upload_file_to_storage(
-        #     metadata.file.read(),
-        #     metadata.content_type,
-        #     make_file_bucket_path(file, saved_item.id),
-        #     file,
-        # )
+        upload_file_to_storage(
+            metadata.file.read(),
+            metadata.content_type,
+            make_file_bucket_path(ownerid, saved_item.id, "file"),
+            file,
+        )
 
         return saved_item if len(folders) == 0 else first_folder
 
@@ -194,29 +198,29 @@ class FileWriteService:
 
         return item_save(db, folder)
 
-    def create_preview(self, db: Session, ownerid: str, id: str):
-        item = exec_first(file_by_id_ownerid(db, id, ownerid))
-        if not item:
-            raise NotFound()
+    # def create_preview(self, db: Session, ownerid: str, id: str):
+    #     item = exec_first(file_by_id_ownerid(db, id, ownerid))
+    #     if not item:
+    #         raise NotFound()
 
-        if item.content_type.startswith("image"):
-            bytedata = storage_client.download(
-                SUPA_BUCKETID, make_file_bucket_path(item)
-            )
+    #     if item.content_type.startswith("image"):
+    #         bytedata = storage_client.download(
+    #             SUPA_BUCKETID, make_file_bucket_path(item)
+    #         )
 
-            data = pipeline(
-                lambda b: Image.open(io.BytesIO(b)),
-                resize_image,
-                image_to_jpg,
-            )(bytedata)
+    #         data = pipeline(
+    #             lambda b: Image.open(io.BytesIO(b)),
+    #             resize_image,
+    #             image_to_jpg,
+    #         )(bytedata)
 
-            upload_file_to_storage(
-                data.read(),
-                "image/jpg",
-                get_file_preview_bucket_path(item),
-                item,
-            )
-            db.commit()
-        else:
-            db.commit()
-            raise NotSupported()
+    #         upload_file_to_storage(
+    #             data.read(),
+    #             "image/jpg",
+    #             make_file_preview_bucket_path(item),
+    #             item,
+    #         )
+    #         db.commit()
+    #     else:
+    #         db.commit()
+    #         raise NotSupported()

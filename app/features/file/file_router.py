@@ -1,12 +1,16 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, Form, UploadFile
-from fastapi.responses import ORJSONResponse, StreamingResponse
+from fastapi.responses import ORJSONResponse, StreamingResponse, Response
 from pytest import Session
 
 from app.core.schemas import FileResponseStructure
 from app.lib.sqlalchemy import client
 from app.core.schemas import FileType, SortColumn, SortOrder
-from app.features.file.services import FileReadService, FileWriteService
+from app.features.file.services import (
+    FileDeleteService,
+    FileReadService,
+    FileWriteService,
+)
 from app.middlewares.authorization_middleware import authorization_middleware
 
 
@@ -82,20 +86,20 @@ def get_file_route(
 
 
 @file_router.get("/{ownerid}/download")
-def download_many_files_route(
+def download_route(
     body: list[str],
     ownerid: str,
     db: Session = Depends(client.get_session),
     file_service: FileReadService = Depends(FileReadService),
 ):
-    content, file = file_service.download(db, ownerid, body.fileids)
+    content, file = file_service.download(db, ownerid, body)
 
     if len(body) == 1 and file.type == FileType.FILE:
         return StreamingResponse(
             content,
             media_type=file.content_type,
             headers={
-                "Content-Disposition": f'attachment; filename="{file.filename}"',
+                "Content-Disposition": f'attachment; filename="{file.filename}.{file.extension}"',
                 "Access-Control-Expose-Headers": "Content-Disposition",
             },
         )
@@ -104,7 +108,7 @@ def download_many_files_route(
         content,
         media_type="application/zip",
         headers={
-            "Content-Disposition": 'attachment; filename="downloaded_content"',
+            "Content-Disposition": 'attachment; filename="downloaded_content.zip"',
             "Access-Control-Expose-Headers": "Content-Disposition",
         },
     )
@@ -129,10 +133,15 @@ def download_many_files_route(
 #     return ORJSONResponse(FileResponseStructure(files=item).model_dump())
 
 
-# @file_router.delete("/{ownerid}")
-# def delete_item_route(ownerid: str, body: list[str], db=Depends(client.get_session)):
-#     deleted = item_delete_serv.delete_items_serv(db, ownerid, body)
-#     return ORJSONResponse(FileResponseStructure(files=deleted)).model_dump()
+@file_router.delete("/{ownerid}")
+def delete_items_route(
+    ownerid: str,
+    body: list[str],
+    db=Depends(client.get_session),
+    file_service: FileDeleteService = Depends(FileDeleteService),
+):
+    file_service.delete_items(db, ownerid, body)
+    return Response(status_code=200)
 
 
 @file_router.get("/{id}/account}/{ownerid}/breadcrumb")

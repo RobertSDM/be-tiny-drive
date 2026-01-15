@@ -1,13 +1,18 @@
 import io
 import os
-from typing import BinaryIO, Generator, List
+from typing import BinaryIO, Generator, List, Optional
 import zipfile
 from sqlalchemy.orm import Session, InstrumentedAttribute
 from sqlalchemy import UnaryExpression
 import storage3
 
 from app.core.constants import SUPA_BUCKETID
-from app.core.exceptions import FileAlreadyExists, NotFound, ParentNotFound
+from app.core.exceptions import (
+    FileAlreadyExists,
+    FileNotFound,
+    NotFound,
+    ParentNotFound,
+)
 from app.core.schemas import FileType, SortColumn, SortOrder
 from app.database.models.FileModel import FileModel
 from app.database.repositories.item_repo import (
@@ -15,7 +20,6 @@ from app.database.repositories.item_repo import (
     item_by_id_ownerid_type,
     file_by_ownerid_parentid_fullname_alive,
 )
-from app.utils.query import exec_first
 from app.lib.supabase.storage import (
     supabase_storage_client as storage_client,
 )
@@ -36,16 +40,21 @@ def get_files(db: Session, ownerid: str, fileids: list[str]) -> list[FileModel]:
     return files
 
 
-def get_file_or_raise(db: Session, ownerid: str, id: str, type: FileType) -> FileModel:
+def get_file_or_raise(
+    db: Session, ownerid: str, id: str, type_: Optional[FileType]
+) -> FileModel:
     """
     Get the file from the database, if it doesn't exist raise [NotFound] error
     """
 
-    file = exec_first(item_by_id_ownerid_type(db, id, ownerid, type))
+    if not type_:
+        file = file_by_id_ownerid(db, id, ownerid).first()
+    else:
+        file = item_by_id_ownerid_type(db, id, ownerid, type_).first()
 
     if not file:
         raise NotFound(
-            f"The {"file" if type == FileType.FILE else "folder"} was not found"
+            f"The {"file" if type_ == FileType.FILE else "folder"} was not found"
         )
 
     return file
@@ -70,13 +79,13 @@ def zip_files(files: List[FileModel], ownerid: str, path: str) -> io.BytesIO:
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zip_:
         for file in files:
-            file = storage_client.download(
-                SUPA_BUCKETID, make_file_bucket_path(ownerid, file)
+            bytedata = storage_client.download(
+                SUPA_BUCKETID, make_file_bucket_path(ownerid, file.id, "file")
             )
 
-            file_path = os.path.join(path, f"{file.filename}{file.extension}")
+            file_path = os.path.join(path, f"{file.filename}.{file.extension}")
 
-            zip_.writestr(file_path, file)
+            zip_.writestr(file_path, bytedata)
 
     buf.seek(0)
     return buf
@@ -134,13 +143,6 @@ def get_file_parent_or_raise(db: Session, ownerid: str, parentid: str) -> FileMo
     return folder
 
 
-def folder_exists_or_raise(db: Session, ownerid: str, parentid: str):
-    folder = db.query(file_by_id_ownerid(db, parentid, ownerid).exists()).scalar()
-
-    if not folder:
-        raise ParentNotFound()
-
-
 def verify_name_duplicated(
     db: Session,
     ownerid: str,
@@ -158,7 +160,6 @@ def verify_name_duplicated(
             db, ownerid, parentid, fullname
         ).exists()
     ).scalar()
-    print(exists)
 
     if exists:
         raise FileAlreadyExists(fullname, type.value)
@@ -177,3 +178,19 @@ def upload_file_to_storage(
                 raise FileAlreadyExists()
 
         raise e
+
+
+def delete_file_from_storage(fileid: str, previewid: str):
+    try:
+        storage_client.remove(
+            SUPA_BUCKETID,
+            fileid,
+        )
+
+        storage_client.remove(
+            SUPA_BUCKETID,
+            previewid,
+        )
+    except storage3.exceptions.StorageApiError as e:
+        if e.code == "NoSuchUpload":
+            raise FileNotFound()

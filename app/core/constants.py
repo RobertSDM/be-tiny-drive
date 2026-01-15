@@ -17,9 +17,7 @@ JWT_SECRET = os.getenv("JWT_SECRET")
 
 SUPA_URL = os.getenv("SUPA_URL")
 SUPA_KEY = os.getenv("SUPA_KEY")
-SUPA_BUCKETID = (
-    os.getenv("SUPA_BUCKET_ID") if MODE == Mode.PROD.value else "drive-files-dev"
-)
+SUPA_BUCKETID = os.getenv("SUPA_BUCKET_ID")
 
 ##
 

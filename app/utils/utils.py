@@ -3,7 +3,7 @@ import math
 import re
 from PIL import ImageOps
 from PIL.ImageFile import ImageFile
-from typing import Callable
+from typing import Callable, Literal, Union
 
 
 def pipeline(*funcs: Callable):
@@ -58,20 +58,18 @@ def byte_formatting(byte_size: int):
         size /= 1024
 
 
-def make_file_bucket_path(ownerid: str, fileid: str) -> str:
+def make_file_bucket_path(
+    ownerid: str, fileid: str, type_: Literal["file", "preview"]
+) -> str:
     """
     Make the bucket path for the file storage
     """
 
-    return f"user-{ownerid}/drive/{fileid}"
-
-
-def get_file_preview_bucket_path(ownerid: str, fileid: str) -> str:
-    """
-    Make the bucket path for the preview storage
-
-    """
-    return f"user-{ownerid}/preview/{fileid}"
+    match type_:
+        case "file":
+            return f"user-{ownerid}/drive/{fileid}"
+        case "preview":
+            return f"user-{ownerid}/preview/{fileid}"
 
 
 def validate_filename(name: str) -> bool:

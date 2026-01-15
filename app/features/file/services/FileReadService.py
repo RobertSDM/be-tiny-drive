@@ -28,7 +28,6 @@ from app.core.constants import SUPA_BUCKETID
 from app.core.schemas import FileType, SortColumn, SortOrder
 from app.utils.utils import (
     make_file_bucket_path,
-    get_file_preview_bucket_path,
 )
 from app.core.constants import LIMIT_PER_PAGE, LIMIT_PER_SEARCH
 
@@ -74,40 +73,39 @@ class FileReadService:
         if len(fileids) == 0:
             raise Exception("There has to be files to download")
 
-        file = file_by_id_ownerid(db, fileids[0], ownerid).first()
+        file = get_file_or_raise(db, ownerid, fileids[0], None)
 
-        if not file:
-            raise FileNotFound()
-
-        if file.type == FileType.FILE and len(fileids) > 0:
+        if len(fileids) > 1 and file.type == FileType.FILE:
             return self._download_files(db, fileids, ownerid), file
 
         if file.type == FileType.FOLDER:
             return self._download_folder(db, ownerid, fileids[0]), file
 
-        file = storage_client.download(SUPA_BUCKETID, make_file_bucket_path(file))
-        stream = stream_buffer(io.BytesIO(file), self.STREAM_SIZE)
+        bytedata = storage_client.download(
+            SUPA_BUCKETID, make_file_bucket_path(ownerid, fileids[0], "file")
+        )
+        stream = stream_buffer(io.BytesIO(bytedata), self.STREAM_SIZE)
 
-        return stream(), file
+        return stream, file
 
     def _download_files(
         self, db: Session, fileids: list[str], ownerid: str
     ) -> Generator[bytes, Any, None]:
         items = get_files(db, ownerid, fileids)
-        buffer = zip_files(items)
-        yield from stream_buffer(buffer, self.STREAM_SIZE)
+        buffer = zip_files(items, ownerid, "")
+        return stream_buffer(buffer, self.STREAM_SIZE)
 
     def _download_folder(
         self, db: Session, ownerid: str, parentid: str
     ) -> Generator[bytes, Any, None]:
         folder = get_file_or_raise(db, ownerid, parentid, FileType.FOLDER)
         buffer = build_zip(db, ownerid, folder)
-        yield from stream_buffer(buffer, self.STREAM_SIZE)
+        return stream_buffer(buffer, self.STREAM_SIZE)
 
     def preview_file(self, db: Session, ownerid: str, id: str) -> str:
         item = get_file_or_raise(db, id, ownerid, FileType.FILE)
 
-        bucket_path = get_file_preview_bucket_path(item)
+        bucket_path = make_file_bucket_path(ownerid, id, "preview")
 
         time_to_expire = 3600  # one hour
         url = storage_client.signedURL(SUPA_BUCKETID, bucket_path, time_to_expire)
