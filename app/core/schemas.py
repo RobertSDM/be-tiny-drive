@@ -60,7 +60,6 @@ class AccountReturnable(BaseModel):
 class FileResponseStructure(BaseModel):
     files: List[FileReturnable]
     parent: Optional[FileReturnable] = None
-    message: Optional[str] = ""
 
 
 class ErrorResponse(BaseModel):

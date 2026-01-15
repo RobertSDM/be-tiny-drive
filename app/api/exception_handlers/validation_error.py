@@ -7,6 +7,7 @@ from app.core.validation_errors import FileValidationError
 
 
 def pydantic_error_handler(request: Request, exc: RequestValidationError):
+    print(exc.errors())
     return JSONResponse(
         ErrorResponse(message="Error on server side, not your fault").model_dump(),
         status_code=500,

@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, Form, UploadFile
+from fastapi import APIRouter, Body, Depends, Form, UploadFile
 from fastapi.responses import ORJSONResponse, StreamingResponse, Response
 from pytest import Session
 
@@ -9,6 +9,7 @@ from app.core.schemas import FileType, SortColumn, SortOrder
 from app.features.file.services import (
     FileDeleteService,
     FileReadService,
+    FileUpdateService,
     FileWriteService,
 )
 from app.middlewares.authorization_middleware import authorization_middleware
@@ -126,11 +127,17 @@ def download_route(
 #     )
 
 
-# @file_router.put("/{id}/account/{ownerid}/name")
-# def put_name_route(id: str, ownerid: str, body: str, db=Depends(client.get_session)):
-#     item = item_update_serv.item_update_name(db, id, ownerid, body)
+@file_router.put("/{id}/account/{ownerid}/name")
+def update_filename_route(
+    id: str,
+    ownerid: str,
+    name: str = Body(media_type="text/plain"),
+    db=Depends(client.get_session),
+    file_service: FileUpdateService = Depends(FileUpdateService),
+):
+    file = file_service.update_filename(db, id, ownerid, name)
 
-#     return ORJSONResponse(FileResponseStructure(files=item).model_dump())
+    return ORJSONResponse(FileResponseStructure(files=[file]).model_dump())
 
 
 @file_router.delete("/{ownerid}")

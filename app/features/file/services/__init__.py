@@ -2,3 +2,4 @@
 from .FileDeleteService import *
 from .FileWriteService import *
 from .FileReadService import *
+from .FileUpdateService import *
