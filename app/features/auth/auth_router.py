@@ -8,7 +8,7 @@ from app.core.schemas import AccountReturnable
 from app.lib.sqlalchemy import client
 from sqlalchemy.orm import Session
 
-from app.features.auth.services.auth_serv import AuthenticationService
+from app.features.auth.services.AuthenticationService import AuthenticationService
 
 auth_router = APIRouter()
 
