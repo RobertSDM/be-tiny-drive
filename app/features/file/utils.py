@@ -166,18 +166,9 @@ def verify_name_duplicated(
 
 
 def upload_file_to_storage(
-    filedata: bytes, content_type: str, path: str, file: FileModel
+    filedata: bytes, content_type: str, path: str
 ):
-    try:
-        storage_client.save(SUPA_BUCKETID, content_type, path, filedata)
-    except storage3.exceptions.StorageApiError as e:
-        match e.code:
-            case "ResourceAlreadyExists":
-                raise FileAlreadyExists(file.filename, file.type.value)
-            case "KeyAlreadyExists":
-                raise FileAlreadyExists()
-
-        raise e
+    storage_client.save(SUPA_BUCKETID, content_type, path, filedata)
 
 
 def delete_file_from_storage(fileid: str, previewid: str):

@@ -42,13 +42,13 @@ def item_by_ownerid_parentid_fullname(
 
 def item_save(db: Session, item: FileModel) -> FileModel:
     db.add(item)
-    db.commit()
+    db.flush()
     return item
 
 
 def item_delete(db: Session, item: FileModel) -> None:
     db.delete(item)
-    db.commit()
+    db.flush()
 
 
 def item_search(db: Session, search: str, ownerid: str) -> Query[FileModel]:

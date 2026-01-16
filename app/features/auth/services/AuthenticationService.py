@@ -6,7 +6,6 @@ from app.database.repositories.account_repo import (
     account_save,
 )
 from app.interfaces.authentication_interface import AuthenticationInterface
-from app.utils.query import exec_exists
 
 
 class AuthenticationService:
@@ -17,7 +16,7 @@ class AuthenticationService:
     def register_serv(
         self, db: Session, username: str, email: str, password: str
     ) -> UserAccount:
-        exists = exec_exists(db, account_by_email(db, email))
+        exists = db.query(account_by_email(db, email).exists()).scalar()
 
         if exists:
             raise AccountAlreadyExists()

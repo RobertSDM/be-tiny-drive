@@ -20,5 +20,6 @@ class FileUpdateService:
         )
 
         file.filename = name
+        db.flush()
 
         return file

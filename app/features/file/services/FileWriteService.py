@@ -10,9 +10,8 @@ from app.core.validation_errors import InvalidFileName, ItemToDeep
 from app.lib.supabase.storage import (
     supabase_storage_client as storage_client,
 )
+from app.lib.sqlalchemy import client
 from app.core.exceptions import (
-    NotSupported,
-    NotFound,
     ParentNotFound,
 )
 from app.database.models.FileModel import FileModel
@@ -22,7 +21,6 @@ from app.database.repositories.item_repo import (
     item_save,
 )
 from app.core.schemas import FileType
-from app.utils.query import exec_first
 from app.features.file.utils import (
     verify_name_duplicated,
     get_file_parent_or_raise,
@@ -32,7 +30,6 @@ from app.utils.utils import (
     image_to_jpg,
     make_file_bucket_path,
     byte_formatting,
-    pipeline,
     resize_image,
 )
 from app.core.constants import MAX_RECURSIVE_DEPTH, SUPA_BUCKETID
@@ -173,7 +170,6 @@ class FileWriteService:
             metadata.file.read(),
             metadata.content_type,
             make_file_bucket_path(ownerid, saved_item.id, "file"),
-            file,
         )
 
         return saved_item if len(folders) == 0 else first_folder
@@ -198,29 +194,24 @@ class FileWriteService:
 
         return item_save(db, folder)
 
-    # def create_preview(self, db: Session, ownerid: str, id: str):
-    #     item = exec_first(file_by_id_ownerid(db, id, ownerid))
-    #     if not item:
-    #         raise NotFound()
+    def create_preview(self, ownerid: str, file: FileModel):
+        session = next(client.get_session())
 
-    #     if item.content_type.startswith("image"):
-    #         bytedata = storage_client.download(
-    #             SUPA_BUCKETID, make_file_bucket_path(item)
-    #         )
+        session.add(file)
 
-    #         data = pipeline(
-    #             lambda b: Image.open(io.BytesIO(b)),
-    #             resize_image,
-    #             image_to_jpg,
-    #         )(bytedata)
+        if not file.content_type.startswith("image"):
+            return
 
-    #         upload_file_to_storage(
-    #             data.read(),
-    #             "image/jpg",
-    #             make_file_preview_bucket_path(item),
-    #             item,
-    #         )
-    #         db.commit()
-    #     else:
-    #         db.commit()
-    #         raise NotSupported()
+        bytedata = storage_client.download(
+            SUPA_BUCKETID, make_file_bucket_path(ownerid, file.id, "file")
+        )
+
+        image = Image.open(io.BytesIO(bytedata))
+        image = resize_image(image)
+        image = image_to_jpg(image)
+
+        upload_file_to_storage(
+            image.read(),
+            "image/jpg",
+            make_file_bucket_path(ownerid, file.id, "preview"),
+        )

@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Body, Depends, Form, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, Form, UploadFile
 from fastapi.responses import ORJSONResponse, StreamingResponse, Response
 from pytest import Session
 
@@ -20,18 +20,19 @@ file_router = APIRouter(dependencies=[Depends(authorization_middleware)])
 
 @file_router.post("/")
 def save_file_route(
-    file: UploadFile,
-    # background_tasks: BackgroundTasks,
+    filedata: UploadFile,
     ownerid: Annotated[str, Form()],
+    background_tasks: BackgroundTasks,
     parentid: Annotated[str | None, Form()] = None,
     db=Depends(client.get_session),
     file_service: FileWriteService = Depends(FileWriteService),
 ):
-    file = file_service.save_file(db, file, ownerid, parentid)
-    # if item.type == FileType.FILE:
-    #     background_tasks.add_task(
-    #         file_service.item_create_preview_serv, db, ownerid, item.id
-    #     )
+    file = file_service.save_file(db, filedata, ownerid, parentid)
+
+    if file.type == FileType.FILE:
+        background_tasks.add_task(
+            lambda: file_service.create_preview(ownerid, file)
+        )
 
     return ORJSONResponse(FileResponseStructure(files=[file]).model_dump())
 
