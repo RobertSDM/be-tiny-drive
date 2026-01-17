@@ -14,12 +14,9 @@ from app.features.file.utils import (
 from app.lib.supabase.storage import (
     supabase_storage_client as storage_client,
 )
-from app.core.exceptions import (
-    FileNotFound,
-)
+
 from app.database.models import FileModel
 from app.database.repositories.item_repo import (
-    file_by_id_ownerid,
     file_by_ownerid_parentid_alive,
     items_by_ownerid_name,
     items_by_ownerid_name_type,
@@ -124,6 +121,20 @@ class FileReadService:
 
         return user_query.limit(LIMIT_PER_SEARCH).all()
 
-    def get_breadcrumb(self, db: Session, ownerid: str, id: str) -> list[FileModel]:
-        file = get_file_or_raise(db, ownerid, id)
-        return file.path
+    def get_breadcrumb(self, db: Session, ownerid: str, id_: str) -> list[FileModel]:
+        breadcrumb = list()
+
+        def climb_filetree(fileid: str) -> FileModel:
+            file = get_file_or_raise(db, ownerid, fileid, None)
+
+            if file.parentid is not None:
+                climb_filetree(file.parentid)
+
+            if file.type == FileType.FILE:
+                breadcrumb.append(file.filename + "." + file.extension)
+            else:
+                breadcrumb.append(file.filename)
+
+        climb_filetree(id_)
+
+        return breadcrumb

@@ -60,17 +60,6 @@ def get_file_or_raise(
     return file
 
 
-def climb_file_tree(db: Session, ownerid: str, parentid: str) -> list[FileModel]:
-    file = get_file_or_raise(db, ownerid, parentid, FileType.FOLDER)
-    if not file.parentid:
-        return [file]
-    res = [file]
-
-    res.extend(climb_file_tree(db, ownerid, file.parentid))
-
-    return res
-
-
 def zip_files(files: List[FileModel], ownerid: str, path: str) -> io.BytesIO:
     """
     Create a zip file within a [io.BytesIO] with all files requested
@@ -148,7 +137,7 @@ def verify_name_duplicated(
     ownerid: str,
     parentid: str | None,
     filename: str,
-    type: FileType,
+    type_: FileType,
 ) -> None:
     """
     Raise [FileAlreadyExists]
@@ -157,17 +146,15 @@ def verify_name_duplicated(
     fullname = filename.split("/")[-1]
     exists = db.query(
         file_by_ownerid_parentid_fullname_alive(
-            db, ownerid, parentid, fullname
+            db, ownerid, parentid, fullname, type_
         ).exists()
     ).scalar()
 
     if exists:
-        raise FileAlreadyExists(fullname, type.value)
+        raise FileAlreadyExists(fullname, type_.value)
 
 
-def upload_file_to_storage(
-    filedata: bytes, content_type: str, path: str
-):
+def upload_file_to_storage(filedata: bytes, content_type: str, path: str):
     storage_client.save(SUPA_BUCKETID, content_type, path, filedata)
 
 

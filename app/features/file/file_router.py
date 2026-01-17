@@ -1,6 +1,7 @@
-from typing import Annotated
+from typing import Annotated, Optional
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, Form, UploadFile
 from fastapi.responses import ORJSONResponse, StreamingResponse, Response
+from pydantic import BaseModel
 from pytest import Session
 
 from app.core.schemas import FileResponseStructure
@@ -18,21 +19,38 @@ from app.middlewares.authorization_middleware import authorization_middleware
 file_router = APIRouter(dependencies=[Depends(authorization_middleware)])
 
 
-@file_router.post("/")
+@file_router.post("/file/account/{ownerid}/parent")
+@file_router.post("/file/account/{ownerid}/parent/{parentid}")
 def save_file_route(
     filedata: UploadFile,
-    ownerid: Annotated[str, Form()],
+    ownerid: str,
     background_tasks: BackgroundTasks,
-    parentid: Annotated[str | None, Form()] = None,
+    parentid: Optional[str] = None,
     db=Depends(client.get_session),
     file_service: FileWriteService = Depends(FileWriteService),
 ):
     file = file_service.save_file(db, filedata, ownerid, parentid)
 
     if file.type == FileType.FILE:
-        background_tasks.add_task(
-            lambda: file_service.create_preview(ownerid, file)
-        )
+        background_tasks.add_task(lambda: file_service.create_preview(ownerid, file))
+
+    return ORJSONResponse(FileResponseStructure(files=[file]).model_dump())
+
+
+class SaveFolder(BaseModel):
+    name: str
+
+
+@file_router.post("/folder/account/{ownerid}/parent")
+@file_router.post("/folder/account/{ownerid}/parent/{parentid}")
+def save_folder_route(
+    ownerid: str,
+    body: SaveFolder,
+    parentid: Optional[str] = None,
+    db=Depends(client.get_session),
+    file_service: FileWriteService = Depends(FileWriteService),
+):
+    file = file_service.save_folder(db, ownerid, parentid, body.name)
 
     return ORJSONResponse(FileResponseStructure(files=[file]).model_dump())
 
@@ -50,7 +68,7 @@ def get_items_route(
     return ORJSONResponse(FileResponseStructure(files=items).model_dump())
 
 
-@file_router.get("/folder/{parentid}/account/{ownerid}")
+@file_router.get("/account/{ownerid}/folder/{parentid}")
 def get_files_in_folder_route(
     ownerid: str,
     parentid: str,
@@ -152,7 +170,7 @@ def delete_items_route(
     return Response(status_code=200)
 
 
-@file_router.get("/{id}/account}/{ownerid}/breadcrumb")
+@file_router.get("/{id}/account/{ownerid}/breadcrumb")
 def breadcrumb_route(
     id: str,
     ownerid: str,
@@ -160,4 +178,4 @@ def breadcrumb_route(
     file_service: FileReadService = Depends(FileReadService),
 ):
     breadcrumb = file_service.get_breadcrumb(db, ownerid, id)
-    return ORJSONResponse(FileResponseStructure(files=breadcrumb).model_dump())
+    return ORJSONResponse(breadcrumb)

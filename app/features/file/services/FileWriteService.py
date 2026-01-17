@@ -1,5 +1,6 @@
 import io
-from typing import List, Union
+from tabnanny import filename_only
+from typing import List, Optional, Union
 from uuid import uuid4
 
 from PIL import Image
@@ -91,7 +92,7 @@ class FileWriteService:
 
         for i, f in enumerate(folders):
             folder = file_by_ownerid_parentid_fullname_alive(
-                db, ownerid, crr_parentid, f.filename
+                db, ownerid, crr_parentid, f.filename, f.type
             ).first()
 
             if not folder:
@@ -113,11 +114,11 @@ class FileWriteService:
 
         for f in folders:
             f.parentid = curr_parentid
-            saved_folder = item_save(db, f)
-            curr_parentid = saved_folder.id
+            item_save(db, f)
+            curr_parentid = f.id
 
             if not first_folder:
-                first_folder = saved_folder
+                first_folder = f
 
         return first_folder, curr_parentid
 
@@ -164,25 +165,34 @@ class FileWriteService:
             )
 
         file.parentid = curr_parentid
-        saved_item = item_save(db, file)
+        item_save(db, file)
 
         upload_file_to_storage(
             metadata.file.read(),
             metadata.content_type,
-            make_file_bucket_path(ownerid, saved_item.id, "file"),
+            make_file_bucket_path(ownerid, file.id, "file"),
         )
 
-        return saved_item if len(folders) == 0 else first_folder
+        return file if len(folders) == 0 else first_folder
 
-    def save_folder(self, db: Session, ownerid: str, name: str, parentid: str | None):
+    def save_folder(
+        self, db: Session, ownerid: str, parentid: Optional[str], name: str
+    ) -> FileModel:
         if not validate_filename(name):
             raise InvalidFileName(name)
 
+        if parentid is not None:
+            exists = db.query(
+                file_by_id_ownerid(db, parentid, ownerid).exists()
+            ).scalar()
+
+            if not exists:
+                raise ParentNotFound()
+
         verify_name_duplicated(db, ownerid, parentid, name, FileType.FOLDER)
-        get_file_parent_or_raise(db, ownerid, parentid)
 
         folder = FileModel(
-            name=name,
+            filename=name,
             ownerid=ownerid,
             parentid=parentid,
             content_type="",
@@ -192,7 +202,9 @@ class FileWriteService:
             type=FileType.FOLDER,
         )
 
-        return item_save(db, folder)
+        item_save(db, folder)
+
+        return folder
 
     def create_preview(self, ownerid: str, file: FileModel):
         session = next(client.get_session())

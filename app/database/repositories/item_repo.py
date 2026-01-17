@@ -43,7 +43,6 @@ def item_by_ownerid_parentid_fullname(
 def item_save(db: Session, item: FileModel) -> FileModel:
     db.add(item)
     db.flush()
-    return item
 
 
 def item_delete(db: Session, item: FileModel) -> None:
@@ -82,15 +81,21 @@ def items_by_ownerid_name(db: Session, ownerid: int, query: str) -> Query[FileMo
 
 
 def file_by_ownerid_parentid_fullname_alive(
-    db: Session, ownerid: str, parentid: Optional[str], fullname: str
+    db: Session,
+    ownerid: str,
+    parentid: Optional[str],
+    fullname: str,
+    type_: FileType = FileType.FILE,
 ) -> Query[FileModel]:
-    return db.query(FileModel).where(
-        and_(
-            FileModel.ownerid == ownerid,
-            FileModel.parentid == parentid,
-            func.concat(FileModel.filename, ".", FileModel.extension) == fullname,
-            FileModel.to_delete.is_(False),
-        ),
+    query_filename = func.concat(FileModel.filename, ".", FileModel.extension)
+    if type_ == FileType.FOLDER:
+        query_filename = FileModel.filename
+
+    return db.query(FileModel).filter(
+        FileModel.ownerid == ownerid,
+        FileModel.parentid == parentid,
+        query_filename == fullname,
+        FileModel.to_delete.is_(False),
     )
 
 

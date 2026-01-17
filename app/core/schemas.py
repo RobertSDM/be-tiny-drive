@@ -42,7 +42,6 @@ class FileReturnable(BaseModel):
     size_prefix: str
     content_type: str
     type: FileType
-    parent: Optional["FileReturnable"]
     content_type: str
     updated_at: datetime
     created_at: datetime

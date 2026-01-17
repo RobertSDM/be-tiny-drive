@@ -1,4 +1,4 @@
-.PHONY: run create_tables mock-db env-run
+.PHONY: run create_tables mock-db env-run run-mock
 
 run:	
 	.\venv\Scripts\python.exe -m main
