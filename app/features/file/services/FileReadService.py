@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, Query
 from app.core.exceptions import FileBeParent, FileNotFound, ParentNotFound
 from app.features.file.utils import (
     apply_order_to_column,
-    build_zip,
+    zip_folder,
     column_and_order_from_file,
     get_file_or_raise,
     get_files,
@@ -78,7 +78,7 @@ class FileReadService:
         """
 
         if len(fileids) == 0:
-            raise Exception("There has to be files to download")
+            raise Exception("There isn't files to download")
 
         file = get_file_or_raise(db, ownerid, fileids[0], None)
 
@@ -106,7 +106,7 @@ class FileReadService:
         self, db: Session, ownerid: str, parentid: str
     ) -> Generator[bytes, Any, None]:
         folder = get_file_or_raise(db, ownerid, parentid, FileType.FOLDER)
-        buffer = build_zip(db, ownerid, folder)
+        buffer = zip_folder(db, ownerid, folder)
         return stream_buffer(buffer, self.STREAM_SIZE)
 
     def preview(self, db: Session, ownerid: str, id_: str) -> str:

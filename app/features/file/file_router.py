@@ -122,7 +122,7 @@ def download_route(
         content,
         media_type="application/zip",
         headers={
-            "Content-Disposition": 'attachment; filename="downloaded_content.zip"',
+            "Content-Disposition": f'attachment; filename="{f'{file.filename}.zip' if file.type == FileType.FOLDER else 'content.zip'}"',
             "Access-Control-Expose-Headers": "Content-Disposition",
         },
     )

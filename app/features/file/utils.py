@@ -17,6 +17,7 @@ from app.core.schemas import FileType, SortColumn, SortOrder
 from app.database.models.FileModel import FileModel
 from app.database.repositories.item_repo import (
     file_by_id_ownerid,
+    file_by_ownerid_parentid_alive,
     item_by_id_ownerid_type,
     file_by_ownerid_parentid_fullname_alive,
 )
@@ -80,8 +81,29 @@ def zip_files(files: List[FileModel], ownerid: str, path: str) -> io.BytesIO:
     return buf
 
 
-def build_zip(db: Session, ownerid: str, root: FileModel):
-    pass
+def zip_folder(db: Session, ownerid: str, root: FileModel) -> io.BytesIO:
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zip_:
+
+        def dfs(path: str):
+            files = file_by_ownerid_parentid_alive(db, ownerid, root.id).all()
+            if len(files) == 0:
+                return
+
+            for file in files:
+                if file.type == FileType.FOLDER:
+                    dfs(os.path.join(path, file.filename))
+                else:
+                    bytedata = storage_client.download(
+                        SUPA_BUCKETID, make_file_bucket_path(ownerid, file.id, "file")
+                    )
+                    file_path = os.path.join(path, f"{file.filename}.{file.extension}")
+                    zip_.writestr(file_path, bytedata)
+
+        dfs("")
+
+    buf.seek(0)
+    return buf
 
 
 def stream_buffer(buffer: BinaryIO, chunk: int) -> Generator[bytes, None, None]:
