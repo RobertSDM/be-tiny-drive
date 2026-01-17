@@ -2,7 +2,7 @@ import io
 from typing import Any, Generator, List, Optional
 from sqlalchemy.orm import Session, Query
 
-from app.core.exceptions import FileBeParent, ParentNotFound
+from app.core.exceptions import FileBeParent, FileNotFound, ParentNotFound
 from app.features.file.utils import (
     apply_order_to_column,
     build_zip,
@@ -18,6 +18,8 @@ from app.lib.supabase.storage import (
 
 from app.database.models import FileModel
 from app.database.repositories.item_repo import (
+    file_by_id_ownerid,
+    file_by_id_ownerid_active,
     file_by_ownerid_parentid_alive,
     search_files_by_ownerid_name_type,
 )
@@ -107,10 +109,13 @@ class FileReadService:
         buffer = build_zip(db, ownerid, folder)
         return stream_buffer(buffer, self.STREAM_SIZE)
 
-    def preview_file(self, db: Session, ownerid: str, id: str) -> str:
-        item = get_file_or_raise(db, id, ownerid, FileType.FILE)
+    def preview(self, db: Session, ownerid: str, id_: str) -> str:
+        exists = db.query(file_by_id_ownerid_active(db, id_, ownerid).exists()).scalar()
 
-        bucket_path = make_file_bucket_path(ownerid, id, "preview")
+        if not exists:
+            raise FileNotFound()
+
+        bucket_path = make_file_bucket_path(ownerid, id_, "preview")
 
         time_to_expire = 3600  # one hour
         url = storage_client.signedURL(SUPA_BUCKETID, bucket_path, time_to_expire)

@@ -1,6 +1,10 @@
 from typing import Optional
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, Query, UploadFile
-from fastapi.responses import ORJSONResponse, StreamingResponse, Response
+from fastapi.responses import (
+    ORJSONResponse,
+    StreamingResponse,
+    Response,
+)
 from pydantic import BaseModel
 from pytest import Session
 
@@ -124,16 +128,25 @@ def download_route(
     )
 
 
-# @file_router.get("/{id}/account/{ownerid}/preview")
-# def image_preview(ownerid: str, id: str, db: Session = Depends(client.get_session)):
-#     url = item_read_serv.preview_serv(db, ownerid, id)
+class PreviewResponse(BaseModel):
+    url: str
 
-#     return ORJSONResponse(
-#         FileResponseStructure(files=url).model_dump(),
-#         headers={
-#             "Cache-Control": "max-age=3600, private",
-#         },
-#     )
+
+@file_router.get("/{id_}/account/{ownerid}/preview")
+def image_preview(
+    ownerid: str,
+    id_: str,
+    db: Session = Depends(client.get_session),
+    file_service: FileReadService = Depends(FileReadService),
+):
+    url = file_service.preview(db, ownerid, id_)
+
+    return ORJSONResponse(
+        PreviewResponse(url=url).model_dump(),
+        headers={
+            "Cache-Control": "max-age=3600, private",
+        },
+    )
 
 
 @file_router.put("/{id}/account/{ownerid}/name")
