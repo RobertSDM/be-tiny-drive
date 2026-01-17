@@ -53,7 +53,7 @@ def item_delete(db: Session, item: FileModel) -> None:
 def item_search(db: Session, search: str, ownerid: str) -> Query[FileModel]:
     return db.query(FileModel).filter(
         and_(
-            (FileModel.filename + "." + FileModel.extension).ilike("%" + search + "%"),
+            (FileModel.filename + FileModel.extension).ilike("%" + search + "%"),
             FileModel.ownerid == ownerid,
         )
     )
@@ -82,7 +82,7 @@ def file_by_ownerid_parentid_fullname_alive(
     fullname: str,
     type_: FileType = FileType.FILE,
 ) -> Query[FileModel]:
-    query_filename = func.concat(FileModel.filename, ".", FileModel.extension)
+    query_filename = func.concat(FileModel.filename, FileModel.extension)
     if type_ == FileType.FOLDER:
         query_filename = FileModel.filename
 

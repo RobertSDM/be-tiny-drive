@@ -143,7 +143,7 @@ class FileReadService:
                 climb_filetree(file.parentid)
 
             if file.type == FileType.FILE:
-                breadcrumb.append(file.filename + "." + file.extension)
+                breadcrumb.append(file.filename + file.extension)
             else:
                 breadcrumb.append(file.filename)
 

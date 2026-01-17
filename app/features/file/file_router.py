@@ -113,7 +113,7 @@ def download_route(
             content,
             media_type=file.content_type,
             headers={
-                "Content-Disposition": f'attachment; filename="{file.filename}.{file.extension}"',
+                "Content-Disposition": f'attachment; filename="{file.filename}{file.extension}"',
                 "Access-Control-Expose-Headers": "Content-Disposition",
             },
         )

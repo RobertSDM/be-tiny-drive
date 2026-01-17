@@ -73,7 +73,7 @@ def zip_files(files: List[FileModel], ownerid: str, path: str) -> io.BytesIO:
                 SUPA_BUCKETID, make_file_bucket_path(ownerid, file.id, "file")
             )
 
-            file_path = os.path.join(path, f"{file.filename}.{file.extension}")
+            file_path = os.path.join(path, f"{file.filename}{file.extension}")
 
             zip_.writestr(file_path, bytedata)
 
@@ -97,7 +97,7 @@ def zip_folder(db: Session, ownerid: str, root: FileModel) -> io.BytesIO:
                     bytedata = storage_client.download(
                         SUPA_BUCKETID, make_file_bucket_path(ownerid, file.id, "file")
                     )
-                    file_path = os.path.join(path, f"{file.filename}.{file.extension}")
+                    file_path = os.path.join(path, f"{file.filename}{file.extension}")
                     zip_.writestr(file_path, bytedata)
 
         dfs("")

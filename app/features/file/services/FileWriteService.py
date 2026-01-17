@@ -24,7 +24,6 @@ from app.database.repositories.item_repo import (
 from app.core.schemas import FileType
 from app.features.file.utils import (
     verify_name_duplicated,
-    get_file_parent_or_raise,
     upload_file_to_storage,
 )
 from app.utils.utils import (
@@ -42,7 +41,7 @@ class FileWriteService:
     def __init__(self):
         self.MAX_RETRY = 3
 
-    def _create_file(
+    def _create_file_and_folders(
         self, metadata: UploadFile, ownerid: str
     ) -> tuple[List[FileModel], FileModel]:
         folders: List[FileModel] = list()
@@ -50,7 +49,7 @@ class FileWriteService:
         dirs = metadata.filename.split("/")
         folder_names = dirs[:-1]
 
-        for i, name in enumerate(folder_names):
+        for name in folder_names:
             folder = FileModel(
                 extension="",
                 parentid=None,
@@ -64,12 +63,13 @@ class FileWriteService:
             folders.append(folder)
 
         name_splited = dirs[-1].split(".")
-        extension = name_splited[-1] if len(name_splited) > 1 else ""
+        name = ".".join(name_splited[:-1])
+        extension = f".{name_splited[-1]}" if len(name_splited) > 1 else ""
         size, prefix = byte_formatting(metadata.size)
 
         file = FileModel(
             id=str(uuid4()),
-            filename=name_splited[0],
+            filename=name,
             extension=extension,
             parentid=None,
             content_type=metadata.content_type,
@@ -102,7 +102,7 @@ class FileWriteService:
 
         return crr_parentid, -1
 
-    def _create_folders(
+    def _save_folders(
         self, db: Session, parentid: str | None, folders: list[FileModel]
     ) -> tuple[FileModel, str]:
         """
@@ -142,7 +142,7 @@ class FileWriteService:
             if not exists:
                 raise ParentNotFound()
 
-        file, folders = self._create_file(
+        file, folders = self._create_file_and_folders(
             metadata,
             ownerid,
         )
@@ -160,7 +160,7 @@ class FileWriteService:
         )
 
         if folder_start_id != -1:
-            first_folder, curr_parentid = self._create_folders(
+            first_folder, curr_parentid = self._save_folders(
                 db, curr_parentid, folders[folder_start_id:]
             )
 
