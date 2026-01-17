@@ -1,5 +1,5 @@
 from typing import Annotated, Optional
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, Form, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, UploadFile
 from fastapi.responses import ORJSONResponse, StreamingResponse, Response
 from pydantic import BaseModel
 from pytest import Session
@@ -19,8 +19,8 @@ from app.middlewares.authorization_middleware import authorization_middleware
 file_router = APIRouter(dependencies=[Depends(authorization_middleware)])
 
 
-@file_router.post("/file/account/{ownerid}/parent")
-@file_router.post("/file/account/{ownerid}/parent/{parentid}")
+@file_router.post("/account/{ownerid}/parent")
+@file_router.post("/account/{ownerid}/parent/{parentid}")
 def save_file_route(
     filedata: UploadFile,
     ownerid: str,
@@ -41,8 +41,8 @@ class SaveFolder(BaseModel):
     name: str
 
 
-@file_router.post("/folder/account/{ownerid}/parent")
-@file_router.post("/folder/account/{ownerid}/parent/{parentid}")
+@file_router.post("/account/{ownerid}/parent/folder")
+@file_router.post("/account/{ownerid}/parent/{parentid}/folder")
 def save_folder_route(
     ownerid: str,
     body: SaveFolder,
@@ -55,7 +55,7 @@ def save_folder_route(
     return ORJSONResponse(FileResponseStructure(files=[file]).model_dump())
 
 
-@file_router.get("/{ownerid}")
+@file_router.get("/account/{ownerid}")
 def get_items_route(
     ownerid: str,
     p: int = 0,
@@ -68,7 +68,7 @@ def get_items_route(
     return ORJSONResponse(FileResponseStructure(files=items).model_dump())
 
 
-@file_router.get("/account/{ownerid}/folder/{parentid}")
+@file_router.get("/account/{ownerid}/parent/{parentid}")
 def get_files_in_folder_route(
     ownerid: str,
     parentid: str,
@@ -105,7 +105,7 @@ def get_file_route(
     return ORJSONResponse(FileResponseStructure(files=[item]).model_dump())
 
 
-@file_router.get("/{ownerid}/download")
+@file_router.get("/account/{ownerid}/download")
 def download_route(
     body: list[str],
     ownerid: str,
@@ -159,7 +159,7 @@ def update_filename_route(
     return ORJSONResponse(FileResponseStructure(files=[file]).model_dump())
 
 
-@file_router.delete("/{ownerid}")
+@file_router.delete("/account/{ownerid}")
 def delete_items_route(
     ownerid: str,
     body: list[str],
