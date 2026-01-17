@@ -1,4 +1,4 @@
-from typing import Annotated, Optional
+from typing import Optional
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, UploadFile
 from fastapi.responses import ORJSONResponse, StreamingResponse, Response
 from pydantic import BaseModel
@@ -19,6 +19,25 @@ from app.middlewares.authorization_middleware import authorization_middleware
 file_router = APIRouter(dependencies=[Depends(authorization_middleware)])
 
 
+class SaveFolder(BaseModel):
+    name: str
+
+
+# Keep the declaration of this route before the route to save a file
+@file_router.post("/account/{ownerid}/parent/folder")
+@file_router.post("/account/{ownerid}/parent/{parentid}/folder")
+def save_folder_route(
+    ownerid: str,
+    body: SaveFolder,
+    parentid: Optional[str] = None,
+    db=Depends(client.get_session),
+    file_service: FileWriteService = Depends(FileWriteService),
+):
+    file = file_service.save_folder(db, ownerid, parentid, body.name)
+
+    return ORJSONResponse(FileResponseStructure(files=[file]).model_dump())
+
+
 @file_router.post("/account/{ownerid}/parent")
 @file_router.post("/account/{ownerid}/parent/{parentid}")
 def save_file_route(
@@ -37,41 +56,11 @@ def save_file_route(
     return ORJSONResponse(FileResponseStructure(files=[file]).model_dump())
 
 
-class SaveFolder(BaseModel):
-    name: str
-
-
-@file_router.post("/account/{ownerid}/parent/folder")
-@file_router.post("/account/{ownerid}/parent/{parentid}/folder")
-def save_folder_route(
-    ownerid: str,
-    body: SaveFolder,
-    parentid: Optional[str] = None,
-    db=Depends(client.get_session),
-    file_service: FileWriteService = Depends(FileWriteService),
-):
-    file = file_service.save_folder(db, ownerid, parentid, body.name)
-
-    return ORJSONResponse(FileResponseStructure(files=[file]).model_dump())
-
-
-@file_router.get("/account/{ownerid}")
-def get_items_route(
-    ownerid: str,
-    p: int = 0,
-    order: SortOrder = SortOrder.ASC,
-    sort: SortColumn = SortColumn.NAME,
-    db=Depends(client.get_session),
-    file_service: FileReadService = Depends(FileReadService),
-):
-    items = file_service.get_files(db, ownerid, p, order, sort)
-    return ORJSONResponse(FileResponseStructure(files=items).model_dump())
-
-
+@file_router.get("/account/{ownerid}/parent")
 @file_router.get("/account/{ownerid}/parent/{parentid}")
-def get_files_in_folder_route(
+def get_files_route(
     ownerid: str,
-    parentid: str,
+    parentid: Optional[str] = None,
     p: int = 0,
     order: SortOrder = SortOrder.ASC,
     sort: SortColumn = SortColumn.NAME,

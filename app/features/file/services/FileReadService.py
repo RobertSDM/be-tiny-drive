@@ -1,7 +1,8 @@
 import io
-from typing import Any, Generator, List
+from typing import Any, Generator, List, Optional
 from sqlalchemy.orm import Session, Query
 
+from app.core.exceptions import FileBeParent, ParentNotFound
 from app.features.file.utils import (
     apply_order_to_column,
     build_zip,
@@ -46,7 +47,7 @@ class FileReadService:
         self,
         db: Session,
         ownerid: str,
-        parentid: str | None,
+        parentid: Optional[str],
         page: int,
         order: SortOrder,
         sort: SortColumn,
@@ -54,7 +55,20 @@ class FileReadService:
         column = column_and_order_from_file(sort)
         column_with_order = apply_order_to_column(order, column)
 
+        if parentid is not None:
+            file = get_file_or_raise(db, ownerid, parentid, None)
+
+            if file.type == FileType.FILE:
+                raise FileBeParent()
+
         query = file_by_ownerid_parentid_alive(db, ownerid, parentid)
+
+        if parentid is not None:
+            files = db.query(query.exists()).scalar()
+
+            if files is None:
+                raise ParentNotFound()
+
         query = query.order_by(column_with_order)
         query = query.limit(LIMIT_PER_PAGE).offset(page * LIMIT_PER_PAGE)
 
