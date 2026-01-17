@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, Query, UploadFile
 from fastapi.responses import ORJSONResponse, StreamingResponse, Response
 from pydantic import BaseModel
 from pytest import Session
@@ -71,16 +71,17 @@ def get_files_route(
     return ORJSONResponse(FileResponseStructure(files=items).model_dump())
 
 
-# @file_router.get("/{ownerid}/search")
-# def item_search_route(
-#     ownerid: str,
-#     q: str,
-#     type: FileType | None = None,
-#     db: Session = Depends(client.get_session),
-# ):
-#     items = search_service(db, ownerid, q, type)
+@file_router.get("/account/{ownerid}/search")
+def item_search_route(
+    ownerid: str,
+    q: str,
+    type_: Optional[FileType] = Query(alias="type", default=None),
+    db: Session = Depends(client.get_session),
+    file_service: FileReadService = Depends(FileReadService),
+):
+    items = file_service.search(db, ownerid, q, type_)
 
-#     return ORJSONResponse(FileResponseStructure(files=items).model_dump())
+    return ORJSONResponse(FileResponseStructure(files=items).model_dump())
 
 
 @file_router.get("/{id}/account/{ownerid}")

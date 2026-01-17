@@ -19,8 +19,7 @@ from app.lib.supabase.storage import (
 from app.database.models import FileModel
 from app.database.repositories.item_repo import (
     file_by_ownerid_parentid_alive,
-    items_by_ownerid_name,
-    items_by_ownerid_name_type,
+    search_files_by_ownerid_name_type,
 )
 from app.core.constants import SUPA_BUCKETID
 from app.core.schemas import FileType, SortColumn, SortOrder
@@ -34,11 +33,6 @@ class FileReadService:
 
     def __init__(self):
         self.STREAM_SIZE = 5 * 1024 * 2  # 5Mbs
-
-    def get_files(
-        self, db: Session, ownerid: str, page: int, order: SortOrder, sort: SortColumn
-    ) -> list[FileModel]:
-        return self.get_files_in_folder(db, ownerid, None, page, order, sort)
 
     def get_file(self, db: Session, ownerid: str, fileid: str):
         return get_file_or_raise(db, ownerid, fileid, FileType.FILE)
@@ -124,16 +118,15 @@ class FileReadService:
         return url
 
     def search(
-        self, db: Session, ownerid: str, user_query: str, type_: FileType | None
+        self, db: Session, ownerid: str, query: str, type_: FileType | None
     ) -> list[FileModel]:
         user_query: Query[FileModel] = None
 
-        if type_:
-            user_query = items_by_ownerid_name_type(db, ownerid, user_query, type_)
-        else:
-            user_query = items_by_ownerid_name(db, ownerid, user_query)
+        user_query = search_files_by_ownerid_name_type(db, ownerid, query, type_)
 
-        return user_query.limit(LIMIT_PER_SEARCH).all()
+        return (
+            user_query.order_by(FileModel.filename.asc()).limit(LIMIT_PER_SEARCH).all()
+        )
 
     def get_breadcrumb(self, db: Session, ownerid: str, id_: str) -> list[FileModel]:
         breadcrumb = list()

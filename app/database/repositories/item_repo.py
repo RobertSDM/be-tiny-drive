@@ -59,24 +59,19 @@ def item_search(db: Session, search: str, ownerid: str) -> Query[FileModel]:
     )
 
 
-def items_by_ownerid_name_type(
-    db: Session, ownerid: int, query: str, type: FileType
+def search_files_by_ownerid_name_type(
+    db: Session, ownerid: int, query: str, type_: Optional[FileType]
 ) -> Query[FileModel]:
-    return db.query(FileModel).where(
-        and_(
+    if type_ is not None:
+        return db.query(FileModel).filter(
             FileModel.ownerid == ownerid,
-            FileModel.type == type,
-            FileModel.filename.ilike(f"%{query}%"),
-        ),
-    )
-
-
-def items_by_ownerid_name(db: Session, ownerid: int, query: str) -> Query[FileModel]:
-    return db.query(FileModel).where(
-        and_(
-            FileModel.ownerid == ownerid,
+            FileModel.type == type_,
             FileModel.filename.ilike(f"%{query}%"),
         )
+
+    return db.query(FileModel).filter(
+        FileModel.ownerid == ownerid,
+        FileModel.filename.ilike(f"%{query}%"),
     )
 
 
