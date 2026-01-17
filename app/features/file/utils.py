@@ -18,7 +18,7 @@ from app.database.models.FileModel import FileModel
 from app.database.repositories.item_repo import (
     file_by_id_ownerid,
     file_by_ownerid_parentid_alive,
-    item_by_id_ownerid_type,
+    file_by_id_ownerid_type,
     file_by_ownerid_parentid_fullname_alive,
 )
 from app.lib.supabase.storage import (
@@ -51,11 +51,11 @@ def get_file_or_raise(
     if not type_:
         file = file_by_id_ownerid(db, id, ownerid).first()
     else:
-        file = item_by_id_ownerid_type(db, id, ownerid, type_).first()
+        file = file_by_id_ownerid_type(db, id, ownerid, type_).first()
 
     if not file:
         raise NotFound(
-            f"The {"file" if type_ == FileType.FILE else "folder"} was not found"
+            f"The {"file" if type_ == FileType.FILE or type_ is None else "folder"} was not found"
         )
 
     return file
@@ -79,6 +79,25 @@ def zip_files(files: List[FileModel], ownerid: str, path: str) -> io.BytesIO:
 
     buf.seek(0)
     return buf
+
+
+def file_exists_or_raise(
+    db: Session, ownerid: str, id_: str, type_: Optional[FileType]
+):
+    exists = False
+
+    if not type_:
+        exists = db.query(
+            file_by_id_ownerid_type(db, id_, ownerid, type_).exists()
+        ).scalar()
+    else:
+        exists = db.query(file_by_id_ownerid(db, id_, ownerid).exists()).scalar()
+
+    if not exists:
+        if type_ == FileType.FILE or type_ is None:
+            raise FileNotFound()
+        else:
+            raise ParentNotFound()
 
 
 def zip_folder(db: Session, ownerid: str, root: FileModel) -> io.BytesIO:

@@ -23,6 +23,7 @@ from app.database.repositories.item_repo import (
 )
 from app.core.schemas import FileType
 from app.features.file.utils import (
+    file_exists_or_raise,
     verify_name_duplicated,
     upload_file_to_storage,
 )
@@ -135,12 +136,7 @@ class FileWriteService:
             raise InvalidFileName(name)
 
         if parentid is not None:
-            exists = db.query(
-                file_by_id_ownerid(db, parentid, ownerid).exists()
-            ).scalar()
-
-            if not exists:
-                raise ParentNotFound()
+            file_exists_or_raise(db, ownerid, parentid)
 
         file, folders = self._create_file_and_folders(
             metadata,
@@ -182,12 +178,7 @@ class FileWriteService:
             raise InvalidFileName(name)
 
         if parentid is not None:
-            exists = db.query(
-                file_by_id_ownerid(db, parentid, ownerid).exists()
-            ).scalar()
-
-            if not exists:
-                raise ParentNotFound()
+            file_exists_or_raise(db, ownerid, parentid)
 
         verify_name_duplicated(db, ownerid, parentid, name, FileType.FOLDER)
 

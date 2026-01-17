@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, Query
 from app.core.exceptions import FileBeParent, FileNotFound, ParentNotFound
 from app.features.file.utils import (
     apply_order_to_column,
+    file_exists_or_raise,
     zip_folder,
     column_and_order_from_file,
     get_file_or_raise,
@@ -110,10 +111,8 @@ class FileReadService:
         return stream_buffer(buffer, self.STREAM_SIZE)
 
     def preview(self, db: Session, ownerid: str, id_: str) -> str:
-        exists = db.query(file_by_id_ownerid_active(db, id_, ownerid).exists()).scalar()
+        file_exists_or_raise(db, ownerid, id_)
 
-        if not exists:
-            raise FileNotFound()
 
         bucket_path = make_file_bucket_path(ownerid, id_, "preview")
 

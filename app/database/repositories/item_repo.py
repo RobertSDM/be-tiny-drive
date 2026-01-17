@@ -21,7 +21,7 @@ def file_by_id_ownerid_active(db: Session, id: str, ownerid: str) -> Query[FileM
     )
 
 
-def item_by_id_ownerid_type(
+def file_by_id_ownerid_type(
     db: Session, id: str, ownerid: str, type: FileType
 ) -> Query[FileModel]:
     return db.query(FileModel).where(
