@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 import sqlalchemy as sa
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import sessionmaker, DeclarativeBase, MappedAsDataclass
 
 from app.core.constants import DATABASE_URL
 
@@ -22,7 +22,7 @@ class SQLAlchemyClient:
             session.close()
 
 
-class Base(DeclarativeBase):
+class Base(MappedAsDataclass, DeclarativeBase):
     pass
 
 

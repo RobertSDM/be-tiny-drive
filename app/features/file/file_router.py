@@ -54,7 +54,7 @@ def save_file_route(
 ):
     file = file_service.save_file(db, filedata, ownerid, parentid)
 
-    if file.type == FileType.FILE:
+    if not file.is_dir:
         background_tasks.add_task(lambda: file_service.create_preview(ownerid, file))
 
     return ORJSONResponse(FileResponseStructure(files=[file]).model_dump())
@@ -83,7 +83,7 @@ def item_search_route(
     db: Session = Depends(client.get_session),
     file_service: FileReadService = Depends(FileReadService),
 ):
-    items = file_service.search(db, ownerid, q, type_)
+    items = file_service.search(db, ownerid, q, type_ == FileType.FOLDER if type_ is not None else None)
 
     return ORJSONResponse(FileResponseStructure(files=items).model_dump())
 
@@ -108,7 +108,7 @@ def download_route(
 ):
     content, file = file_service.download(db, ownerid, body)
 
-    if len(body) == 1 and file.type == FileType.FILE:
+    if len(body) == 1 and not file.is_dir:
         return StreamingResponse(
             content,
             media_type=file.content_type,
@@ -122,7 +122,7 @@ def download_route(
         content,
         media_type="application/zip",
         headers={
-            "Content-Disposition": f'attachment; filename="{f'{file.filename}.zip' if file.type == FileType.FOLDER else 'content.zip'}"',
+            "Content-Disposition": f'attachment; filename="{f'{file.filename}.zip' if file.is_dir else 'content.zip'}"',
             "Access-Control-Expose-Headers": "Content-Disposition",
         },
     )

@@ -13,13 +13,13 @@ from app.core.exceptions import (
     NotFound,
     ParentNotFound,
 )
-from app.core.schemas import FileType, SortColumn, SortOrder
+from app.core.schemas import SortColumn, SortOrder
 from app.database.models.FileModel import FileModel
-from app.database.repositories.item_repo import (
+from app.database.repositories.file_repo import (
     file_by_id_ownerid,
-    file_by_ownerid_parentid_alive,
-    file_by_id_ownerid_type,
-    file_by_ownerid_parentid_fullname_alive,
+    file_by_ownerid_parentid,
+    file_by_id_ownerid_is_dir,
+    file_by_ownerid_parentid_fullname,
 )
 from app.lib.supabase.storage import (
     supabase_storage_client as storage_client,
@@ -35,28 +35,30 @@ def get_files(db: Session, ownerid: str, fileids: list[str]) -> list[FileModel]:
     files = list()
 
     for id in fileids:
-        file = get_file_or_raise(db, ownerid, id, FileType.FILE)
+        file = get_file_or_raise(
+            db,
+            ownerid,
+            id,
+        )
         files.append(file)
 
     return files
 
 
 def get_file_or_raise(
-    db: Session, ownerid: str, id: str, type_: Optional[FileType]
+    db: Session, ownerid: str, id: str, is_dir: Optional[bool] = None
 ) -> FileModel:
     """
     Get the file from the database, if it doesn't exist raise [NotFound] error
     """
 
-    if not type_:
+    if is_dir is None:
         file = file_by_id_ownerid(db, id, ownerid).first()
     else:
-        file = file_by_id_ownerid_type(db, id, ownerid, type_).first()
+        file = file_by_id_ownerid_is_dir(db, id, ownerid, is_dir).first()
 
     if not file:
-        raise NotFound(
-            f"The {"file" if type_ == FileType.FILE or type_ is None else "folder"} was not found"
-        )
+        raise NotFound(f"The {"file" if not is_dir else "folder"} was not found")
 
     return file
 
@@ -82,19 +84,19 @@ def zip_files(files: List[FileModel], ownerid: str, path: str) -> io.BytesIO:
 
 
 def file_exists_or_raise(
-    db: Session, ownerid: str, id_: str, type_: Optional[FileType]
+    db: Session, ownerid: str, id_: str, is_dir: Optional[bool] = None
 ):
     exists = False
 
-    if not type_:
+    if is_dir is not None:
         exists = db.query(
-            file_by_id_ownerid_type(db, id_, ownerid, type_).exists()
+            file_by_id_ownerid_is_dir(db, id_, ownerid, is_dir).exists()
         ).scalar()
     else:
         exists = db.query(file_by_id_ownerid(db, id_, ownerid).exists()).scalar()
 
     if not exists:
-        if type_ == FileType.FILE or type_ is None:
+        if not is_dir:
             raise FileNotFound()
         else:
             raise ParentNotFound()
@@ -105,12 +107,12 @@ def zip_folder(db: Session, ownerid: str, root: FileModel) -> io.BytesIO:
     with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zip_:
 
         def dfs(path: str):
-            files = file_by_ownerid_parentid_alive(db, ownerid, root.id).all()
+            files = file_by_ownerid_parentid(db, ownerid, root.id).all()
             if len(files) == 0:
                 return
 
             for file in files:
-                if file.type == FileType.FOLDER:
+                if file.is_dir:
                     dfs(os.path.join(path, file.filename))
                 else:
                     bytedata = storage_client.download(
@@ -178,7 +180,7 @@ def verify_name_duplicated(
     ownerid: str,
     parentid: str | None,
     filename: str,
-    type_: FileType,
+    is_dir: bool,
 ) -> None:
     """
     Raise [FileAlreadyExists]
@@ -186,13 +188,13 @@ def verify_name_duplicated(
 
     fullname = filename.split("/")[-1]
     exists = db.query(
-        file_by_ownerid_parentid_fullname_alive(
-            db, ownerid, parentid, fullname, type_
+        file_by_ownerid_parentid_fullname(
+            db, ownerid, parentid, fullname, is_dir
         ).exists()
     ).scalar()
 
     if exists:
-        raise FileAlreadyExists(fullname, type_.value)
+        raise FileAlreadyExists(fullname, "file")
 
 
 def upload_file_to_storage(filedata: bytes, content_type: str, path: str):

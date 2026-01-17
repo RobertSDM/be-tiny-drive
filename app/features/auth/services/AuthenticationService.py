@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.core.exceptions import AccountAlreadyExists, AccountRegistrationError
-from app.database.models.account_model import UserAccount
+from app.database.models.UserAccount import UserAccount
 from app.database.repositories.account_repo import (
     account_by_email,
     account_save,

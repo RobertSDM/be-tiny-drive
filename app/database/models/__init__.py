@@ -1,2 +1,2 @@
-from .account_model import UserAccount
+from .UserAccount import UserAccount
 from .FileModel import FileModel

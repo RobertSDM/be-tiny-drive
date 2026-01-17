@@ -18,14 +18,12 @@ from app.lib.supabase.storage import (
 )
 
 from app.database.models import FileModel
-from app.database.repositories.item_repo import (
-    file_by_id_ownerid,
-    file_by_id_ownerid_active,
-    file_by_ownerid_parentid_alive,
-    search_files_by_ownerid_name_type,
+from app.database.repositories.file_repo import (
+    file_by_ownerid_parentid,
+    search_files_by_ownerid_name_is_dir,
 )
 from app.core.constants import SUPA_BUCKETID
-from app.core.schemas import FileType, SortColumn, SortOrder
+from app.core.schemas import SortColumn, SortOrder
 from app.utils.utils import (
     make_file_bucket_path,
 )
@@ -38,7 +36,7 @@ class FileReadService:
         self.STREAM_SIZE = 5 * 1024 * 2  # 5Mbs
 
     def get_file(self, db: Session, ownerid: str, fileid: str):
-        return get_file_or_raise(db, ownerid, fileid, FileType.FILE)
+        return get_file_or_raise(db, ownerid, fileid, False)
 
     def get_files_in_folder(
         self,
@@ -55,10 +53,10 @@ class FileReadService:
         if parentid is not None:
             file = get_file_or_raise(db, ownerid, parentid, None)
 
-            if file.type == FileType.FILE:
+            if not file.is_dir:
                 raise FileBeParent()
 
-        query = file_by_ownerid_parentid_alive(db, ownerid, parentid)
+        query = file_by_ownerid_parentid(db, ownerid, parentid)
 
         if parentid is not None:
             files = db.query(query.exists()).scalar()
@@ -83,10 +81,10 @@ class FileReadService:
 
         file = get_file_or_raise(db, ownerid, fileids[0], None)
 
-        if len(fileids) > 1 and file.type == FileType.FILE:
+        if len(fileids) > 1 and not file.is_dir:
             return self._download_files(db, fileids, ownerid), file
 
-        if file.type == FileType.FOLDER:
+        if file.is_dir:
             return self._download_folder(db, ownerid, fileids[0]), file
 
         bytedata = storage_client.download(
@@ -106,13 +104,12 @@ class FileReadService:
     def _download_folder(
         self, db: Session, ownerid: str, parentid: str
     ) -> Generator[bytes, Any, None]:
-        folder = get_file_or_raise(db, ownerid, parentid, FileType.FOLDER)
+        folder = get_file_or_raise(db, ownerid, parentid, True)
         buffer = zip_folder(db, ownerid, folder)
         return stream_buffer(buffer, self.STREAM_SIZE)
 
     def preview(self, db: Session, ownerid: str, id_: str) -> str:
         file_exists_or_raise(db, ownerid, id_)
-
 
         bucket_path = make_file_bucket_path(ownerid, id_, "preview")
 
@@ -122,11 +119,11 @@ class FileReadService:
         return url
 
     def search(
-        self, db: Session, ownerid: str, query: str, type_: FileType | None
+        self, db: Session, ownerid: str, query: str, is_dir: Optional[bool]
     ) -> list[FileModel]:
         user_query: Query[FileModel] = None
 
-        user_query = search_files_by_ownerid_name_type(db, ownerid, query, type_)
+        user_query = search_files_by_ownerid_name_is_dir(db, ownerid, query, is_dir)
 
         return (
             user_query.order_by(FileModel.filename.asc()).limit(LIMIT_PER_SEARCH).all()
@@ -141,7 +138,7 @@ class FileReadService:
             if file.parentid is not None:
                 climb_filetree(file.parentid)
 
-            if file.type == FileType.FILE:
+            if not file.is_dir:
                 breadcrumb.append(file.filename + file.extension)
             else:
                 breadcrumb.append(file.filename)

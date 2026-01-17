@@ -41,7 +41,7 @@ class FileReturnable(BaseModel):
     size: int
     size_prefix: str
     content_type: str
-    type: FileType
+    is_dir: bool
     content_type: str
     updated_at: datetime
     created_at: datetime

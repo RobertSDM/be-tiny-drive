@@ -12,14 +12,10 @@ from app.lib.supabase.storage import (
     supabase_storage_client as storage_client,
 )
 from app.lib.sqlalchemy import client
-from app.core.exceptions import (
-    ParentNotFound,
-)
 from app.database.models.FileModel import FileModel
-from app.database.repositories.item_repo import (
-    file_by_id_ownerid,
-    file_by_ownerid_parentid_fullname_alive,
-    item_save,
+from app.database.repositories.file_repo import (
+    file_by_ownerid_parentid_fullname,
+    file_save,
 )
 from app.core.schemas import FileType
 from app.features.file.utils import (
@@ -59,7 +55,7 @@ class FileWriteService:
                 content_type="",
                 filename=name,
                 ownerid=ownerid,
-                type=FileType.FOLDER,
+                is_dir=True,
             )
             folders.append(folder)
 
@@ -77,7 +73,6 @@ class FileWriteService:
             size=size,
             size_prefix=prefix,
             ownerid=ownerid,
-            type=FileType.FILE,
         )
 
         return file, folders
@@ -92,8 +87,8 @@ class FileWriteService:
         crr_parentid = parentid
 
         for i, f in enumerate(folders):
-            folder = file_by_ownerid_parentid_fullname_alive(
-                db, ownerid, crr_parentid, f.filename, f.type
+            folder = file_by_ownerid_parentid_fullname(
+                db, ownerid, crr_parentid, f.filename, f.is_dir
             ).first()
 
             if not folder:
@@ -115,7 +110,7 @@ class FileWriteService:
 
         for f in folders:
             f.parentid = curr_parentid
-            item_save(db, f)
+            file_save(db, f)
             curr_parentid = f.id
 
             if not first_folder:
@@ -151,9 +146,7 @@ class FileWriteService:
             db, ownerid, parentid, folders
         )
 
-        verify_name_duplicated(
-            db, ownerid, curr_parentid, metadata.filename, FileType.FILE
-        )
+        verify_name_duplicated(db, ownerid, curr_parentid, metadata.filename, False)
 
         if folder_start_id != -1:
             first_folder, curr_parentid = self._save_folders(
@@ -161,7 +154,7 @@ class FileWriteService:
             )
 
         file.parentid = curr_parentid
-        item_save(db, file)
+        file_save(db, file)
 
         upload_file_to_storage(
             metadata.file.read(),
@@ -180,7 +173,7 @@ class FileWriteService:
         if parentid is not None:
             file_exists_or_raise(db, ownerid, parentid)
 
-        verify_name_duplicated(db, ownerid, parentid, name, FileType.FOLDER)
+        verify_name_duplicated(db, ownerid, parentid, name, True)
 
         folder = FileModel(
             filename=name,
@@ -190,10 +183,10 @@ class FileWriteService:
             extension="",
             size=0,
             size_prefix="",
-            type=FileType.FOLDER,
+            is_dir=True,
         )
 
-        item_save(db, folder)
+        file_save(db, folder)
 
         return folder
 

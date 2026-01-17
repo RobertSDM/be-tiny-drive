@@ -1,3 +1,6 @@
+from typing import Literal
+
+
 class DomainError(Exception):
     def __init__(self, message: str, status: int):
         self.message = message
@@ -52,8 +55,8 @@ class FileBeParent(DomainError):
 
 
 class FileAlreadyExists(DomainError):
-    def __init__(self, name: str, type: str):
-        self.message = f"The {type.lower()} named '{name}' already exists in the folder"
+    def __init__(self, name: str, type_: Literal["file", "folder"]):
+        self.message = f"The {type_} named '{name}' already exists in the folder"
         super().__init__(self.message, 409)
 
 

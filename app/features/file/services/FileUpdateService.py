@@ -16,7 +16,7 @@ class FileUpdateService:
         file = get_file_or_raise(db, ownerid, id, None)
 
         verify_name_duplicated(
-            db, ownerid, file.parentid, name + file.extension, file.type
+            db, ownerid, file.parentid, name + file.extension, file.is_dir
         )
 
         file.filename = name
