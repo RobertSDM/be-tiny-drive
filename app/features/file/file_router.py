@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, Query, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, UploadFile
 from fastapi.responses import (
     ORJSONResponse,
     StreamingResponse,

@@ -8,9 +8,7 @@ from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.validation_errors import InvalidFileName, ItemToDeep
-from app.lib.supabase.storage import (
-    supabase_storage_client as storage_client,
-)
+from app.lib.supabase.storage import supabase_storage_client
 from app.lib.sqlalchemy import client
 from app.database.models.FileModel import FileModel
 from app.database.repositories.file_repo import (
@@ -198,7 +196,7 @@ class FileWriteService:
         if not file.content_type.startswith("image"):
             return
 
-        bytedata = storage_client.download(
+        bytedata = supabase_storage_client.download(
             SUPA_BUCKETID, make_file_bucket_path(ownerid, file.id, "file")
         )
 

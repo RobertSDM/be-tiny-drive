@@ -3,7 +3,7 @@ import math
 import re
 from PIL import ImageOps
 from PIL.ImageFile import ImageFile
-from typing import Callable, Literal, Union
+from typing import Callable, Literal
 
 
 def pipeline(*funcs: Callable):

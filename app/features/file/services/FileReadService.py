@@ -13,9 +13,7 @@ from app.features.file.utils import (
     zip_files,
     stream_buffer,
 )
-from app.lib.supabase.storage import (
-    supabase_storage_client as storage_client,
-)
+from app.lib.supabase.storage import supabase_storage_client
 
 from app.database.models import FileModel
 from app.database.repositories.file_repo import (
@@ -87,7 +85,7 @@ class FileReadService:
         if file.is_dir:
             return self._download_folder(db, ownerid, fileids[0]), file
 
-        bytedata = storage_client.download(
+        bytedata = supabase_storage_client.download(
             SUPA_BUCKETID, make_file_bucket_path(ownerid, fileids[0], "file")
         )
         stream = stream_buffer(io.BytesIO(bytedata), self.STREAM_SIZE)
@@ -114,7 +112,9 @@ class FileReadService:
         bucket_path = make_file_bucket_path(ownerid, id_, "preview")
 
         time_to_expire = 3600  # one hour
-        url = storage_client.signedURL(SUPA_BUCKETID, bucket_path, time_to_expire)
+        url = supabase_storage_client.signedURL(
+            SUPA_BUCKETID, bucket_path, time_to_expire
+        )
 
         return url
 

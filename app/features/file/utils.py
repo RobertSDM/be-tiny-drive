@@ -21,9 +21,7 @@ from app.database.repositories.file_repo import (
     file_by_id_ownerid_is_dir,
     file_by_ownerid_parentid_fullname,
 )
-from app.lib.supabase.storage import (
-    supabase_storage_client as storage_client,
-)
+from app.lib.supabase.storage import supabase_storage_client
 from app.utils.utils import make_file_bucket_path
 
 
@@ -73,7 +71,7 @@ def zip_files(files: List[FileModel], ownerid: str, path: str) -> io.BytesIO:
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zip_:
         for file in files:
-            bytedata = storage_client.download(
+            bytedata = supabase_storage_client.download(
                 SUPA_BUCKETID, make_file_bucket_path(ownerid, file.id, "file")
             )
 
@@ -118,7 +116,7 @@ def zip_folder(db: Session, ownerid: str, root: FileModel) -> io.BytesIO:
                 if file.is_dir:
                     dfs(os.path.join(path, file.filename), file.id)
                 else:
-                    bytedata = storage_client.download(
+                    bytedata = supabase_storage_client.download(
                         SUPA_BUCKETID, make_file_bucket_path(ownerid, file.id, "file")
                     )
                     file_path = os.path.join(path, f"{file.filename}{file.extension}")
@@ -200,19 +198,19 @@ def verify_name_duplicated(
         raise FileAlreadyExists(fullname, "file")
 
 
-def upload_file_to_storage(filedata: bytes, content_type: str, path: str):
-    storage_client.save(SUPA_BUCKETID, content_type, path, filedata)
+def upload_file_to_storage(filedata: io.BufferedReader, content_type: str, path: str):
+    supabase_storage_client.save(SUPA_BUCKETID, content_type, path, filedata)
 
 
 def delete_file_from_storage(fileid: str, previewid: Optional[str] = None):
     try:
-        storage_client.remove(
+        supabase_storage_client.remove(
             SUPA_BUCKETID,
             fileid,
         )
 
         if previewid is not None:
-            storage_client.remove(
+            supabase_storage_client.remove(
                 SUPA_BUCKETID,
                 previewid,
             )
