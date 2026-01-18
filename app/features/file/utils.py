@@ -106,14 +106,15 @@ def zip_folder(db: Session, ownerid: str, root: FileModel) -> io.BytesIO:
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zip_:
 
-        def dfs(path: str):
-            files = file_by_ownerid_parentid(db, ownerid, root.id).all()
+        def dfs(path: str, parentid: str):
+            files = file_by_ownerid_parentid(db, ownerid, parentid).all()
             if len(files) == 0:
+                # Just returning, not adding folders with no content
                 return
 
             for file in files:
                 if file.is_dir:
-                    dfs(os.path.join(path, file.filename))
+                    dfs(os.path.join(path, file.filename), file.id)
                 else:
                     bytedata = storage_client.download(
                         SUPA_BUCKETID, make_file_bucket_path(ownerid, file.id, "file")
@@ -121,7 +122,7 @@ def zip_folder(db: Session, ownerid: str, root: FileModel) -> io.BytesIO:
                     file_path = os.path.join(path, f"{file.filename}{file.extension}")
                     zip_.writestr(file_path, bytedata)
 
-        dfs("")
+        dfs("", root.id)
 
     buf.seek(0)
     return buf

@@ -83,7 +83,9 @@ def item_search_route(
     db: Session = Depends(client.get_session),
     file_service: FileReadService = Depends(FileReadService),
 ):
-    items = file_service.search(db, ownerid, q, type_ == FileType.FOLDER if type_ is not None else None)
+    items = file_service.search(
+        db, ownerid, q, type_ == FileType.FOLDER if type_ is not None else None
+    )
 
     return ORJSONResponse(FileResponseStructure(files=items).model_dump())
 
@@ -169,7 +171,7 @@ def delete_items_route(
     db=Depends(client.get_session),
     file_service: FileDeleteService = Depends(FileDeleteService),
 ):
-    file_service.delete_items(db, ownerid, body)
+    file_service.delete_files(db, ownerid, body)
     return Response(status_code=200)
 
 
