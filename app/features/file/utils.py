@@ -46,16 +46,18 @@ def get_files(db: Session, ownerid: str, fileids: list[str]) -> list[FileModel]:
 
 
 def get_file_or_raise(
-    db: Session, ownerid: str, id: str, is_dir: Optional[bool] = None
+    db: Session, ownerid: str, id_: str, is_dir: Optional[bool] = None
 ) -> FileModel:
     """
     Get the file from the database, if it doesn't exist raise [NotFound] error
     """
 
+    file: Optional[FileModel] = None
+
     if is_dir is None:
-        file = file_by_id_ownerid(db, id, ownerid).first()
+        file = file_by_id_ownerid(db, id_, ownerid).first()
     else:
-        file = file_by_id_ownerid_is_dir(db, id, ownerid, is_dir).first()
+        file = file_by_id_ownerid_is_dir(db, id_, ownerid, is_dir).first()
 
     if not file:
         raise NotFound(f"The {"file" if not is_dir else "folder"} was not found")
@@ -202,17 +204,18 @@ def upload_file_to_storage(filedata: bytes, content_type: str, path: str):
     storage_client.save(SUPA_BUCKETID, content_type, path, filedata)
 
 
-def delete_file_from_storage(fileid: str, previewid: str):
+def delete_file_from_storage(fileid: str, previewid: Optional[str] = None):
     try:
         storage_client.remove(
             SUPA_BUCKETID,
             fileid,
         )
 
-        storage_client.remove(
-            SUPA_BUCKETID,
-            previewid,
-        )
+        if previewid is not None:
+            storage_client.remove(
+                SUPA_BUCKETID,
+                previewid,
+            )
     except storage3.exceptions.StorageApiError as e:
         if e.code == "NoSuchUpload":
             raise FileNotFound()

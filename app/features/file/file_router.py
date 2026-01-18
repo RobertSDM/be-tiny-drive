@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, Query, UploadFile
 from fastapi.responses import (
     ORJSONResponse,
@@ -101,16 +101,19 @@ def get_file_route(
     return ORJSONResponse(FileResponseStructure(files=[item]).model_dump())
 
 
+class DownloadRequest(BaseModel):
+    fileids: List[str]
+
 @file_router.get("/account/{ownerid}/download")
 def download_route(
-    body: list[str],
+    body: DownloadRequest,
     ownerid: str,
     db: Session = Depends(client.get_session),
     file_service: FileReadService = Depends(FileReadService),
 ):
-    content, file = file_service.download(db, ownerid, body)
+    content, file = file_service.download(db, ownerid, body.fileids)
 
-    if len(body) == 1 and not file.is_dir:
+    if len(body.fileids) == 1 and not file.is_dir:
         return StreamingResponse(
             content,
             media_type=file.content_type,
@@ -151,27 +154,35 @@ def image_preview(
     )
 
 
+class UpdateFilenameRequest(BaseModel):
+    filename: str
+
+
 @file_router.put("/{id}/account/{ownerid}/name")
 def update_filename_route(
     id: str,
     ownerid: str,
-    name: str = Body(media_type="text/plain"),
+    body: UpdateFilenameRequest,
     db=Depends(client.get_session),
     file_service: FileUpdateService = Depends(FileUpdateService),
 ):
-    file = file_service.update_filename(db, id, ownerid, name)
+    file = file_service.update_filename(db, id, ownerid, body.filename)
 
     return ORJSONResponse(FileResponseStructure(files=[file]).model_dump())
+
+
+class DeleteItemsRequest(BaseModel):
+    fileids: List[str]
 
 
 @file_router.delete("/account/{ownerid}")
 def delete_items_route(
     ownerid: str,
-    body: list[str],
+    body: DeleteItemsRequest,
     db=Depends(client.get_session),
     file_service: FileDeleteService = Depends(FileDeleteService),
 ):
-    file_service.delete_files(db, ownerid, body)
+    file_service.delete_files(db, ownerid, body.fileids)
     return Response(status_code=200)
 
 
