@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from pytest import Session
 
 from app.core.schemas import FileResponseStructure
+from app.database.models import FileModel
 from app.lib.sqlalchemy import client
 from app.core.schemas import FileType, SortColumn, SortOrder
 from app.features.file.services import (
@@ -24,7 +25,7 @@ file_router = APIRouter(dependencies=[Depends(authorization_middleware)])
 
 
 class SaveFolder(BaseModel):
-    name: str
+    filename: str
 
 
 # Keep the declaration of this route before the route to save a file
@@ -37,7 +38,7 @@ def save_folder_route(
     db=Depends(client.get_session),
     file_service: FileWriteService = Depends(FileWriteService),
 ):
-    file = file_service.save_folder(db, ownerid, parentid, body.name)
+    file = file_service.save_folder(db, ownerid, parentid, body.filename)
 
     return ORJSONResponse(FileResponseStructure(files=[file]).model_dump())
 
@@ -45,19 +46,26 @@ def save_folder_route(
 @file_router.post("/account/{ownerid}/parent")
 @file_router.post("/account/{ownerid}/parent/{parentid}")
 def save_file_route(
-    filedata: UploadFile,
+    filedata: List[UploadFile],
     ownerid: str,
     background_tasks: BackgroundTasks,
     parentid: Optional[str] = None,
     db=Depends(client.get_session),
     file_service: FileWriteService = Depends(FileWriteService),
 ):
-    file = file_service.save_file(db, filedata, ownerid, parentid)
+    files: List[FileModel] = file_service.save_file(db, filedata, ownerid, parentid)
 
-    if not file.is_dir:
-        background_tasks.add_task(lambda: file_service.create_preview(ownerid, file))
+    files_to_process = [file for file in files if not file.is_dir]
 
-    return ORJSONResponse(FileResponseStructure(files=[file]).model_dump())
+    background_tasks.add_task(
+        lambda: file_service.create_preview(ownerid, files_to_process)
+    )
+
+    return ORJSONResponse(
+        FileResponseStructure(
+            files=[file for file in files if file.parentid == parentid]
+        ).model_dump()
+    )
 
 
 @file_router.get("/account/{ownerid}/parent")
@@ -83,11 +91,11 @@ def item_search_route(
     db: Session = Depends(client.get_session),
     file_service: FileReadService = Depends(FileReadService),
 ):
-    items = file_service.search(
+    files = file_service.search(
         db, ownerid, q, type_ == FileType.FOLDER if type_ is not None else None
     )
 
-    return ORJSONResponse(FileResponseStructure(files=items).model_dump())
+    return ORJSONResponse(FileResponseStructure(files=files).model_dump())
 
 
 @file_router.get("/{id}/account/{ownerid}")
@@ -104,7 +112,8 @@ def get_file_route(
 class DownloadRequest(BaseModel):
     fileids: List[str]
 
-@file_router.get("/account/{ownerid}/download")
+
+@file_router.post("/account/{ownerid}/download")
 def download_route(
     body: DownloadRequest,
     ownerid: str,
@@ -182,8 +191,8 @@ def delete_items_route(
     db=Depends(client.get_session),
     file_service: FileDeleteService = Depends(FileDeleteService),
 ):
-    file_service.delete_files(db, ownerid, body.fileids)
-    return Response(status_code=200)
+    files = file_service.delete_files(db, ownerid, body.fileids)
+    return ORJSONResponse(FileResponseStructure(files=files).model_dump())
 
 
 @file_router.get("/{id}/account/{ownerid}/breadcrumb")
@@ -194,4 +203,4 @@ def breadcrumb_route(
     file_service: FileReadService = Depends(FileReadService),
 ):
     breadcrumb = file_service.get_breadcrumb(db, ownerid, id)
-    return ORJSONResponse(breadcrumb)
+    return ORJSONResponse([b.model_dump() for b in breadcrumb])

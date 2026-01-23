@@ -1,4 +1,7 @@
+from enum import IntFlag, auto
 from typing import Literal
+
+from app.core.constants import MAX_RECURSIVE_DEPTH
 
 
 class DomainError(Exception):
@@ -106,3 +109,17 @@ class JWTTokenExpired(DomainError):
     def __init__(self):
         self.message = "The token has expired"
         super().__init__(self.message, 401)
+
+
+class FileValidationError(Exception):
+    def __init__(self, message: str, status: int):
+        self.message = message
+        self.status = status
+        super().__init__(message)
+
+
+class InvalidFileName(FileValidationError):
+    def __init__(self, name: str):
+        self.message = f"The item name '{name}' is not valid. There are allowed only '_', '.', '-', letters, numbers and spaces"
+
+        super().__init__(self.message, 422)

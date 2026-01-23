@@ -23,7 +23,7 @@ class SupabaseStorageClient:
                 return func()
             except httpx.RemoteProtocolError:
                 if retry < self._max_retries - 1:
-                    logger.debug("Recreating the storage client")
+                    logger.info("Recreating the storage client")
                     self._storage = self._new_client()
                 else:
                     raise

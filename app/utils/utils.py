@@ -5,6 +5,8 @@ from PIL import ImageOps
 from PIL.ImageFile import ImageFile
 from typing import Callable, Literal
 
+from fastapi.logger import logger
+
 
 def pipeline(*funcs: Callable):
     def run(*args, **kwargs):
@@ -73,9 +75,11 @@ def make_file_bucket_path(
 
 
 def validate_filename(name: str) -> bool:
-    name_regex = r"^[a-zA-Z0-9._\- ]+$"
+    name_regex = r"^[^\\/:*?\"<>|]+$"
 
-    if len(name) < 4 or len(name) > 50 or name == "":
+    # 260 is the maximum filename length in windows.
+    # It's the largest of other OS
+    if name == "" or len(name) > 260:
         return False
 
-    return re.match(name_regex, name)
+    return re.fullmatch(name_regex, name)

@@ -8,7 +8,7 @@ default_db_url = "postgresql://postgres:password@localhost:5432/postgres"
 
 MODE = os.getenv("MODE")
 
-DATABASE_URL = os.getenv("DATABASE_URL") if MODE == Mode.PROD.value else default_db_url
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 ORIGINS = os.getenv("ORIGINS").split(";")
 PORT = int(os.getenv("PORT") or 4500)
@@ -26,10 +26,11 @@ LOG_LEVEL = "info" if MODE == Mode.PROD.value else "debug"
 HOST = "0.0.0.0" if MODE == Mode.PROD.value else "127.0.0.1"
 
 # limit for file return
-LIMIT_PER_PAGE = 20
+LIMIT_PER_PAGE = 12
 
 # limit for search results return
 LIMIT_PER_SEARCH = 6
 
+MAX_FILESIZE = 15 * 1024**2
 MAX_RECURSIVE_DEPTH = 3
 MAX_FILE_AMOUNT = 15  # rate limit maybe?

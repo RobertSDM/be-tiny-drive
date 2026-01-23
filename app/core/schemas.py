@@ -56,6 +56,11 @@ class AccountReturnable(BaseModel):
     created_at: datetime
 
 
+class BreadcrumbResponse(BaseModel):
+    id: str
+    filename: str
+
+
 class FileResponseStructure(BaseModel):
     files: List[FileReturnable]
     parent: Optional[FileReturnable] = None

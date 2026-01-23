@@ -7,12 +7,11 @@ from app.api.exception_handlers.validation_error import (
     pydantic_error_handler,
     validation_error_handler,
 )
-from app.core.validation_errors import FileValidationError
 from app.features.auth.auth_router import auth_router
 from app.features.file.file_router import file_router
 from app.features.account.auth_router import account_router
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.exceptions import DomainError
+from app.core.exceptions import DomainError, FileValidationError
 from app.core.constants import LOG_LEVEL, HOST, ORIGINS, PORT
 
 app = FastAPI(title="Tiny Drive", description="Backend API for tiny-drive project")

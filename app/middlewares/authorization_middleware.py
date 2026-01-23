@@ -24,7 +24,7 @@ async def authorization_middleware(
     token = authorization.replace("Bearer ", "")
     tokenValue = auth_client.validateToken(token)
 
-    exists = account_by_id(db, tokenValue["sub"]).first()
+    exists = db.query(account_by_id(db, tokenValue["sub"]).exists()).scalar()
 
     if not exists:
         raise AccountNotExists()

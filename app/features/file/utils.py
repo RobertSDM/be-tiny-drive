@@ -198,10 +198,6 @@ def verify_name_duplicated(
         raise FileAlreadyExists(fullname, "file")
 
 
-def upload_file_to_storage(filedata: io.BufferedReader, content_type: str, path: str):
-    supabase_storage_client.save(SUPA_BUCKETID, content_type, path, filedata)
-
-
 def delete_file_from_storage(fileid: str, previewid: Optional[str] = None):
     try:
         supabase_storage_client.remove(

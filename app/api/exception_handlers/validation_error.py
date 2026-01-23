@@ -2,8 +2,8 @@ from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from app.core.exceptions import FileValidationError
 from app.core.schemas import ErrorResponse
-from app.core.validation_errors import FileValidationError
 
 
 def pydantic_error_handler(request: Request, exc: RequestValidationError):

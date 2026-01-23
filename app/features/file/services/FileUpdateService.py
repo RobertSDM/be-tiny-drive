@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.core.validation_errors import InvalidFileName
+from app.core.exceptions import InvalidFileName
 from app.features.file.utils import get_file_or_raise, verify_name_duplicated
 from app.utils.utils import validate_filename
 from app.database.models.FileModel import FileModel

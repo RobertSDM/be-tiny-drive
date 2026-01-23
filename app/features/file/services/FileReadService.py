@@ -21,7 +21,7 @@ from app.database.repositories.file_repo import (
     search_files_by_ownerid_name_is_dir,
 )
 from app.core.constants import SUPA_BUCKETID
-from app.core.schemas import SortColumn, SortOrder
+from app.core.schemas import BreadcrumbResponse, SortColumn, SortOrder
 from app.utils.utils import (
     make_file_bucket_path,
 )
@@ -129,8 +129,10 @@ class FileReadService:
             user_query.order_by(FileModel.filename.asc()).limit(LIMIT_PER_SEARCH).all()
         )
 
-    def get_breadcrumb(self, db: Session, ownerid: str, id_: str) -> list[FileModel]:
-        breadcrumb = list()
+    def get_breadcrumb(
+        self, db: Session, ownerid: str, id_: str
+    ) -> List[BreadcrumbResponse]:
+        breadcrumb: List[BreadcrumbResponse] = list()
 
         def climb_filetree(fileid: str) -> FileModel:
             file = get_file_or_raise(db, ownerid, fileid, None)
@@ -139,9 +141,15 @@ class FileReadService:
                 climb_filetree(file.parentid)
 
             if not file.is_dir:
-                breadcrumb.append(file.filename + file.extension)
+                breadcrumb.append(
+                    BreadcrumbResponse(
+                        id=file.id, filename=file.filename + file.extension
+                    )
+                )
             else:
-                breadcrumb.append(file.filename)
+                breadcrumb.append(
+                    BreadcrumbResponse(id=file.id, filename=file.filename)
+                )
 
         climb_filetree(id_)
 
