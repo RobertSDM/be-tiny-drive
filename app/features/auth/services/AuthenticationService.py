@@ -13,7 +13,7 @@ class AuthenticationService:
     def __init__(self, auth_client: AuthenticationInterface):
         self.auth_client = auth_client
 
-    def register_serv(
+    def register(
         self, db: Session, username: str, email: str, password: str
     ) -> UserAccount:
         exists = db.query(account_by_email(db, email).exists()).scalar()
@@ -21,7 +21,7 @@ class AuthenticationService:
         if exists:
             raise AccountAlreadyExists()
 
-        resp = self.auth_client.AccountReturnable(email, password)
+        resp = self.auth_client.register(email, password, username)
         if not resp:
             return AccountRegistrationError()
 

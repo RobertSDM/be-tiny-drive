@@ -12,4 +12,4 @@ def account_by_email(db: Session, email: str) -> Query[UserAccount]:
 
 def account_save(db: Session, account: UserAccount) -> None:
     db.add(account)
-    db.commit()
+    db.flush()

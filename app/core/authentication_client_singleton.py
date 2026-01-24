@@ -5,17 +5,8 @@ from app.interfaces.authentication_interface import AuthenticationInterface
 from app.core.constants import MODE, SUPA_KEY, SUPA_URL
 
 
-class AuthClientSingleton:
-    _instance = None
-
-    @staticmethod
-    def get_instance() -> AuthenticationInterface:
-        if not AuthClientSingleton._instance:
-            if MODE == Mode.PROD.value:
-                AuthClientSingleton._instance = SupabaseAuthenticationClient(
-                    SUPA_URL, SUPA_KEY
-                )
-            else:
-                AuthClientSingleton._instance = MockAuthenticationClient()
-
-        return AuthClientSingleton._instance
+def get_auth_service() -> AuthenticationInterface:
+    # if MODE == Mode.value:
+        return SupabaseAuthenticationClient(SUPA_URL, SUPA_KEY)
+    # else:
+        # return MockAuthenticationClient()

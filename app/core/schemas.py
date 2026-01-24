@@ -47,13 +47,19 @@ class FileReturnable(BaseModel):
     created_at: datetime
 
 
-class AccountReturnable(BaseModel):
+class AccountDTO(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
     username: str
     email: str
     created_at: datetime
+
+
+class LoginData(BaseModel):
+    access_token: str
+    refresh_token: str
+    user: AccountDTO
 
 
 class BreadcrumbResponse(BaseModel):
