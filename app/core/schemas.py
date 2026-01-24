@@ -57,9 +57,9 @@ class AccountDTO(BaseModel):
 
 
 class LoginData(BaseModel):
-    access_token: str
-    refresh_token: str
-    user: AccountDTO
+        access_token: str
+        refresh_token: str
+        user: AccountDTO
 
 
 class BreadcrumbResponse(BaseModel):

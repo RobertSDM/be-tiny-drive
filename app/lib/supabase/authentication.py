@@ -1,12 +1,11 @@
-from typing import Any, Optional
-from jose import ExpiredSignatureError, JWTError, jwt
+from typing import Optional
+from gotrue.errors import AuthApiError
 from supabase import create_client
-from app.core.exceptions import InvalidJWTToken, JWTTokenExpired
 from app.core.schemas import AccountDTO, LoginData
 from app.interfaces.authentication_interface import (
     AuthenticationInterface,
 )
-from app.core.constants import JWT_SECRET
+from gotrue.types import UserResponse
 
 
 class SupabaseAuthenticationClient(AuthenticationInterface):
@@ -31,6 +30,7 @@ class SupabaseAuthenticationClient(AuthenticationInterface):
             id=resp.user.id,
             created_at=resp.user.created_at,
             email=resp.user.email,
+            username=username,
         )
 
     def login(self, email: str, password: str) -> Optional[LoginData]:
@@ -55,13 +55,24 @@ class SupabaseAuthenticationClient(AuthenticationInterface):
             ),
         )
 
-    def validateToken(self, token: str) -> dict[str, Any]:
+    def logout(self, jwt: str) -> bool:
         try:
-            resp = jwt.decode(
-                token, JWT_SECRET, algorithms="HS256", audience="authenticated"
+            self.suauth.admin.sign_out(
+                jwt,
             )
-            return resp
-        except JWTError:
-            raise InvalidJWTToken()
-        except ExpiredSignatureError:
-            raise JWTTokenExpired()
+            return True
+        except AuthApiError:
+            return False
+
+    def get_token_data(self, token: str) -> Optional[UserResponse]:
+        try:
+            user = self.suauth.get_user(token)
+
+            return AccountDTO(
+                created_at=user.user.created_at,
+                email=user.user.email,
+                username=user.user.user_metadata["username"],
+                id=user.user.id,
+            )
+        except AuthApiError:
+            return None

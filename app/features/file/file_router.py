@@ -21,7 +21,7 @@ from app.features.file.services import (
 from app.middlewares.authorization_middleware import authorization_middleware
 
 
-file_router = APIRouter(dependencies=[Depends(authorization_middleware)])
+file_router = APIRouter()
 
 
 class SaveFolder(BaseModel):

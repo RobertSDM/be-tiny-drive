@@ -29,7 +29,7 @@ class AuthenticationService:
             id=resp.id,
             username=username,
             email=resp.email,
-            creation_date=resp.creation_date,
+            created_at=resp.created_at,
         )
 
         return account_save(db, account)

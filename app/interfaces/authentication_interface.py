@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Optional
 
 from app.core.schemas import AccountDTO, LoginData
 
@@ -12,9 +12,13 @@ class AuthenticationInterface(ABC):
         pass
 
     @abstractmethod
+    def logout(self, email: str) -> bool:
+        pass
+
+    @abstractmethod
     def login(self, email, password: str) -> Optional[LoginData]:
         pass
 
     @abstractmethod
-    def validateToken(self, token: str) -> dict[str, Any]:
+    def get_token_data(self, token: str) -> Optional[AccountDTO]:
         pass

@@ -24,5 +24,5 @@ class MockAuthenticationClient(AuthenticationInterface):
             ),
         )
 
-    def validateToken(self, token) -> dict[str, Any]:
+    def get_token_data(self, token) -> dict[str, Any]:
         return {"sub": "7dc334cc-c103-4bd4-bdf4-dfc2a76f2f2d"}
