@@ -77,5 +77,8 @@ class SupabaseAuthenticationClient(AuthenticationInterface):
         except AuthApiError:
             return None
 
+    def delete(self, id_):
+        self.suauth.admin.delete_user(id_)
+
 
 supa_authentication = SupabaseAuthenticationClient(SUPA_URL, SUPA_KEY)

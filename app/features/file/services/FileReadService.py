@@ -1,13 +1,19 @@
 import io
 from typing import Any, Generator, List, Optional
 from sqlalchemy.orm import Session, Query
+from storage3.exceptions import StorageApiError
 
-from app.core.exceptions import FileBeParent, FileNotFound, ParentNotFound
+from app.core.exceptions import (
+    FileNotBeParent,
+    FolderNotFound,
+    PreviewNotFound,
+    PreviewNotSupported,
+)
 from app.features.file.utils import (
     apply_order_to_column,
     file_exists_or_raise,
     zip_folder,
-    column_and_order_from_file,
+    column_from_sort,
     get_file_or_raise,
     get_files,
     zip_files,
@@ -45,14 +51,13 @@ class FileReadService:
         order: SortOrder,
         sort: SortColumn,
     ) -> list[FileModel]:
-        column = column_and_order_from_file(sort)
-        column_with_order = apply_order_to_column(order, column)
+        column_with_order = apply_order_to_column(order, column_from_sort(sort))
 
         if parentid is not None:
             file = get_file_or_raise(db, ownerid, parentid, None)
 
             if not file.is_dir:
-                raise FileBeParent()
+                raise FileNotBeParent()
 
         query = file_by_ownerid_parentid(db, ownerid, parentid)
 
@@ -60,7 +65,7 @@ class FileReadService:
             files = db.query(query.exists()).scalar()
 
             if files is None:
-                raise ParentNotFound()
+                raise FolderNotFound()
 
         query = query.order_by(column_with_order)
         query = query.limit(LIMIT_PER_PAGE).offset(page * LIMIT_PER_PAGE)
@@ -71,7 +76,7 @@ class FileReadService:
         self, db, ownerid: str, fileids: List[str]
     ) -> tuple[Generator[bytes, Any, None], FileModel]:
         """
-        Get a stream of a file or a zip containing all files inside a folder
+        Returns a stream of a file or a zip containing all files inside a folder
         """
 
         if len(fileids) == 0:
@@ -112,11 +117,13 @@ class FileReadService:
         bucket_path = make_file_bucket_path(ownerid, id_, "preview")
 
         time_to_expire = 3600  # one hour
-        url = supabase_storage_client.signedURL(
-            SUPA_BUCKETID, bucket_path, time_to_expire
-        )
-
-        return url
+        try:
+            return supabase_storage_client.signedURL(
+                SUPA_BUCKETID, bucket_path, time_to_expire
+            )
+        except StorageApiError as e:
+            if e.code == "NoSuchUpload":
+                raise PreviewNotFound()
 
     def search(
         self, db: Session, ownerid: str, query: str, is_dir: Optional[bool]

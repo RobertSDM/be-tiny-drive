@@ -11,6 +11,9 @@ class AuthenticationInterface(ABC):
     ) -> Optional[AccountDTO]: ...
 
     @abstractmethod
+    def delete(self, id_: str) -> None: ...
+
+    @abstractmethod
     def login(self, email: str, password: str) -> Optional[LoginData]: ...
 
     @abstractmethod

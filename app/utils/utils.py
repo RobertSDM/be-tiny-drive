@@ -3,23 +3,7 @@ import math
 import re
 from PIL import ImageOps
 from PIL.ImageFile import ImageFile
-from typing import Callable, Literal
-
-from fastapi.logger import logger
-
-
-def pipeline(*funcs: Callable):
-    def run(*args, **kwargs):
-        result = funcs[0](*args, **kwargs)
-        for func in funcs[1:]:
-            if result:
-                result = func(result)
-            else:
-                result = func()
-
-        return result
-
-    return run
+from typing import Literal
 
 
 def image_to_jpg(im: ImageFile, quality: int = 70) -> io.BytesIO:
@@ -75,8 +59,8 @@ def make_file_bucket_path(
 
 
 def validate_filename(name: str) -> bool:
-    name_regex = r"^[^\\/:*?\"<>|]+$"
 
+    name_regex = r"^[^\\/:*?\"<>|]+$"
     # 260 is the maximum filename length in windows.
     # It's the largest of other OS
     if name == "" or len(name) > 260:

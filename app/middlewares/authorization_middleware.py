@@ -4,7 +4,7 @@ import re
 from app.core.exceptions import (
     AccountNotExists,
     NoAuthorizationHeader,
-    IndentityMismatch,
+    AccountMismatch,
 )
 from app.core.constants import non_protected_routes
 from app.lib.supabase.authentication import supa_authentication
@@ -29,6 +29,6 @@ async def authorization_middleware(
 
     ownerid = req.path_params.get("ownerid")
     if ownerid and ownerid != data.id:
-        raise IndentityMismatch()
+        raise AccountMismatch()
 
     req.state.owner = data

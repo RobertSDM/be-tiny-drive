@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional, TypeVar
+from typing import List, Literal, Optional, TypeVar
 from pydantic import BaseModel, ConfigDict
 
 T = TypeVar("T")
@@ -57,9 +57,9 @@ class AccountDTO(BaseModel):
 
 
 class LoginData(BaseModel):
-        access_token: str
-        refresh_token: str
-        user: AccountDTO
+    access_token: str
+    refresh_token: str
+    user: AccountDTO
 
 
 class BreadcrumbResponse(BaseModel):

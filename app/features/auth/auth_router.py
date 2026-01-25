@@ -1,12 +1,9 @@
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import ORJSONResponse
-import gotrue
-import gotrue.errors
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 
 from app.core.exceptions import NoAuthorizationHeader
-from app.core.schemas import ErrorResponse
 from app.lib.sqlalchemy import client
 from app.features.auth.services.AuthenticationService import AuthenticationService
 from app.lib.supabase.authentication import supa_authentication
@@ -24,16 +21,11 @@ def login_route(
     body: LoginBody,
     response: ORJSONResponse,
 ):
-    try:
-        user_data = AuthenticationService(supa_authentication).login(
-            body.email, body.password
-        )
+    user_data = AuthenticationService(supa_authentication).login(
+        body.email, body.password
+    )
 
-        return user_data
-    except gotrue.errors.AuthApiError:
-        response.status_code = 422
-
-        return ErrorResponse(message="Email or password are wrong")
+    return user_data
 
 
 @auth_router.post("/logout")
@@ -45,10 +37,7 @@ def logout_route(request: Request):
 
     jwt = authorization.replace("Bearer ", "")
 
-    isLoggedOut = AuthenticationService(supa_authentication).logout(jwt)
-
-    if not isLoggedOut:
-        return Response(status_code=404)
+    AuthenticationService(supa_authentication).logout(jwt)
 
     return Response(status_code=200)
 

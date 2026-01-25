@@ -10,8 +10,7 @@ from app.core.constants import SUPA_BUCKETID
 from app.core.exceptions import (
     FileAlreadyExists,
     FileNotFound,
-    NotFound,
-    ParentNotFound,
+    FolderNotFound,
 )
 from app.core.schemas import SortColumn, SortOrder
 from app.database.models.FileModel import FileModel
@@ -58,7 +57,10 @@ def get_file_or_raise(
         file = file_by_id_ownerid_is_dir(db, id_, ownerid, is_dir).first()
 
     if not file:
-        raise NotFound(f"The {"file" if not is_dir else "folder"} was not found")
+        if is_dir:
+            raise FolderNotFound()
+        else:
+            raise FileNotFound()
 
     return file
 
@@ -99,7 +101,7 @@ def file_exists_or_raise(
         if not is_dir:
             raise FileNotFound()
         else:
-            raise ParentNotFound()
+            raise FolderNotFound()
 
 
 def zip_folder(db: Session, ownerid: str, root: FileModel) -> io.BytesIO:
@@ -140,7 +142,7 @@ def stream_buffer(buffer: BinaryIO, chunk: int) -> Generator[bytes, None, None]:
         yield b
 
 
-def column_and_order_from_file(type_: SortColumn) -> InstrumentedAttribute:
+def column_from_sort(type_: SortColumn) -> InstrumentedAttribute:
     """
     Return the [File] table column based on the [SortColumn]
     """
@@ -171,7 +173,7 @@ def get_file_parent_or_raise(db: Session, ownerid: str, parentid: str) -> FileMo
     folder = file_by_id_ownerid(db, parentid, ownerid).first()
 
     if not folder:
-        raise ParentNotFound()
+        raise FolderNotFound()
 
     return folder
 

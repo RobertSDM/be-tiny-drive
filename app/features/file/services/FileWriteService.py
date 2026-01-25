@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import (
     DomainError,
-    FileValidationError,
     InvalidFileName,
 )
 from app.lib.supabase.storage import supabase_storage_client
@@ -154,7 +153,7 @@ class FileWriteService:
 
                 # TODO: find other way to treat max depth
                 if len(folders) > MAX_RECURSIVE_DEPTH:
-                    raise FileValidationError(
+                    raise DomainError(
                         f"The item '{file.filename + file.extension}' exceeds the maximum depth {MAX_RECURSIVE_DEPTH}"
                     )
 

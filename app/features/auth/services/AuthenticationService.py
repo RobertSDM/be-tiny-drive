@@ -1,7 +1,13 @@
+from gotrue.errors import AuthApiError
+from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm import Session
-from supabase import SupabaseAuthClient
-from app.core.exceptions import AccountAlreadyExists, AccountRegistrationError
-from app.core.interfaces import AuthenticationInterface
+from app.core.exceptions import (
+    AccountAlreadyExists,
+    AccountRegistrationError,
+    DomainError,
+    WrongAuthData,
+)
+from app.core.interfaces.AuthenticationInterface import AuthenticationInterface
 from app.database.models.UserAccount import UserAccount
 from app.database.repositories.account_repo import (
     account_by_email,
@@ -15,7 +21,10 @@ class AuthenticationService:
         self.auth_client = auth_client
 
     def login(self, email: str, password: str):
-        return self.auth_client.login(email, password)
+        try:
+            return self.auth_client.login(email, password)
+        except AuthApiError:
+            raise WrongAuthData()
 
     def register(
         self, db: Session, username: str, email: str, password: str
@@ -36,7 +45,13 @@ class AuthenticationService:
             created_at=resp.created_at,
         )
 
-        return account_save(db, account)
+        try:
+            return account_save(db, account)
+        except InvalidRequestError:
+            self.auth_client.delete(resp.id)
 
     def logout(self, jwt: str):
-        return self.auth_client.logout(jwt)
+        try:
+            return self.auth_client.logout(jwt)
+        except AuthApiError:
+            raise DomainError("Error loging out the user", 500)

@@ -2,6 +2,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 
+from app.core.exceptions import FileNotFound
 from app.database.models import FileModel
 from app.database.repositories.file_repo import (
     file_by_ownerid_parentid,
