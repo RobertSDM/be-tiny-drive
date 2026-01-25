@@ -8,17 +8,13 @@ class AuthenticationInterface(ABC):
     @abstractmethod
     def register(
         self, email: str, password: str, username: str
-    ) -> Optional[AccountDTO]:
-        pass
+    ) -> Optional[AccountDTO]: ...
 
     @abstractmethod
-    def logout(self, email: str) -> bool:
-        pass
+    def login(self, email: str, password: str) -> Optional[LoginData]: ...
 
     @abstractmethod
-    def login(self, email, password: str) -> Optional[LoginData]:
-        pass
+    def logout(self, jwt: str) -> bool: ...
 
     @abstractmethod
-    def get_token_data(self, token: str) -> Optional[AccountDTO]:
-        pass
+    def get_token_data(self, token: str) -> Optional[AccountDTO]: ...

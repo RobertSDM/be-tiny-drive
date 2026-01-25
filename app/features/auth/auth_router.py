@@ -2,17 +2,14 @@ from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import ORJSONResponse
 import gotrue
 import gotrue.errors
-from pydantic import BaseModel, Field
-from app.core.authentication_client_singleton import (
-    get_auth_service,
-)
-from app.core.exceptions import NoAuthorizationHeader
-from app.core.schemas import AccountDTO, ErrorResponse
-from app.interfaces.authentication_interface import AuthenticationInterface
-from app.lib.sqlalchemy import client
 from sqlalchemy.orm import Session
+from pydantic import BaseModel, Field
 
+from app.core.exceptions import NoAuthorizationHeader
+from app.core.schemas import ErrorResponse
+from app.lib.sqlalchemy import client
 from app.features.auth.services.AuthenticationService import AuthenticationService
+from app.lib.supabase.authentication import supa_authentication
 
 auth_router = APIRouter()
 
@@ -26,16 +23,17 @@ class LoginBody(BaseModel):
 def login_route(
     body: LoginBody,
     response: ORJSONResponse,
-    auth_client: AuthenticationInterface = Depends(get_auth_service),
 ):
     try:
-        user_data = auth_client.login(body.email, body.password)
+        user_data = AuthenticationService(supa_authentication).login(
+            body.email, body.password
+        )
+
+        return user_data
     except gotrue.errors.AuthApiError:
         response.status_code = 422
 
         return ErrorResponse(message="Email or password are wrong")
-
-    return user_data
 
 
 @auth_router.post("/logout")
@@ -47,7 +45,7 @@ def logout_route(request: Request):
 
     jwt = authorization.replace("Bearer ", "")
 
-    isLoggedOut = get_auth_service().logout(jwt)
+    isLoggedOut = AuthenticationService(supa_authentication).logout(jwt)
 
     if not isLoggedOut:
         return Response(status_code=404)
@@ -66,7 +64,7 @@ def register_route(
     body: RegisterBody,
     db: Session = Depends(client.get_session),
 ):
-    auth_service = AuthenticationService(get_auth_service())
+    auth_service = AuthenticationService(supa_authentication)
     account = auth_service.register(db, body.username, body.email, body.password)
 
     return ORJSONResponse(account)

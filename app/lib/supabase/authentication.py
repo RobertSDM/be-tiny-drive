@@ -1,11 +1,11 @@
 from typing import Optional
 from gotrue.errors import AuthApiError
 from supabase import create_client
-from app.core.schemas import AccountDTO, LoginData
-from app.interfaces.authentication_interface import (
-    AuthenticationInterface,
-)
 from gotrue.types import UserResponse
+
+from app.core.constants import SUPA_KEY, SUPA_URL
+from app.core.schemas import AccountDTO, LoginData
+from app.core.interfaces.AuthenticationInterface import AuthenticationInterface
 
 
 class SupabaseAuthenticationClient(AuthenticationInterface):
@@ -76,3 +76,6 @@ class SupabaseAuthenticationClient(AuthenticationInterface):
             )
         except AuthApiError:
             return None
+
+
+supa_authentication = SupabaseAuthenticationClient(SUPA_URL, SUPA_KEY)
