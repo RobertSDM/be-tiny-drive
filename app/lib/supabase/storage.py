@@ -43,6 +43,9 @@ class SupabaseStorageClient:
             lambda: self._storage.from_(bucketid).download(fileid)
         )
 
+    def move(self, bucketid: str, from_: str, to: str):
+        self._run_and_retry(lambda: self._storage.from_(bucketid).move(from_, to))
+
     def signedURL(
         self, buckedid: int, fileid: int, expires_in: int, download: str | bool = False
     ) -> str:

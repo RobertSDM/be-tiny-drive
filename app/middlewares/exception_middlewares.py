@@ -7,6 +7,7 @@ from app.core.exceptions import DomainError
 
 
 def pydantic_error_handler(_: Request, exc: RequestValidationError):
+    print(exc)
     return ORJSONResponse(
         ErrorResponse(message="Error on server side, not your fault").model_dump(),
         status_code=500,

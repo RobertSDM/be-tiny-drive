@@ -31,7 +31,7 @@ class FolderNotFound(DomainError):
 
 class FileNotFound(DomainError):
     def __init__(self):
-        super().__init__(f"The file not found")
+        super().__init__(f"The file not found", 404)
 
 
 class FileDeleteError(DomainError):

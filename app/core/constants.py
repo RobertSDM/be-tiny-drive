@@ -35,4 +35,4 @@ MAX_RECURSIVE_DEPTH = 3
 
 ## API
 
-non_protected_routes = ["/auth/*", "/"]
+non_protected_routes = ["/auth/*", "^/$"]

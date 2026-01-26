@@ -3,6 +3,7 @@ import re
 
 from app.core.exceptions import (
     AccountNotExists,
+    DomainError,
     NoAuthorizationHeader,
     AccountMismatch,
 )
@@ -25,7 +26,7 @@ async def authorization_middleware(
     data = supa_authentication.get_token_data(token)
 
     if not data:
-        raise AccountNotExists()
+        raise DomainError("The JWT Token is invalid", 422)
 
     ownerid = req.path_params.get("ownerid")
     if ownerid and ownerid != data.id:

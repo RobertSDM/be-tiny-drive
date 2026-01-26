@@ -45,7 +45,9 @@ def byte_formatting(byte_size: int):
 
 
 def make_file_bucket_path(
-    ownerid: str, fileid: str, type_: Literal["file", "preview"]
+    ownerid: str,
+    fileid: str,
+    type_: Literal["file", "preview", "trash+preview", "trash+file"],
 ) -> str:
     """
     Make the bucket path for the file storage
@@ -56,6 +58,10 @@ def make_file_bucket_path(
             return f"user-{ownerid}/drive/{fileid}"
         case "preview":
             return f"user-{ownerid}/preview/{fileid}"
+        case "trash+file":
+            return f"user-{ownerid}/trash/drive/{fileid}"
+        case "trash+preview":
+            return f"user-{ownerid}/trash/preview/{fileid}"
 
 
 def validate_filename(name: str) -> bool:
