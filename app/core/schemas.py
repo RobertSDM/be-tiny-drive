@@ -36,6 +36,7 @@ class FileReturnable(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
+    parentid: Optional[str]
     filename: str
     extension: str
     size: int

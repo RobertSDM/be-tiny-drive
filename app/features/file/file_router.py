@@ -8,7 +8,7 @@ from fastapi.responses import (
 from pydantic import BaseModel
 from pytest import Session
 
-from app.core.schemas import FileResponseStructure
+from app.core.schemas import FileResponseStructure, FileReturnable
 from app.database.models import FileModel
 from app.lib.sqlalchemy import client
 from app.core.schemas import FileType, SortColumn, SortOrder
@@ -40,7 +40,9 @@ def save_folder_route(
 ):
     file = file_service.save_folder(db, ownerid, parentid, body.filename)
 
-    return ORJSONResponse(FileResponseStructure(files=[file]).model_dump())
+    return ORJSONResponse(
+        FileResponseStructure(files=[FileReturnable.model_validate(file)]).model_dump()
+    )
 
 
 @file_router.post("/account/{ownerid}/parent")
@@ -63,7 +65,11 @@ def save_file_route(
 
     return ORJSONResponse(
         FileResponseStructure(
-            files=[file for file in files if file.parentid == parentid]
+            files=[
+                FileReturnable.model_validate(file)
+                for file in files
+                if file.parentid == parentid
+            ]
         ).model_dump()
     )
 
@@ -79,8 +85,12 @@ def get_files_route(
     db=Depends(client.get_session),
     file_service: FileReadService = Depends(FileReadService),
 ):
-    items = file_service.get_files_in_folder(db, ownerid, parentid, p, order, sort)
-    return ORJSONResponse(FileResponseStructure(files=items).model_dump())
+    files = file_service.get_files_in_folder(db, ownerid, parentid, p, order, sort)
+    return ORJSONResponse(
+        FileResponseStructure(
+            files=[FileReturnable.model_validate(file) for file in files]
+        ).model_dump()
+    )
 
 
 @file_router.get("/account/{ownerid}/search")
@@ -95,7 +105,11 @@ def item_search_route(
         db, ownerid, q, type_ == FileType.FOLDER if type_ is not None else None
     )
 
-    return ORJSONResponse(FileResponseStructure(files=files).model_dump())
+    return ORJSONResponse(
+        FileResponseStructure(
+            files=[FileReturnable.model_validate(file) for file in files]
+        ).model_dump()
+    )
 
 
 @file_router.get("/{id}/account/{ownerid}")
@@ -105,8 +119,10 @@ def get_file_route(
     db=Depends(client.get_session),
     file_service: FileReadService = Depends(FileReadService),
 ):
-    item = file_service.get_file(db, ownerid, id)
-    return ORJSONResponse(FileResponseStructure(files=[item]).model_dump())
+    file = file_service.get_file(db, ownerid, id)
+    return ORJSONResponse(
+        FileResponseStructure(files=[FileReturnable.model_validate(file)]).model_dump()
+    )
 
 
 class DownloadRequest(BaseModel):
@@ -177,7 +193,9 @@ def update_filename_route(
 ):
     file = file_service.update_filename(db, id, ownerid, body.filename)
 
-    return ORJSONResponse(FileResponseStructure(files=[file]).model_dump())
+    return ORJSONResponse(
+        FileResponseStructure(files=[FileReturnable.model_validate(file)]).model_dump()
+    )
 
 
 class DeleteItemsRequest(BaseModel):
@@ -192,7 +210,11 @@ def delete_items_route(
     file_service: FileDeleteService = Depends(FileDeleteService),
 ):
     files = file_service.delete_files(db, ownerid, body.fileids)
-    return ORJSONResponse(FileResponseStructure(files=files).model_dump())
+    return ORJSONResponse(
+        FileResponseStructure(
+            files=[FileReturnable.model_validate(file) for file in files]
+        ).model_dump()
+    )
 
 
 @file_router.get("/{id}/account/{ownerid}/breadcrumb")

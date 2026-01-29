@@ -1,6 +1,6 @@
 import copy
 import io
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 from uuid import uuid4
 
 from PIL import Image
@@ -58,9 +58,8 @@ class FileWriteService:
             )
             folders.append(folder)
 
-        name_splited = dirs[-1].split(".")
-        name = ".".join(name_splited[:-1])
-        extension = f".{name_splited[-1]}" if len(name_splited) > 1 else ""
+        name, extension = self._get_filename(metadata.filename)
+
         size, prefix = byte_formatting(metadata.size)
 
         file = FileModel(
@@ -120,6 +119,22 @@ class FileWriteService:
 
         return curr_parentid
 
+    def _get_filename(self, filepath: str) -> Tuple[str, str]:
+        file_base_name = filepath.split("/")[-1]
+        splited_name = file_base_name[1:].split(".")
+        if len(splited_name) > 1:
+            name = file_base_name[: -len(splited_name[-1]) - 1]
+        else:
+            name = file_base_name
+
+        extension = (
+            f".{file_base_name[len(file_base_name) - len(splited_name[-1]):]}"
+            if len(splited_name) > 1
+            else ""
+        )
+
+        return name, extension
+
     def save_file(
         self,
         db: Session,
@@ -131,8 +146,7 @@ class FileWriteService:
 
         try:
             for meta in metadata:
-                # Extracting metadata
-                name = meta.filename.split("/")[-1].split(".")[0]
+                name, _ = self._get_filename(meta.filename)
 
                 if meta.size > MAX_FILESIZE:
                     raise DomainError(
