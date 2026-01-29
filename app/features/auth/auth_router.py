@@ -28,6 +28,19 @@ def login_route(
     return user_data
 
 
+class RefreshBody(BaseModel):
+    token: str
+
+
+@auth_router.post("/refresh", response_class=ORJSONResponse)
+def refresh_route(body: RefreshBody):
+    return (
+        AuthenticationService(supa_authentication)
+        .refresh_session(body.token)
+        .model_dump()
+    )
+
+
 @auth_router.post("/logout")
 def logout_route(request: Request):
     authorization = request.headers.get("Authorization")

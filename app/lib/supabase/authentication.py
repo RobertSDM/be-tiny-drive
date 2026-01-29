@@ -4,7 +4,7 @@ from supabase import create_client
 from gotrue.types import UserResponse
 
 from app.core.constants import SUPA_KEY, SUPA_URL
-from app.core.schemas import AccountDTO, LoginData
+from app.core.schemas import AccountDTO, LoginData, RefreshSessionData
 from app.core.interfaces.AuthenticationInterface import AuthenticationInterface
 
 
@@ -63,6 +63,17 @@ class SupabaseAuthenticationClient(AuthenticationInterface):
             return True
         except AuthApiError:
             return False
+
+    def refresh(self, token) -> Optional[RefreshSessionData]:
+        resp = self.suauth.refresh_session(token)
+
+        if not resp.user:
+            return None
+
+        return RefreshSessionData(
+            access_token=resp.session.access_token,
+            refresh_token=resp.session.refresh_token,
+        )
 
     def get_token_data(self, token: str) -> Optional[UserResponse]:
         try:

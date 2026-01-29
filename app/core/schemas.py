@@ -63,6 +63,11 @@ class LoginData(BaseModel):
     user: AccountDTO
 
 
+class RefreshSessionData(BaseModel):
+    access_token: str
+    refresh_token: str
+
+
 class BreadcrumbResponse(BaseModel):
     id: str
     filename: str

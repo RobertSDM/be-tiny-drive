@@ -8,6 +8,7 @@ from app.core.exceptions import (
     WrongAuthData,
 )
 from app.core.interfaces.AuthenticationInterface import AuthenticationInterface
+from app.core.schemas import RefreshSessionData
 from app.database.models.UserAccount import UserAccount
 from app.database.repositories.account_repo import (
     account_by_email,
@@ -25,6 +26,12 @@ class AuthenticationService:
             return self.auth_client.login(email, password)
         except AuthApiError:
             raise WrongAuthData()
+
+    def refresh_session(self, token: str) -> RefreshSessionData:
+        try:
+            return self.auth_client.refresh(token)
+        except AuthApiError:
+            raise DomainError("Error refreshing the session", 500)
 
     def register(
         self, db: Session, username: str, email: str, password: str

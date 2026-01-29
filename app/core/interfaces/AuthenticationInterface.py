@@ -21,3 +21,6 @@ class AuthenticationInterface(ABC):
 
     @abstractmethod
     def get_token_data(self, token: str) -> Optional[AccountDTO]: ...
+
+    @abstractmethod
+    def refresh(self, token: str) -> Optional[AccountDTO]: ...
