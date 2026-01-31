@@ -1,0 +1,11 @@
+{
+    
+    "configurations": [
+        {
+            "name": "FastAPI with make",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "main",
+        }
+    ],
+}

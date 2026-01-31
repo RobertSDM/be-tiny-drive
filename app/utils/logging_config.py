@@ -1,3 +1,3 @@
 import logging
 
-logger = logging.getLogger("uvicorn.debug")
+logger = logging.getLogger(__name__)
