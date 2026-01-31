@@ -1,38 +1,9 @@
 import io
 import math
+import re
 from PIL import ImageOps
 from PIL.ImageFile import ImageFile
-import pillow_avif
-from typing import Callable
-
-import zstandard
-
-from app.database.models.item_model import Item
-from app.decorators.timer import timer
-
-
-def pipeline(*funcs: Callable):
-    def run(*args, **kwargs):
-        result = funcs[0](*args, **kwargs)
-        for func in funcs[1:]:
-            if result:
-                result = func(result)
-            else:
-                result = func()
-
-        return result
-
-    return run
-
-
-def compress_file(file: bytes) -> bytes:
-    cctx = zstandard.ZstdCompressor()
-    return cctx.compress(file)
-
-
-def decompress(file: bytes) -> bytes:
-    dctx = zstandard.ZstdDecompressor()
-    return dctx.decompress(file)
+from typing import Literal
 
 
 def image_to_jpg(im: ImageFile, quality: int = 70) -> io.BytesIO:
@@ -58,9 +29,9 @@ def resize_image(im: ImageFile, size: tuple[int, int] = (1920, 1080)) -> ImageFi
     return ImageOps.contain(im, size)
 
 
-def normalize_file_size(byte_size: int):
+def byte_formatting(byte_size: int):
     """
-    Transform a size in bytes into a normalized size with its prefix
+    Format the size to be more readable
     """
 
     prefix = ["B", "KB", "MB", "GB"]
@@ -73,13 +44,32 @@ def normalize_file_size(byte_size: int):
         size /= 1024
 
 
-def make_bucket_file_path(item: Item) -> str:
+def make_file_bucket_path(
+    ownerid: str,
+    fileid: str,
+    type_: Literal["file", "preview", "trash+preview", "trash+file"],
+) -> str:
     """
-    Make the bucket path for a storage item file
+    Make the bucket path for the file storage
     """
 
-    return f"user-{item.ownerid}/drive/{item.id}"
+    match type_:
+        case "file":
+            return f"user-{ownerid}/drive/{fileid}"
+        case "preview":
+            return f"user-{ownerid}/preview/{fileid}"
+        case "trash+file":
+            return f"user-{ownerid}/trash/drive/{fileid}"
+        case "trash+preview":
+            return f"user-{ownerid}/trash/preview/{fileid}"
 
 
-def make_bucket_file_preview_path(item: Item) -> str:
-    return f"user-{item.ownerid}/preview/{item.id}"
+def validate_filename(name: str) -> bool:
+
+    name_regex = r"^[\^\<\>\*\?\\\|\"\'\:]$"
+    # 260 is the maximum filename length in windows.
+    # It's the largest of other OS
+    if name == "" or len(name) > 260:
+        return False
+
+    return re.match(name_regex, name) is None

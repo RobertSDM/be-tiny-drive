@@ -1,17 +1,15 @@
-from app.decorators.timer import timer
-from ..models import Account
+from app.database.models import UserAccount
 from sqlalchemy.orm import Session, Query
 
 
-def account_by_id(db: Session, id: str) -> Query[Account]:
-    return db.query(Account).where(Account.id == id)
+def account_by_id(db: Session, id: str) -> Query[UserAccount]:
+    return db.query(UserAccount).where(UserAccount.id == id)
 
 
-def account_by_email(db: Session, email: str) -> Query[Account]:
-    return db.query(Account).where(Account.email == email)
+def account_by_email(db: Session, email: str) -> Query[UserAccount]:
+    return db.query(UserAccount).where(UserAccount.email == email)
 
 
-def account_save(db: Session, account: Account) -> Account:
+def account_save(db: Session, account: UserAccount) -> None:
     db.add(account)
-    db.commit()
-    return account
+    db.flush()

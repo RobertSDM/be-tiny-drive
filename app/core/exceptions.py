@@ -1,26 +1,21 @@
+from typing import Literal
+
+
 class DomainError(Exception):
+    """
+    Represents an error from business logic
+    """
+
     def __init__(self, message: str, status: int):
         self.message = message
         self.status = status
         super().__init__(self.message)
 
 
-class FeatureNotSupported(DomainError):
+class NotSupported(DomainError):
     def __init__(self):
-        self.message = "Feature not supported yet"
-        super().__init__(self.message, 500)
-
-
-class PreviewStillProcessing(DomainError):
-    def __init__(self):
-        self.message = "The requested preview still processing. Wait a few seconds"
-        super().__init__(self.message, 202)
-
-
-class ItemKeyExistsInStorage(DomainError):
-    def __init__(self):
-        self.message = "Error saving the file"
-        super().__init__(self.message, 500)
+        self.message = "The resource you are trying to access is not supported yet"
+        super().__init__(self.message, 501)
 
 
 class AccountAlreadyExists(DomainError):
@@ -29,80 +24,84 @@ class AccountAlreadyExists(DomainError):
         super().__init__(self.message, 409)
 
 
-class ParentFolderNotFound(DomainError):
+class FolderNotFound(DomainError):
     def __init__(self):
-        self.message = f"The parent folder was not found"
-        super().__init__(self.message, 404)
+        super().__init__("The parent was not found", 404)
 
 
-class ItemNotFound(DomainError):
+class FileNotFound(DomainError):
     def __init__(self):
-        self.message = f"The item was not found"
-        super().__init__(self.message, 404)
+        super().__init__(f"The file not found", 404)
 
 
-class ItemDeleteError(DomainError):
+class FileDeleteError(DomainError):
     def __init__(self):
-        self.message = f"Error deleting the item"
-        super().__init__(self.message, 500)
+        super().__init__("Error while deleting", 500)
 
 
-class FileCannotBeParent(DomainError):
+class FileNotBeParent(DomainError):
     def __init__(self):
-        self.message = f"A file cannot be parent of a file or folder"
+        super().__init__("A file cannot be a parent", 409)
+
+
+class FileAlreadyExists(DomainError):
+    def __init__(self, name: str, type_: Literal["file", "folder"]):
+        self.message = f"The {type_} named '{name}' already exists in the folder"
         super().__init__(self.message, 409)
 
 
-class ItemExistsInFolder(DomainError):
-    def __init__(self, name: str, type: str):
-        self.message = f"The {type.lower()} named '{name}' already exists in the folder"
-        super().__init__(self.message, 409)
-
-
-class AccountDoesNotExists(DomainError):
+class AccountNotExists(DomainError):
     def __init__(self):
-        self.message = f"The account don't exist"
-        super().__init__(self.message, 404)
+        super().__init__("The account don't exist", 404)
 
 
 class AccountRegistrationError(DomainError):
     def __init__(self):
-        self.message = "Error registring the user"
-        super().__init__(self.message, 500)
-
-
-class InvalidPassword(DomainError):
-    def __init__(self):
-        self.message = f"The password is invalid"
-        super().__init__(self.message, 422)
+        super().__init__("Error registering the account", 500)
 
 
 class NoAuthorizationHeader(DomainError):
     def __init__(self):
-        self.message = "The authorization header was not present in the request"
-        super().__init__(self.message, 422)
+        super().__init__("The authorization header was not present in the request", 401)
 
 
-class InvalidItemToPreview(DomainError):
+class PreviewNotSupported(DomainError):
     def __init__(self):
-        self.message = "The item is not elegible to preview"
-        super().__init__(self.message, 422)
+        super().__init__(
+            "TinyDrive don't support previews for this file extension", 501
+        )
 
 
-class IndentityMismatch(DomainError):
-
+class PreviewNotFound(DomainError):
     def __init__(self):
-        self.message = "Account mismatch"
-        super().__init__(self.message, 401)
+        super().__init__(
+            "Preview not found.", 501
+        )
+
+
+class AccountMismatch(DomainError):
+    def __init__(self):
+        super().__init__("Account mismatch", 409)
 
 
 class InvalidJWTToken(DomainError):
     def __init__(self):
-        self.message = "The token is invalid"
-        super().__init__(self.message, 422)
+        super().__init__("The token is invalid", 401)
 
 
 class JWTTokenExpired(DomainError):
     def __init__(self):
-        self.message = "The token has expired"
-        super().__init__(self.message, 401)
+        super().__init__("The token has expired", 401)
+
+
+class InvalidFileName(DomainError):
+    def __init__(self, name: str):
+        super().__init__(
+            f'The filename "{name}" is not valid. The characters: "\\", "/", ":", "*", "?", \'"\', "<", ">" and "|", are not allowed',
+            422,
+        )
+
+
+class WrongAuthData(DomainError):
+    def __init__(self):
+        super().__init__("Email or password are wrong", 422)
