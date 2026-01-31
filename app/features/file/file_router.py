@@ -148,11 +148,13 @@ def download_route(
             },
         )
 
+    filename = f'{file.filename}.zip' if file.is_dir else 'content.zip'
+
     return StreamingResponse(
         content,
         media_type="application/zip",
         headers={
-            "Content-Disposition": f'attachment; filename="{f'{file.filename}.zip' if file.is_dir else 'content.zip'}"',
+            "Content-Disposition": f'attachment; filename="{filename}"',
             "Access-Control-Expose-Headers": "Content-Disposition",
         },
     )
