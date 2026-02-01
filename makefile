@@ -17,3 +17,7 @@ mock-db:
 	timeout 3 && \
 	alembic upgrade head && \
 	.\venv\Scripts\python.exe -m app.scripts.load_mock_data
+
+.PHONY: dump-dep
+dump-dep:
+	.\venv\Scripts\python.exe -m pip freeze > requirements.txt
