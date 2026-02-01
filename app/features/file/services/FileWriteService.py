@@ -28,7 +28,7 @@ from app.utils.utils import (
     byte_formatting,
     resize_image,
 )
-from app.core.constants import MAX_FILESIZE, MAX_RECURSIVE_DEPTH, SUPA_BUCKETID
+from app.core.constants import MAX_FILESIZE, MAX_RECURSIVE_DEPTH, SUPA_BUCKETID, SUPPORTED_PREVIEW_TYPES
 from app.utils.utils import validate_filename
 
 
@@ -246,7 +246,7 @@ class FileWriteService:
         for file in files:
             session.add(file)
 
-            if not file.content_type.startswith("image"):
+            if not file.content_type in SUPPORTED_PREVIEW_TYPES:
                 return
 
             bytedata = supabase_storage_client.download(
