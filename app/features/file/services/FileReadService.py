@@ -26,7 +26,7 @@ from app.database.repositories.file_repo import (
     file_by_ownerid_parentid,
     search_files_by_ownerid_name_is_dir,
 )
-from app.core.constants import SUPA_BUCKETID
+from app.core.constants import SUPA_BUCKETID, SUPPORTED_PREVIEW_TYPES
 from app.core.schemas import BreadcrumbResponse, SortColumn, SortOrder
 from app.utils.utils import (
     make_file_bucket_path,
@@ -112,7 +112,10 @@ class FileReadService:
         return stream_buffer(buffer, self.STREAM_SIZE)
 
     def preview(self, db: Session, ownerid: str, id_: str) -> str:
-        file_exists_or_raise(db, ownerid, id_)
+        file = get_file_or_raise(db, ownerid, id_)
+
+        if file.content_type not in SUPPORTED_PREVIEW_TYPES:
+            raise PreviewNotSupported()
 
         bucket_path = make_file_bucket_path(ownerid, id_, "preview")
 
