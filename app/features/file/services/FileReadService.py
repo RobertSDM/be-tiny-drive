@@ -2,7 +2,7 @@ import io
 from typing import Any, Generator, List, Optional
 from sqlalchemy.orm import Session, Query
 from storage3.exceptions import StorageApiError
-
+from sqlalchemy import case, func
 from app.core.exceptions import (
     FileNotBeParent,
     FolderNotFound,
@@ -11,7 +11,6 @@ from app.core.exceptions import (
 )
 from app.features.file.utils import (
     apply_order_to_column,
-    file_exists_or_raise,
     zip_folder,
     column_from_sort,
     get_file_or_raise,
@@ -51,7 +50,8 @@ class FileReadService:
         order: SortOrder,
         sort: SortColumn,
     ) -> list[FileModel]:
-        column_with_order = apply_order_to_column(order, column_from_sort(sort))
+        column = column_from_sort(sort)
+        column_with_order = apply_order_to_column(order, column)
 
         if parentid is not None:
             file = get_file_or_raise(db, ownerid, parentid, None)
@@ -67,7 +67,16 @@ class FileReadService:
             if files is None:
                 raise FolderNotFound()
 
-        query = query.order_by(column_with_order)
+        query = query.order_by(
+            column_with_order
+            if sort != SortColumn.SIZE
+            else case(
+                (func.lower(FileModel.size_prefix) == "b", column),
+                (func.lower(FileModel.size_prefix) == "kb", 1024 * column),
+                (func.lower(FileModel.size_prefix) == "mb", 1024 * 1024 * column),
+                else_=column,
+            )
+        )
         query = query.limit(LIMIT_PER_PAGE).offset(page * LIMIT_PER_PAGE)
 
         return query.all()
