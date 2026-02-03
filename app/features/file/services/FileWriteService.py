@@ -175,10 +175,6 @@ class FileWriteService:
                     self._find_first_ancestor_in_common(db, ownerid, parentid, folders)
                 )
 
-                verify_name_duplicated(
-                    db, ownerid, start_parentid, meta.filename, False
-                )
-
                 # If all the folders don't form a path
                 if folders_start_index != -1:
                     for f in folders:
@@ -189,6 +185,10 @@ class FileWriteService:
                             files.append(f)
 
                         start_parentid = f.id
+
+                verify_name_duplicated(
+                    db, ownerid, start_parentid, meta.filename, False
+                )
 
                 file.parentid = start_parentid
                 file_save(db, file)
