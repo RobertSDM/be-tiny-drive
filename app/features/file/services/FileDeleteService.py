@@ -28,7 +28,7 @@ class FileDeleteService:
             if file.is_dir:
                 self._cascade_storage(db, ownerid, file.id)
             else:
-                self._move_to_trash(ownerid, file)
+                self._move_to_trash(ownerid, file.id, file.content_type)
 
     def _move_from_trash(self, ownerid: str, fileid: str, content_type: str):
         supabase_storage_client.move(
@@ -67,6 +67,7 @@ class FileDeleteService:
             for fileid in fileids:
                 file = get_file_or_raise(db, ownerid, fileid)
                 files.append(file)
+
 
                 if file.is_dir:
                     self._cascade_storage(db, ownerid, file.id)
