@@ -10,8 +10,8 @@ from enum import Enum
 
 class SortColumn(Enum):
     NAME = "name"
-    UPDATED_AT = "upddate"
-    CREATED_AT = "creadate"
+    UPDATED_AT = "updated.at"
+    SIZE = "size"
 
 
 class SortOrder(Enum):

@@ -152,8 +152,8 @@ def column_from_sort(type_: SortColumn) -> InstrumentedAttribute:
             return FileModel.filename
         case SortColumn.UPDATED_AT:
             return FileModel.updated_at
-        case SortColumn.CREATED_AT:
-            return FileModel.created_at
+        case SortColumn.SIZE:
+            return FileModel.size
 
 
 def apply_order_to_column(
