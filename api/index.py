@@ -1,4 +1,3 @@
-import uvicorn
 from fastapi import Depends, FastAPI
 from fastapi.exceptions import RequestValidationError
 
@@ -12,7 +11,7 @@ from app.features.file.file_router import file_router
 from app.features.account.account_router import account_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.exceptions import DomainError
-from app.core.constants import LOG_LEVEL, HOST, MODE, ORIGINS, PORT
+from app.core.constants import HOST, LOG_LEVEL, MODE, ORIGINS, PORT
 from app.middlewares.authorization_middleware import authorization_middleware
 
 app = FastAPI(
@@ -46,12 +45,8 @@ def root():
 
 
 if __name__ == "__main__":
+    import uvicorn
+
     uvicorn.run(
-        "main:app",
-        host=HOST,
-        port=PORT,
-        reload=MODE != Mode.PROD.value,
-        log_level=LOG_LEVEL,
-        use_colors=True,
-        workers=2,
+        app, host=HOST, port=PORT, log_level=LOG_LEVEL, reload=MODE == Mode.DEV.value
     )
