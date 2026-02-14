@@ -51,8 +51,8 @@ jsonschema-specifications==2025.9.1
 keystoneauth1==5.13.0
 keystonemiddleware==11.0.0
 kombu==5.6.2
-magnum==21.0.1
 Mako==1.3.10
+mangum==0.21.0
 markdown-it-py==4.0.0
 MarkupSafe==3.0.2
 mdurl==0.1.2
