@@ -7,7 +7,6 @@ load_dotenv()
 MODE = os.getenv("MODE")
 DATABASE_URL = os.getenv("DATABASE_URL")
 ORIGINS = os.getenv("ORIGINS").split(";")
-PORT = int(os.getenv("PORT") or 4500)
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 
@@ -15,11 +14,6 @@ SUPA_URL = os.getenv("SUPA_URL")
 SUPA_KEY = os.getenv("SUPA_KEY")
 SUPA_BUCKETID = os.getenv("SUPA_BUCKET_ID")
 
-##
-
-LOG_LEVEL = "info" if MODE == Mode.PROD.value else "debug"
-
-HOST = "0.0.0.0" if MODE == Mode.PROD.value else "127.0.0.1"
 
 ## App Constants
 
@@ -43,4 +37,4 @@ SUPPORTED_PREVIEW_TYPES = [
 
 ## API
 
-non_protected_routes = ["/auth/*", "^/$"]
+non_protected_routes = ["/auth/*"]
