@@ -13,10 +13,7 @@ from server.app.features.auth.auth_router import auth_router
 from server.app.features.file.file_router import file_router
 from server.app.features.account.account_router import account_router
 from fastapi.middleware.cors import CORSMiddleware
-from server.app.core.exceptions import DomainError
 
-from server.app.middlewares.authorization_middleware import authorization_middleware
-from server.app.core.constants import MODE
 
 app = FastAPI(
     title="Tiny Drive",
@@ -49,10 +46,13 @@ def root():
 
 
 if __name__ == "__main__":
+    import uvicorn
+
     uvicorn.run(
         app,
         host=HOST,
         port=PORT,
         log_level=LOG_LEVEL,
         reload=MODE == Mode.DEV.value,
+
     )
