@@ -1,7 +1,8 @@
 .PHONY: run create_tables mock-db env-run run-mock
 
 run:	
-	./venv/bin/python -m uvicorn api.index:app --reload --host 0.0.0.0 --port 4500 --log-level info
+	./venv/bin/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 4500 --log-level info
+
 
 run-mock: mock-db run
 

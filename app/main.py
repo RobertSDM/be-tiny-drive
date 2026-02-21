@@ -43,7 +43,6 @@ app.add_exception_handler(RequestValidationError, pydantic_error_handler)
 def root():
     return "I'm alive!"
 
-
 if __name__ == "__main__":
     import uvicorn
 
