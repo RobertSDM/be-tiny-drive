@@ -14,6 +14,12 @@ SUPA_URL = os.getenv("SUPA_URL")
 SUPA_KEY = os.getenv("SUPA_KEY")
 SUPA_BUCKETID = os.getenv("SUPA_BUCKET_ID")
 
+HOST = "0.0.0.0" if MODE == Mode.PROD else "127.0.0.1"
+
+LOG_LEVEL = "info" if MODE == Mode.PROD else "debug"
+
+PORT = int(os.getenv("PORT") or 4500)
+
 
 ## App Constants
 
