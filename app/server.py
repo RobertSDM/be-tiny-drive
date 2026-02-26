@@ -1,3 +1,5 @@
+import uvicorn
+
 from fastapi import Depends, FastAPI
 from fastapi.exceptions import RequestValidationError
 
@@ -11,7 +13,13 @@ from app.features.file.file_router import file_router
 from app.features.account.account_router import account_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.exceptions import DomainError
-from app.core.constants import HOST, LOG_LEVEL, MODE, ORIGINS, PORT
+from app.core.constants import (
+    HOST,
+    LOG_LEVEL,
+    MODE,
+    ORIGINS,
+    PORT,
+)
 from app.middlewares.authorization_middleware import authorization_middleware
 
 app = FastAPI(
@@ -43,9 +51,16 @@ app.add_exception_handler(RequestValidationError, pydantic_error_handler)
 def root():
     return "I'm alive!"
 
-if __name__ == "__main__":
-    import uvicorn
+@app.get("/send/{message}")
+def s(message: str):
+    from app.lib.rabbitmq import send
+    send("file_processing", message)
 
+if __name__ == "__main__":
     uvicorn.run(
-        app, host=HOST, port=PORT, log_level=LOG_LEVEL, reload=MODE == Mode.DEV.value
+        app,
+        host=HOST,
+        port=PORT,
+        log_level=LOG_LEVEL,
+        reload=MODE == Mode.DEV.value,
     )

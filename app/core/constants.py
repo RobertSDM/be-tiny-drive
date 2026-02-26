@@ -23,6 +23,8 @@ PORT = int(os.getenv("PORT") or 4500)
 
 ## App Constants
 
+FILE_PROCESSING_QUEUE = "file_processing"
+
 # limit for file return
 LIMIT_PER_PAGE = 12
 
@@ -33,14 +35,15 @@ MAX_FILESIZE = 15 * 1024**2
 MAX_RECURSIVE_DEPTH = 3
 # MAX_FILE_AMOUNT = 15  # rate limit maybe?
 
-SUPPORTED_PREVIEW_TYPES = [
+SUPPORTED_IMAGE_PREVIEW_TYPES = [
     "image/png",
-    "image/jpg",
     "image/jpeg",
     "image/webp",
     "image/tiff",
+    "image/jpg",
 ]
+
 
 ## API
 
-non_protected_routes = ["/auth/*"]
+non_protected_routes = ["/auth/*", "/send"]

@@ -1,9 +1,9 @@
 import copy
 import io
+import json
 from typing import List, Optional, Tuple, Union
 from uuid import uuid4
 
-from PIL import Image
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
@@ -11,6 +11,7 @@ from app.core.exceptions import (
     DomainError,
     InvalidFileName,
 )
+from app.lib import rabbitmq
 from app.lib.supabase.storage import supabase_storage_client
 from app.lib.sqlalchemy import client
 from app.database.models.FileModel import FileModel
@@ -23,12 +24,14 @@ from app.features.file.utils import (
     verify_name_duplicated,
 )
 from app.utils.utils import (
-    image_to_jpg,
     make_file_bucket_path,
     byte_formatting,
-    resize_image,
 )
-from app.core.constants import MAX_FILESIZE, MAX_RECURSIVE_DEPTH, SUPA_BUCKETID, SUPPORTED_PREVIEW_TYPES
+from app.core.constants import (
+    MAX_FILESIZE,
+    MAX_RECURSIVE_DEPTH,
+    SUPA_BUCKETID,
+)
 from app.utils.utils import validate_filename
 
 
@@ -200,6 +203,18 @@ class FileWriteService:
                     make_file_bucket_path(ownerid, file.id, "file"),
                     io.BufferedReader(meta.file),
                 )
+
+                rabbitmq.send(
+                    "file_processing",
+                    json.dumps(
+                        {
+                            "ownerid": ownerid,
+                            "fileid": file.id,
+                            "content_type": meta.content_type,
+                        }
+                    ),
+                )
+
         except Exception as e:
             for file in files:
                 if file.is_dir:
@@ -239,27 +254,3 @@ class FileWriteService:
         file_save(db, folder)
 
         return folder
-
-    def create_preview(self, ownerid: str, files: List[FileModel]):
-        session = next(client.get_session())
-
-        for file in files:
-            session.add(file)
-
-            if not file.content_type in SUPPORTED_PREVIEW_TYPES:
-                return
-
-            bytedata = supabase_storage_client.download(
-                SUPA_BUCKETID, make_file_bucket_path(ownerid, file.id, "file")
-            )
-
-            image = Image.open(io.BytesIO(bytedata))
-            image = resize_image(image)
-            image = image_to_jpg(image)
-
-            supabase_storage_client.save(
-                SUPA_BUCKETID,
-                "image/jpg",
-                make_file_bucket_path(ownerid, file.id, "preview"),
-                io.BufferedReader(image),
-            )

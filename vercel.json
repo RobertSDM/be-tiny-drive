@@ -1,12 +1,6 @@
 {
     "$schema": "https://openapi.vercel.sh/vercel.json",
     "installCommand": "python -m pip install -r requirements.txt",
-    "rewrites": [
-        {
-            "source": "/(.*)*",
-            "destination": "/server/main.py"
-        }
-    ],
     "fluid": true,
     "framework": "fastapi"
 }

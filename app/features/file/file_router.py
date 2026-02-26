@@ -1,9 +1,8 @@
 from typing import List, Optional
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, UploadFile
+from fastapi import APIRouter, Depends, Query, UploadFile
 from fastapi.responses import (
     ORJSONResponse,
     StreamingResponse,
-    Response,
 )
 from pydantic import BaseModel
 from pytest import Session
@@ -18,7 +17,6 @@ from app.features.file.services import (
     FileUpdateService,
     FileWriteService,
 )
-from app.middlewares.authorization_middleware import authorization_middleware
 
 
 file_router = APIRouter()
@@ -50,18 +48,11 @@ def save_folder_route(
 def save_file_route(
     filedata: List[UploadFile],
     ownerid: str,
-    background_tasks: BackgroundTasks,
     parentid: Optional[str] = None,
     db=Depends(client.get_session),
     file_service: FileWriteService = Depends(FileWriteService),
 ):
     files: List[FileModel] = file_service.save_file(db, filedata, ownerid, parentid)
-
-    files_to_process = [file for file in files if not file.is_dir]
-
-    background_tasks.add_task(
-        lambda: file_service.create_preview(ownerid, files_to_process)
-    )
 
     return ORJSONResponse(
         FileResponseStructure(
@@ -148,7 +139,7 @@ def download_route(
             },
         )
 
-    filename = f'{file.filename}.zip' if file.is_dir else 'content.zip'
+    filename = f"{file.filename}.zip" if file.is_dir else "content.zip"
 
     return StreamingResponse(
         content,

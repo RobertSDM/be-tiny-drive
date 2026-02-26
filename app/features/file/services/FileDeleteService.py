@@ -2,7 +2,7 @@ from typing import List
 from sqlalchemy.orm import Session
 from storage3.exceptions import StorageApiError
 
-from app.core.constants import SUPA_BUCKETID, SUPPORTED_PREVIEW_TYPES
+from app.core.constants import SUPA_BUCKETID, SUPPORTED_IMAGE_PREVIEW_TYPES
 from app.core.exceptions import FileNotFound
 from app.lib.supabase.storage import supabase_storage_client
 from app.database.models import FileModel
@@ -37,7 +37,7 @@ class FileDeleteService:
             make_file_bucket_path(ownerid, fileid, "file"),
         )
 
-        if content_type in SUPPORTED_PREVIEW_TYPES:
+        if content_type in SUPPORTED_IMAGE_PREVIEW_TYPES:
             supabase_storage_client.move(
                 SUPA_BUCKETID,
                 make_file_bucket_path(ownerid, fileid, "trash+preview"),
@@ -51,7 +51,7 @@ class FileDeleteService:
             make_file_bucket_path(ownerid, fileid, "trash+file"),
         )
 
-        if content_type in SUPPORTED_PREVIEW_TYPES:
+        if content_type in SUPPORTED_IMAGE_PREVIEW_TYPES:
             supabase_storage_client.move(
                 SUPA_BUCKETID,
                 make_file_bucket_path(ownerid, fileid, "preview"),
@@ -67,7 +67,6 @@ class FileDeleteService:
             for fileid in fileids:
                 file = get_file_or_raise(db, ownerid, fileid)
                 files.append(file)
-
 
                 if file.is_dir:
                     self._cascade_storage(db, ownerid, file.id)
