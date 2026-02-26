@@ -51,11 +51,6 @@ app.add_exception_handler(RequestValidationError, pydantic_error_handler)
 def root():
     return "I'm alive!"
 
-@app.get("/send/{message}")
-def s(message: str):
-    from app.lib.rabbitmq import send
-    send("file_processing", message)
-
 if __name__ == "__main__":
     uvicorn.run(
         app,
