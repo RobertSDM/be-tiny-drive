@@ -1,0 +1,12 @@
+services:
+  task_queue:
+    image: rabbitmq:4.2.4-alpine
+    ports:
+      - "5672:5672"
+    networks:
+      - net1
+
+networks:
+  net1:
+    name: tinydrive-default
+    external: true
