@@ -14,6 +14,7 @@ SUPA_BUCKETID = os.getenv("SUPA_BUCKET_ID")
 PROCESSING_QUEUE_URL = os.getenv("PROCESSING_QUEUE_URL")
 
 HOST = os.getenv("HOST") or "127.0.0.1"
+
 LOG_LEVEL = "info" if MODE == Mode.PROD else "debug"
 PORT = int(os.getenv("PORT") or 4500)
 
