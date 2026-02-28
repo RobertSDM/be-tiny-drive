@@ -15,9 +15,6 @@ services:
     build: ./task_queue
 
     environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
-      - ORIGINS=${ORIGINS}
       - MODE=${MODE}
       - SUPA_URL=${SUPA_URL}
       - SUPA_KEY=${SUPA_KEY}
