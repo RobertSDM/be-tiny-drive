@@ -1,7 +1,6 @@
-.vercel
+**/.vercel
+**/venv
 **/__pycache__
 **/.env*
-**/venv
-database.db
 
 **/.pytest_cache
