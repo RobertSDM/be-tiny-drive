@@ -1,2 +1,0 @@
-[phases.install]
-    cmds = ['python -m pip install -r processing_queue/requirements.txt']

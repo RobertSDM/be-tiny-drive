@@ -1,5 +1,0 @@
-services:
-  file_queue:
-    image: rabbitmq:4.2.4-alpine
-    ports:
-      - "5672:5672"
