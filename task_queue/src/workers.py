@@ -8,8 +8,8 @@ from pika.adapters.blocking_connection import BlockingChannel
 from pika.spec import Basic, BasicProperties
 from PIL import Image
 
-from shared.constants import SUPA_BUCKETID, SUPPORTED_IMAGE_PREVIEW_TYPES
-from shared.lib.supabase.storage import supabase_storage_client
+from task_queue.src.constants import SUPA_BUCKETID, SUPPORTED_IMAGE_PREVIEW_TYPES
+from task_queue.src.lib.supabase.storage import supabase_storage_client
 from task_queue.src.utils import image_to_jpg, make_file_bucket_path, resize_image
 
 

@@ -2,9 +2,9 @@ from typing import List
 from sqlalchemy.orm import Session
 from storage3.exceptions import StorageApiError
 
-from shared.constants import SUPA_BUCKETID, SUPPORTED_IMAGE_PREVIEW_TYPES
+from server.app.core.constants import SUPA_BUCKETID, SUPPORTED_IMAGE_PREVIEW_TYPES
 from server.app.core.exceptions import FileNotFound
-from shared.lib.supabase.storage import supabase_storage_client
+from server.app.lib.supabase.storage import supabase_storage_client
 from server.app.database.models import FileModel
 from server.app.database.repositories.file_repo import (
     file_by_ownerid_parentid,

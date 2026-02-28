@@ -11,9 +11,9 @@ from server.app.core.exceptions import (
     DomainError,
     InvalidFileName,
 )
-from shared.constants import SUPA_BUCKETID
-from shared.lib import rabbitmq
-from shared.lib.supabase.storage import supabase_storage_client
+from server.app.core.constants import SUPA_BUCKETID
+from server.app.lib import rabbitmq
+from server.app.lib.supabase.storage import supabase_storage_client
 from server.app.database.models.FileModel import FileModel
 from server.app.database.repositories.file_repo import (
     file_by_ownerid_parentid_fullname,

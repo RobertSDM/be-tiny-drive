@@ -3,7 +3,7 @@ from typing import Callable
 from pika import BasicProperties, BlockingConnection, DeliveryMode, URLParameters
 from pika.adapters.blocking_connection import BlockingChannel
 
-from shared.constants import FILE_PROCESSING_QUEUE
+from server.app.core.constants import FILE_PROCESSING_QUEUE, PROCESSING_QUEUE_URL
 
 
 def send(queue: str, message: str) -> None:
@@ -20,13 +20,11 @@ def send(queue: str, message: str) -> None:
         ),
     )
 
-    print("Message sent")
-
     connection.close()
 
 
 def consumer(queue: str, callback: Callable[[], None]) -> BlockingChannel:
-    connection = BlockingConnection(URLParameters("amqp://guest:guest@file_queue:5672"))
+    connection = BlockingConnection(URLParameters(PROCESSING_QUEUE_URL))
     channel = connection.channel()
 
     channel.queue_declare(queue=queue, durable=True)

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, InstrumentedAttribute
 from sqlalchemy import UnaryExpression
 import storage3
 
-from shared.constants import SUPA_BUCKETID
+from server.app.core.constants import SUPA_BUCKETID
 from server.app.core.exceptions import (
     FileAlreadyExists,
     FileNotFound,
@@ -20,7 +20,7 @@ from server.app.database.repositories.file_repo import (
     file_by_id_ownerid_is_dir,
     file_by_ownerid_parentid_fullname,
 )
-from shared.lib.supabase.storage import supabase_storage_client
+from server.app.lib.supabase.storage import supabase_storage_client
 from server.app.utils.utils import make_file_bucket_path
 
 

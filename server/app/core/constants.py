@@ -1,16 +1,33 @@
 import os
+
 from server.app.core.schemas import Mode
-from shared.constants import MODE
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 ORIGINS = os.getenv("ORIGINS").split(";")
 JWT_SECRET = os.getenv("JWT_SECRET")
 
-HOST = "0.0.0.0" if MODE == Mode.PROD else "127.0.0.1"
+MODE = os.getenv("MODE")
+
+SUPA_URL = os.getenv("SUPA_URL")
+SUPA_KEY = os.getenv("SUPA_KEY")
+SUPA_BUCKETID = os.getenv("SUPA_BUCKET_ID")
+PROCESSING_QUEUE_URL = os.getenv("PROCESSING_QUEUE_URL")
+
+HOST = os.getenv("HOST") or "127.0.0.1"
 LOG_LEVEL = "info" if MODE == Mode.PROD else "debug"
 PORT = int(os.getenv("PORT") or 4500)
 
 ## APP CONSTANTS
+SUPPORTED_IMAGE_PREVIEW_TYPES = [
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+    "image/tiff",
+    "image/jpg",
+]
+
+FILE_PROCESSING_QUEUE = "file_processing"
+
 # limit for file return
 LIMIT_PER_PAGE = 12
 

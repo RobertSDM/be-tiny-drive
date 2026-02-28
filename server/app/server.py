@@ -16,8 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from server.app.core.exceptions import DomainError
 
 from server.app.middlewares.authorization_middleware import authorization_middleware
-from shared.constants import MODE
-from shared.lib.rabbitmq import send
+from server.app.core.constants import MODE
 
 app = FastAPI(
     title="Tiny Drive",
@@ -47,7 +46,7 @@ app.add_exception_handler(RequestValidationError, pydantic_error_handler)
 @app.get("/")
 def root():
     return "I'm alive!"
-    
+
 
 if __name__ == "__main__":
     uvicorn.run(

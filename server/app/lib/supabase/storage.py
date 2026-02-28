@@ -3,7 +3,7 @@ from storage3 import SyncStorageClient
 from supabase import create_client
 import httpx
 
-from shared.constants import SUPA_KEY, SUPA_URL
+from server.app.core.constants import SUPA_KEY, SUPA_URL
 
 
 class SupabaseStorageClient:
@@ -52,5 +52,6 @@ class SupabaseStorageClient:
                 fileid, expires_in, {"download": download}
             )["signedUrl"]
         )
+
 
 supabase_storage_client = SupabaseStorageClient(SUPA_URL, SUPA_KEY)

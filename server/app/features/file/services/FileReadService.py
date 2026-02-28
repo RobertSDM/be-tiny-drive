@@ -18,14 +18,14 @@ from server.app.features.file.utils import (
     zip_files,
     stream_buffer,
 )
-from shared.lib.supabase.storage import supabase_storage_client
+from server.app.lib.supabase.storage import supabase_storage_client
 
 from server.app.database.models import FileModel
 from server.app.database.repositories.file_repo import (
     file_by_ownerid_parentid,
     search_files_by_ownerid_name_is_dir,
 )
-from shared.constants import SUPA_BUCKETID, SUPPORTED_IMAGE_PREVIEW_TYPES
+from server.app.core.constants import SUPA_BUCKETID, SUPPORTED_IMAGE_PREVIEW_TYPES
 from server.app.core.schemas import BreadcrumbResponse, SortColumn, SortOrder
 from server.app.utils.utils import (
     make_file_bucket_path,

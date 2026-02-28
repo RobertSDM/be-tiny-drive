@@ -1,0 +1,76 @@
+services:
+
+  rabbitmq:
+    image: rabbitmq:4.2.4-alpine
+    ports:
+      - "5672:5672"
+
+    networks:
+      - tinydrive-default
+
+  task_queue:
+    depends_on: 
+      - rabbitmq
+
+    build: ./task_queue
+
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - ORIGINS=${ORIGINS}
+      - MODE=${MODE}
+      - SUPA_URL=${SUPA_URL}
+      - SUPA_KEY=${SUPA_KEY}
+      - SUPA_BUCKET_ID=${SUPA_BUCKET_ID}
+      - PROCESSING_QUEUE_URL=${PROCESSING_QUEUE_URL}
+
+    develop:
+      watch:
+        - path: ./task_queue
+          action: sync
+          target: ./task_queue
+
+        - path: ./task_queue/requirements.txt
+          action: rebuild
+    
+
+    networks:
+      - tinydrive-default
+  server:
+    depends_on: 
+      - rabbitmq
+      - task_queue
+
+    build: ./server
+    ports:
+      - "${PORT}:${PORT}"
+
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - ORIGINS=${ORIGINS}
+      - MODE=${MODE}
+      - SUPA_URL=${SUPA_URL}
+      - SUPA_KEY=${SUPA_KEY}
+      - SUPA_BUCKET_ID=${SUPA_BUCKET_ID}
+      - PROCESSING_QUEUE_URL=${PROCESSING_QUEUE_URL}
+      - PORT=${PORT}
+      - HOST=${HOST}
+    
+    develop:
+      watch:
+        - path: ./server
+          action: sync
+          target: ./server
+
+        - path: ./task_queue/requirements.txt
+          action: rebuild
+    
+    networks:
+      - tinydrive-default
+
+  
+    
+networks:
+  tinydrive-default:
+    name: tinydrive-default
