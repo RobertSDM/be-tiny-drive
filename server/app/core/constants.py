@@ -37,6 +37,17 @@ SUPPORTED_IMAGE_PREVIEW_TYPES = [
     "image/jpg",
 ]
 
+SUPPORTED_TEXT_PREVIEW_TYPES = [
+    "text/plain",
+    "text/css",
+    "text/csv",
+    "text/html",
+    "text/javascript",
+    "text/markdown",
+    "application/json",
+    "application/xml",
+]
+
 FILE_PROCESSING_QUEUE = "file_processing"
 
 # limit for file return

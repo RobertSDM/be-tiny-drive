@@ -20,6 +20,6 @@ def preview_processing(
     medium = image_to_jpg(medium, 60)
 
     small = resize_image(image, (640, 360))
-    small = image_to_jpg(small, 45)
+    small = image_to_jpg(small, 60)
 
     return [("large", large), ("medium", medium), ("small", small)]

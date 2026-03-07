@@ -12,7 +12,6 @@ from pika.spec import Basic, BasicProperties
 
 from task_queue.src.constants import PREVIEW_SIZES, SUPA_BUCKETID
 from task_queue.src.lib.supabase.storage import supabase_storage_client
-from task_queue.src.processors.image_processor import preview_processing
 from task_queue.src.shemas import PreviewBody
 from task_queue.src.utils import make_file_bucket_path
 
@@ -61,7 +60,13 @@ def preview_worker(
     temp.close()
 
     if preview_body.content_type.startswith("image"):
+        from task_queue.src.processors.image_processor import preview_processing
+
         previews = preview_processing(Image.open(temp.name), preview_body.content_type)
+    elif preview_body.content_type.startswith("text"):
+        from task_queue.src.processors.text_processor import text_processing
+
+        previews = text_processing(temp.name, preview_body.content_type)
     else:
         ch.basic_nack(delivery_tag=method.delivery_tag)
         return

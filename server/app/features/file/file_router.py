@@ -1,4 +1,3 @@
-import sys
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, UploadFile
 from fastapi.responses import (
@@ -6,7 +5,7 @@ from fastapi.responses import (
     StreamingResponse,
 )
 from pydantic import BaseModel
-from pytest import Session
+from sqlalchemy.orm import Session
 
 from server.app.core.schemas import FileResponseStructure, FileReturnable
 from server.app.database.models import FileModel
