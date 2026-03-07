@@ -5,23 +5,6 @@ from PIL import ImageOps
 from PIL.ImageFile import ImageFile
 
 
-def image_to_jpg(im: ImageFile, quality: int = 70) -> io.BytesIO:
-    buffer = io.BytesIO()
-
-    if im.mode != "RGB":
-        im = im.convert("RGB")
-
-    if im.mode in ["JPEG", "JPG"]:
-        im.save(buffer)
-        buffer.seek(0)
-        return buffer
-
-    im.save(buffer, "JPEG", optimize=True, quality=quality)
-
-    buffer.seek(0)
-    return buffer
-
-
 def make_file_bucket_path(
     ownerid: str,
     fileid: str,

@@ -7,7 +7,7 @@ from pika.adapters.blocking_connection import BlockingChannel
 from task_queue.src.constants import FILE_PROCESSING_QUEUE
 from task_queue.src.lib.rabbitmq import consumer
 from task_queue.src.constants import DEFAULT_WORKERS_NUMBER
-from task_queue.src.workers import preview_worker
+from task_queue.src.preview_consumer import preview_worker
 
 
 def main():
