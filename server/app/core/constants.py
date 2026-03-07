@@ -39,5 +39,13 @@ MAX_FILESIZE = 15 * 1024**2
 MAX_RECURSIVE_DEPTH = 3
 # MAX_FILE_AMOUNT = 15  # rate limit maybe?
 
+SUPPORTED_PREVIEW_TYPES = [
+    "image/png",
+    "image/jpg",
+    "image/jpeg",
+    "image/webp",
+    "image/tiff",
+]
+
 ## API
 non_protected_routes = ["/auth/*"]
