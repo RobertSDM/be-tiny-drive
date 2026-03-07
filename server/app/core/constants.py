@@ -43,9 +43,6 @@ SUPPORTED_TEXT_PREVIEW_TYPES = [
     "text/csv",
     "text/html",
     "text/javascript",
-    "text/markdown",
-    "application/json",
-    "application/xml",
 ]
 
 FILE_PROCESSING_QUEUE = "file_processing"
