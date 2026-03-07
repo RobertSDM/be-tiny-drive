@@ -126,7 +126,7 @@ class FileReadService:
         if file.content_type not in SUPPORTED_IMAGE_PREVIEW_TYPES:
             raise PreviewNotSupported()
 
-        bucket_path = make_file_bucket_path(ownerid, id_, "preview")
+        bucket_path = make_file_bucket_path(ownerid, id_, "preview+large")
 
         time_to_expire = 3600  # one hour
         try:

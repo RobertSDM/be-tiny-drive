@@ -41,7 +41,7 @@ class FileDeleteService:
             supabase_storage_client.move(
                 SUPA_BUCKETID,
                 make_file_bucket_path(ownerid, fileid, "trash+preview"),
-                make_file_bucket_path(ownerid, fileid, "preview"),
+                make_file_bucket_path(ownerid, fileid, "preview+large"),
             )
 
     def _move_to_trash(self, ownerid: str, fileid: str, content_type: str):
@@ -54,7 +54,7 @@ class FileDeleteService:
         if content_type in SUPPORTED_IMAGE_PREVIEW_TYPES:
             supabase_storage_client.move(
                 SUPA_BUCKETID,
-                make_file_bucket_path(ownerid, fileid, "preview"),
+                make_file_bucket_path(ownerid, fileid, "preview+large"),
                 make_file_bucket_path(ownerid, fileid, "trash+preview"),
             )
 
@@ -67,7 +67,6 @@ class FileDeleteService:
             for fileid in fileids:
                 file = get_file_or_raise(db, ownerid, fileid)
                 files.append(file)
-
 
                 if file.is_dir:
                     self._cascade_storage(db, ownerid, file.id)

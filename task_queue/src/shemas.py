@@ -2,6 +2,6 @@ from pydantic import BaseModel
 
 
 class PreviewBody(BaseModel):
-    id_: str
+    fileid: str
     content_type: str
     ownerid: str

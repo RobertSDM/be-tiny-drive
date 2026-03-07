@@ -1,4 +1,5 @@
 import os
+from typing import Literal
 
 DEFAULT_WORKERS_NUMBER = 2
 
@@ -17,3 +18,6 @@ SUPPORTED_IMAGE_PREVIEW_TYPES = [
 ]
 
 FILE_PROCESSING_QUEUE = "file_processing"
+
+PREVIEW_SIZES = Literal["large", "medium", "small"]
+BUCKET_PATH_TYPES = Literal["file", "preview+large", "preview+small", "preview+medium"]

@@ -1,35 +1,25 @@
 import io
+from typing import List, Tuple
 
 from PIL import Image
-from PIL.ImageFile import ImageFile
-from task_queue.src.utils import resize_image
+from task_queue.src.utils import image_to_jpg, resize_image
 
-from task_queue.src.constants import SUPPORTED_IMAGE_PREVIEW_TYPES
-
-
-def image_to_jpg(im: ImageFile, quality: int = 70) -> io.BytesIO:
-    buffer = io.BytesIO()
-
-    if im.mode != "RGB":
-        im = im.convert("RGB")
-
-    if im.mode in ["JPEG", "JPG"]:
-        im.save(buffer)
-        buffer.seek(0)
-        return buffer
-
-    im.save(buffer, "JPEG", optimize=True, quality=quality)
-
-    buffer.seek(0)
-    return buffer
+from task_queue.src.constants import PREVIEW_SIZES, SUPPORTED_IMAGE_PREVIEW_TYPES
 
 
-def image_processing(tempfile_: str, content_type: str) -> None:
+def preview_processing(
+    image: Image, content_type: str
+) -> List[Tuple[PREVIEW_SIZES, io.BytesIO]]:
     if content_type not in SUPPORTED_IMAGE_PREVIEW_TYPES:
         return None
 
-    image = Image.open(tempfile_)
-    image = resize_image(image)
-    image = image_to_jpg(image)
+    large = resize_image(image)
+    large = image_to_jpg(large)
 
-    return image
+    medium = resize_image(image, (1280, 720))
+    medium = image_to_jpg(medium, 60)
+
+    small = resize_image(image, (640, 360))
+    small = image_to_jpg(small, 45)
+
+    return [("large", large), ("medium", medium), ("small", small)]

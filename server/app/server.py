@@ -3,12 +3,14 @@ import uvicorn
 from fastapi import Depends, FastAPI
 from fastapi.exceptions import RequestValidationError
 
-from server.app.core.constants import HOST, LOG_LEVEL, ORIGINS, PORT
+from server.app.core.constants import HOST, LOG_LEVEL, MODE, ORIGINS, PORT
 from server.app.core.schemas import Mode
 from server.app.middlewares.exception_middlewares import (
     domain_error_handler,
     pydantic_error_handler,
 )
+from server.app.core.exceptions import DomainError
+from server.app.middlewares.authorization_middleware import authorization_middleware
 from server.app.features.auth.auth_router import auth_router
 from server.app.features.file.file_router import file_router
 from server.app.features.account.account_router import account_router
@@ -46,8 +48,6 @@ def root():
 
 
 if __name__ == "__main__":
-    import uvicorn
-
     uvicorn.run(
         app,
         host=HOST,

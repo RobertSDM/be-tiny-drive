@@ -1,6 +1,7 @@
 import math
 import re
-from typing import Literal
+
+from server.app.core.constants import BUCKET_PATH_TYPES
 
 
 def byte_formatting(byte_size: int):
@@ -21,7 +22,7 @@ def byte_formatting(byte_size: int):
 def make_file_bucket_path(
     ownerid: str,
     fileid: str,
-    type_: Literal["file", "preview", "trash+preview", "trash+file"],
+    type_: BUCKET_PATH_TYPES,
 ) -> str:
     """
     Make the bucket path for the file storage
@@ -30,8 +31,12 @@ def make_file_bucket_path(
     match type_:
         case "file":
             return f"user-{ownerid}/drive/{fileid}"
-        case "preview":
-            return f"user-{ownerid}/preview/{fileid}"
+        case "preview+large":
+            return f"user-{ownerid}/preview/large/{fileid}"
+        case "preview+medium":
+            return f"user-{ownerid}/preview/medium/{fileid}"
+        case "preview+small":
+            return f"user-{ownerid}/preview/small/{fileid}"
         case "trash+file":
             return f"user-{ownerid}/trash/drive/{fileid}"
         case "trash+preview":
