@@ -64,22 +64,24 @@ def text_processing(
                     for word in words:
                         for letter in word:
                             if letter == "\n":
-                                if line:
-                                    draw.text((x, y), line, fill="black", font=font)
-                                y += line_height + line_spacing
-                                line = ""
-                                continue
-
-                            w = draw.textlength(line + letter, font=font)
-                            if w > writable_width:
                                 draw.text((x, y), line, fill="black", font=font)
                                 y += line_height + line_spacing
                                 line = ""
-
-                            if y > writable_height:
-                                break
-
+                                continue
                             line += letter
+
+                        w = draw.textlength(line, font=font)
+                        if w > writable_width:
+                            next_word = line.split(" ")[-1]
+                            draw.text(
+                                (x, y), line[: -len(next_word)], fill="black", font=font
+                            )
+                            y += line_height + line_spacing
+                            line = next_word
+
+                        if y > writable_height:
+                            break
+
                         line += " "
 
                 if line:
