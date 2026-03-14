@@ -15,7 +15,7 @@ def load_font(path_: str, size: int):
         return ImageFont.load_default()
 
 
-def create_image(tempfile: strj) -> Optional[Image.Image]:
+def create_image(tempfile: str) -> Optional[Image.Image]:
     """
     Create an image from a text file.
     """
